@@ -1,38 +1,11 @@
-import { expect, test, type Page } from "@playwright/test";
-
-const hasTurso =
-  Boolean(process.env.TURSO_DATABASE_URL) &&
-  Boolean(process.env.TURSO_AUTH_TOKEN) &&
-  Boolean(process.env.JWT_SECRET);
-
-async function waitForAuthNav(page: Page) {
-  await expect(page.getByTestId("auth-loading")).toBeHidden({
-    timeout: 15_000,
-  });
-}
-
-async function registerUser(page: Page, email: string, password: string) {
-  await page.goto("/register");
-  await page.getByTestId("auth-email").fill(email);
-  await page.getByTestId("auth-submit").click();
-  await expect(page.getByTestId("auth-otp")).toBeVisible();
-
-  const otpValue = await page.getByTestId("auth-otp").inputValue();
-  if (!otpValue) {
-    const info = page.getByTestId("auth-info");
-    await expect(info).toBeVisible();
-    const text = await info.innerText();
-    const match = text.match(/\b(\d{4,8})\b/);
-    expect(match?.[1]).toBeTruthy();
-    await page.getByTestId("auth-otp").fill(match![1]!);
-  }
-
-  await page.getByTestId("auth-password").fill(password);
-  await page.getByTestId("auth-submit").click();
-  await expect(page).toHaveURL("/");
-  await waitForAuthNav(page);
-  await expect(page.getByTestId("user-email")).toHaveText(email);
-}
+import { expect, test } from "@playwright/test";
+import {
+  E2E_PASSWORD,
+  hasTurso,
+  logoutUser,
+  registerUser,
+  waitForAuthNav,
+} from "./helpers";
 
 test.describe("auth validation", () => {
   test("shows error for invalid credentials format on login", async ({
@@ -75,27 +48,23 @@ test.describe("auth validation", () => {
 
 test.describe("auth flow", () => {
   test.skip(!hasTurso, "Requires TURSO_* and JWT_SECRET in environment");
+  test.describe.configure({ mode: "serial" });
 
   test("register, stay signed in, then log out", async ({ page }) => {
     const email = `e2e.${Date.now()}@tell.test`;
-    const password = "TellSecure99!";
 
-    await registerUser(page, email, password);
+    await registerUser(page, email);
     await expect(page.getByTestId("logout-button")).toBeVisible();
 
-    await page.getByTestId("logout-button").click();
-    await waitForAuthNav(page);
-    await expect(page.getByTestId("nav-signin")).toBeVisible();
+    await logoutUser(page);
     await expect(page.getByTestId("nav-register")).toBeVisible();
   });
 
   test("rejects duplicate registration", async ({ page }) => {
     const email = `e2e.dup.${Date.now()}@tell.test`;
-    const password = "TellSecure99!";
 
-    await registerUser(page, email, password);
-    await page.getByTestId("logout-button").click();
-    await waitForAuthNav(page);
+    await registerUser(page, email);
+    await logoutUser(page);
 
     await page.goto("/register");
     await page.getByTestId("auth-email").fill(email);
@@ -108,15 +77,13 @@ test.describe("auth flow", () => {
 
   test("login works after register", async ({ page }) => {
     const email = `e2e.login.${Date.now()}@tell.test`;
-    const password = "TellSecure99!";
 
-    await registerUser(page, email, password);
-    await page.getByTestId("logout-button").click();
-    await waitForAuthNav(page);
+    await registerUser(page, email);
+    await logoutUser(page);
 
     await page.goto("/login");
     await page.getByTestId("auth-email").fill(email);
-    await page.getByTestId("auth-password").fill(password);
+    await page.getByTestId("auth-password").fill(E2E_PASSWORD);
     await page.getByTestId("auth-submit").click();
 
     await expect(page).toHaveURL("/");
@@ -126,11 +93,9 @@ test.describe("auth flow", () => {
 
   test("login fails with wrong password", async ({ page }) => {
     const email = `e2e.wrong.${Date.now()}@tell.test`;
-    const password = "TellSecure99!";
 
-    await registerUser(page, email, password);
-    await page.getByTestId("logout-button").click();
-    await waitForAuthNav(page);
+    await registerUser(page, email);
+    await logoutUser(page);
 
     await page.goto("/login");
     await page.getByTestId("auth-email").fill(email);

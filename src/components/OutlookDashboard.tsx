@@ -115,6 +115,7 @@ export function OutlookDashboard({
   initialNearTermBias?: NearTermBias | null;
 }) {
   const router = useRouter();
+  const [sessionUser, setSessionUser] = useState<User | null>(user);
   const [horizon, setHorizon] = useState<string>("1d");
   const [watchlist, setWatchlist] = useState<string[]>(initialWatchlist);
   const [assetClass, setAssetClass] = useState<AssetClass>(() =>
@@ -146,6 +147,10 @@ export function OutlookDashboard({
   } | null>(null);
   const [chatOpen, setChatOpen] = useState(false);
 
+  useEffect(() => {
+    setSessionUser(user);
+  }, [user]);
+
   const watchSet = useMemo(() => new Set(watchlist), [watchlist]);
 
   const signalMap = useMemo(() => {
@@ -168,7 +173,7 @@ export function OutlookDashboard({
   );
 
   async function toggleWatch(symbol: string) {
-    if (!user) {
+    if (!sessionUser) {
       router.push("/login");
       return;
     }
@@ -251,7 +256,7 @@ export function OutlookDashboard({
   const regime = latestSignal?.regime ?? "neutral";
 
   useEffect(() => {
-    if (!user || !effectiveSelectedSymbol) return;
+    if (!sessionUser || !effectiveSelectedSymbol) return;
 
     const controller = new AbortController();
 
@@ -280,11 +285,19 @@ export function OutlookDashboard({
       });
 
     return () => controller.abort();
-  }, [effectiveSelectedSymbol, user]);
+  }, [effectiveSelectedSymbol, sessionUser]);
 
   async function logout() {
-    await fetch("/api/auth/logout", { method: "POST" });
-    router.refresh();
+    try {
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: "{}",
+      });
+    } finally {
+      setSessionUser(null);
+      router.refresh();
+    }
   }
 
   return (
@@ -321,7 +334,7 @@ export function OutlookDashboard({
               horizon={horizon}
               open={chatOpen}
               onOpenChange={setChatOpen}
-              enabled={Boolean(user)}
+              enabled={Boolean(sessionUser)}
             />
             <Link
               className="nav-link"
@@ -333,13 +346,13 @@ export function OutlookDashboard({
             <Link className="nav-link nav-system-link" href="/api/health">
               System
             </Link>
-            {user ? (
+            {sessionUser ? (
               <>
                 <span
                   data-testid="user-email"
                   className="hidden max-w-48 truncate text-xs text-[var(--muted)] md:block"
                 >
-                  {user.email}
+                  {sessionUser.email}
                 </span>
                 <button
                   data-testid="logout-button"
@@ -439,22 +452,22 @@ export function OutlookDashboard({
         <SignalQuality
           symbol={effectiveSelectedSymbol || undefined}
           horizon={horizon}
-          enabled={Boolean(user)}
+          enabled={Boolean(sessionUser)}
         />
 
         <EventsPanel
           symbol={effectiveSelectedSymbol || undefined}
           countryCode={selectedAsset?.countryCode ?? null}
-          enabled={Boolean(user)}
+          enabled={Boolean(sessionUser)}
         />
 
         <EventImpactPanel
           symbol={effectiveSelectedSymbol || undefined}
-          enabled={Boolean(user)}
+          enabled={Boolean(sessionUser)}
         />
 
         <AlertsPanel
-          user={user}
+          user={sessionUser}
           defaultSymbol={effectiveSelectedSymbol || "SPY"}
           defaultHorizon={horizon}
           watchlist={watchlist}
@@ -467,7 +480,8 @@ export function OutlookDashboard({
             </h2>
             <p className="mt-1 text-sm text-[var(--muted)]">
               Star symbols to build a watchlist
-              {user ? "" : " (sign in required)"}. Select a row for evidence.
+              {sessionUser ? "" : " (sign in required)"}. Select a row for
+              evidence.
             </p>
           </div>
 
@@ -621,10 +635,12 @@ export function OutlookDashboard({
                 {assetClass === "watchlist" ? (
                   <>
                     <p className="font-medium">
-                      {user ? "Watchlist is empty" : "Sign in to use watchlist"}
+                      {sessionUser
+                        ? "Watchlist is empty"
+                        : "Sign in to use watchlist"}
                     </p>
                     <p className="mt-2 text-sm text-[var(--muted)]">
-                      {user ? (
+                      {sessionUser ? (
                         <>
                           Star any instrument in{" "}
                           <button
@@ -766,7 +782,7 @@ export function OutlookDashboard({
                 <PriceChart
                   symbol={effectiveSelectedSymbol}
                   horizon={horizon}
-                  enabled={Boolean(user)}
+                  enabled={Boolean(sessionUser)}
                 />
 
                 <div className="mt-6 border-t border-[var(--line)] pt-5">
@@ -816,7 +832,7 @@ export function OutlookDashboard({
                 <ResearchBrief
                   symbol={effectiveSelectedSymbol}
                   horizon={horizon}
-                  enabled={Boolean(user)}
+                  enabled={Boolean(sessionUser)}
                 />
               </>
             ) : (

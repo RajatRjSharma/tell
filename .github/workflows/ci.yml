@@ -75,6 +75,9 @@ jobs:
           TELL_OTP_DEV_ECHO: "1"
           REGISTRATION_ENABLED: "true"
           EMAIL_OTP_ENABLED: "true"
+          AUTH_RATE_LIMIT_PER_MINUTE: "300"
+          API_RATE_LIMIT_PER_MINUTE: "300"
+          PLAYWRIGHT_PORT: "3000"
 
       - name: Upload Playwright report
         if: failure()
