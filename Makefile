@@ -1,4 +1,4 @@
-.PHONY: help install install-browsers dev build start lint lint-fix format format-check typecheck test test-watch test-coverage test-e2e test-e2e-ui ci db-migrate db-seed ingest-fred setup
+.PHONY: help install install-browsers dev build start lint lint-fix format format-check typecheck test test-watch test-coverage test-e2e test-e2e-ui ci db-migrate db-seed ingest-fred ingest-imf setup
 
 help: ## Show available commands
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-16s\033[0m %s\n", $$1, $$2}'
@@ -59,5 +59,8 @@ db-seed: ## Seed countries, indicators, assets
 
 ingest-fred: ## Fetch US macro series from FRED into Turso
 	npm run ingest:fred
+
+ingest-imf: ## Fetch cross-country macro from IMF into Turso
+	npm run ingest:imf
 
 setup: install install-browsers db-migrate db-seed ## Install deps + browsers + migrate + seed

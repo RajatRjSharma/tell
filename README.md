@@ -32,9 +32,10 @@ Never commit `.env`.
 
 ```bash
 make ingest-fred       # US macro from FRED → Turso readings
+make ingest-imf        # Cross-country macro from IMF → Turso readings
 ```
 
-Optional: set `FRED_OBSERVATION_START=2018-01-01` in `.env`.
+Optional: set `FRED_OBSERVATION_START=2018-01-01` or `IMF_MIN_YEAR=2015` in `.env`.
 
 ## Quality
 
