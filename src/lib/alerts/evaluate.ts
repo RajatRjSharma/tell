@@ -5,6 +5,7 @@ import {
   updateAlertRuleSeen,
 } from "@/lib/alerts/store";
 import type { AlertRule, AlertSignalSnapshot } from "@/lib/alerts/types";
+import { appUrl } from "@/lib/config";
 import { sendMail } from "@/lib/email/mailer";
 import { alertEmailTemplate } from "@/lib/email/templates";
 import { SIGNAL_MODEL_VERSION } from "@/lib/signals/score";
@@ -192,7 +193,7 @@ export async function evaluateAlertRules(
                 symbol: signal.symbol,
                 horizon: signal.horizon,
                 asOfDate: signal.asOfDate,
-                appUrl: process.env.APP_URL,
+                appUrl: appUrl(),
               });
               const result = await sendMail({
                 to: email,

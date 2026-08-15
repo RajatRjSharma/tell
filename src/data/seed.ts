@@ -151,10 +151,7 @@ export const indicators = [
   },
 ] as const;
 
-/**
- * Assets: Yahoo Finance daily OHLC (Finnhub free tier blocks candles).
- * source_symbol is the Yahoo ticker (FX uses =X pairs).
- */
+/** Assets: Yahoo daily OHLC. `source_symbol` is the Yahoo ticker. */
 export const assets = [
   {
     symbol: "SPY",

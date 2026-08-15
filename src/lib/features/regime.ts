@@ -1,7 +1,4 @@
-/**
- * Transparent US macro regime from a small set of FRED-derived signals.
- * Research aid only — not a forecast.
- */
+/** US macro regime from a small set of FRED-derived signals. */
 
 export type UsRegime =
   "expansion" | "slowdown" | "inflationary" | "risk_off" | "neutral";
@@ -37,11 +34,11 @@ function pctLabel(rate: number, digits = 1): string {
 }
 
 /**
- * Priority (first match wins after scoring):
- * 1. risk_off — elevated VIX
- * 2. inflationary — hot CPI with non-collapsing growth
- * 3. slowdown — weak growth and/or inverted curve
- * 4. expansion — solid growth, calm vol, non-inverted curve
+ * Priority (first match wins):
+ * 1. risk_off
+ * 2. inflationary
+ * 3. slowdown
+ * 4. expansion
  * 5. neutral
  */
 export function classifyUsRegime(

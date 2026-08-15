@@ -96,10 +96,10 @@ backfill-signals: ## Recompute historical signals + forecasts for hit-rate sampl
 compute-alerts: ## Evaluate watchlist alert rules → in-app alert_events
 	npm run compute:alerts
 
-compute-briefs: ## Local-only Gemini briefs → Turso (blocked in CI)
+compute-briefs: ## Persist Gemini briefs to Turso
 	npm run compute:briefs
 
-compute-watchlist-briefs: ## Local-only Gemini briefs for starred symbols (+ optional email)
+compute-watchlist-briefs: ## Gemini briefs for watchlist symbols
 	npm run compute:watchlist-briefs
 
 setup: install install-browsers db-migrate db-seed ## Install deps + browsers + migrate + seed

@@ -2,6 +2,10 @@
 
 Global activity → market outlook research platform.
 
+![Tell platform architecture](docs/tell-architecture.png)
+
+Documentation: [index](docs/README.md) · [architecture](docs/ARCHITECTURE.md) · [data model](docs/DATA-MODEL.md) · [signals](docs/SIGNALS.md) · [API](docs/API.md) · [auth and email](docs/AUTH-AND-EMAIL.md) · [security](docs/SECURITY.md) · [operations](docs/OPERATIONS.md)
+
 ## Stack
 
 - Next.js (Vercel)
@@ -86,8 +90,8 @@ Daily Actions runs this after `compute:signals` (no AI keys).
 `make backfill-signals` walks recent SPY trading days (default `BACKFILL_DAYS=90`),
 upserts historical `signals`, then evaluates `forecast_log` so quality hit rates have
 real sample size. Optional: `BACKFILL_FROM` / `BACKFILL_TO`, `FORECAST_SYMBOLS`,
-`BACKFILL_SKIP_FORECASTS=1`. Do **not** run this every day in CI — use locally or
-occasionally after rule changes. FRED ingest also stores ALFRED vintages for key US
+`BACKFILL_SKIP_FORECASTS=1`. Prefer local/occasional runs after rule changes, not
+every daily CI job. FRED ingest also stores ALFRED vintages for key US
 series (`CPI`, `UNRATE`, `INDPRO`, `GDP`); live features still read `vintage=current`.
 
 `compute-alerts` checks enabled rules (direction flip, became direction, confidence
@@ -95,8 +99,8 @@ below) against the latest signals and writes unread `alert_events` (and emails w
 SMTP is configured). First observation after creating a rule is a baseline only (no
 false fire).
 
-`make compute-watchlist-briefs` (local Gemini only) emails a personal brief for each
-user with a non-empty watchlist when SMTP is set.
+`make compute-watchlist-briefs` builds a Gemini brief per user with a non-empty
+watchlist and emails it when SMTP is configured.
 
 ## Daily ingest (GitHub Actions)
 
@@ -110,7 +114,7 @@ Workflow: `.github/workflows/ingest.yml`
 Repo secrets (Settings → Secrets and variables → Actions):
 
 | Secret | Required for |
-|--------|----------------|
+| ------ | ------------ |
 | `TURSO_DATABASE_URL` | ingest + e2e |
 | `TURSO_AUTH_TOKEN` | ingest + e2e |
 | `FRED_API_KEY` | FRED ingest |
@@ -150,9 +154,10 @@ For full auth e2e in CI, add repo secrets: `JWT_SECRET`, `TURSO_DATABASE_URL`, `
 ## Auth
 
 - `/register` (OTP email verify) · `/login`
-- Cookie JWT (`tell_session`) backed by Turso `users`
+- Cookie JWT (`AUTH_COOKIE_NAME`, default `tell_session`) backed by Turso `users`
+- Registration requires email OTP (`REGISTRATION_ENABLED`, `EMAIL_OTP_ENABLED`, SMTP)
 - APIs: `/api/auth/otp/request` · `/api/auth/otp/verify` · `login` · `logout` · `me`
-  (legacy `POST /api/auth/register` remains for scripts)
+  (`POST /api/auth/register` is disabled; email verification is required)
 - SMTP: `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM`,
   `SMTP_USE_TLS`, plus `OTP_EXPIRE_MINUTES` / `OTP_LENGTH`
 - Watchlist (signed-in): `GET/POST/DELETE /api/watchlist` — saved symbols filter the dashboard by default when non-empty
@@ -163,7 +168,7 @@ For full auth e2e in CI, add repo secrets: `JWT_SECRET`, `TURSO_DATABASE_URL`, `
 Public JSON endpoints (Turso-backed):
 
 | Route | Purpose |
-|-------|---------|
+| ----- | ------- |
 | `GET /api/health` | App + config + DB + data counts (`?deep=1` probes Yahoo/Finnhub) |
 | `GET /api/ready` | Same as health (deploy / uptime readiness probe) |
 | `GET /api/assets` | Asset universe |
@@ -174,7 +179,7 @@ Public JSON endpoints (Turso-backed):
 | `GET /api/events` | Policy events (`?source=Fed&country=US&symbol=SPY&since=YYYY-MM-DD&limit=30`) |
 | `GET /api/events/impact` | Historical forward returns after similar events (`?symbol=SPY&source=Fed&sentiment=any`) |
 | `GET /api/macro/strip` | US CPI / curve / VIX sparkline strip (`?limit=24`) |
-| `GET /api/risk/near-term` | Today / tomorrow risk-on|mixed|risk-off ensemble bias |
+| `GET /api/risk/near-term` | Today / tomorrow risk-on, mixed, or risk-off ensemble bias |
 | `GET /api/readings?country=US&indicator=CPI` | Macro series (`from`/`to`/`limit`) |
 
 ## AI (Gemini + Groq)
@@ -182,7 +187,7 @@ Public JSON endpoints (Turso-backed):
 Optional research layer on top of Turso signals and macro readings.
 
 | Route | Purpose |
-|-------|---------|
+| ----- | ------- |
 | `GET /api/brief?symbol=SPY&horizon=1d` | Gemini brief with prior delta (`&refresh=1` regenerates + upserts) |
 | `GET /api/brief/history?symbol=SPY&horizon=1d&limit=7` | Stored brief history from Turso |
 | `POST /api/chat` | Groq Q&A grounded in latest evidence (`{ message, history?, symbol?, horizon? }`) |
@@ -198,12 +203,12 @@ Without keys, endpoints return `503` and the UI shows a soft unavailable state.
 
 Dashboard: evidence panel includes a **Gemini brief** with vs-prior delta; header **Ask Tell** opens Groq chat.
 
-Daily Actions ingest runs data + `compute:signals` only.
-Do **not** add `GEMINI_API_KEY` / `GROQ_API_KEY` to GitHub Actions secrets — briefs and live evals are local-only so free credits are not burned in CI.
+Daily Actions ingest runs data + `compute:signals` only. Keep `GEMINI_API_KEY` /
+`GROQ_API_KEY` out of Actions secrets; run briefs and live evals locally:
 
 ```bash
-make compute-briefs                 # local Gemini brief refresh → Turso
-TELL_AI_EVAL=1 make test-eval       # local live AI eval
+make compute-briefs
+TELL_AI_EVAL=1 make test-eval
 ```
 
 Offline AI evals (mocked, no API keys) still run in `npm test`.

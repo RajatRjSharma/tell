@@ -116,7 +116,7 @@ export async function upsertResearchBrief(
       bullets: brief.bullets,
     });
   } catch {
-    // FTS is best-effort — schema may not be migrated yet.
+    /* research_fts optional */
   }
 }
 

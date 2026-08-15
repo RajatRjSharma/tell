@@ -45,7 +45,7 @@ function noteFor(
 
 /**
  * Near-term risk bias from the latest 1d signal ensemble.
- * "Tomorrow" is a dampened carry-forward of today (daily data only — not intraday).
+ * Tomorrow is a dampened carry-forward of today.
  */
 export async function getNearTermRiskBias(
   db: Client,
@@ -116,7 +116,6 @@ export async function getNearTermRiskBias(
   const n = rows.rows.length;
   const todayScore = n === 0 ? 0 : scoreSum / n;
   const todayLabel = labelFromScore(todayScore);
-  // Dampen overnight — tomorrow is not a separate model, just a softer carry.
   const tomorrowScore = todayScore * 0.65;
   const tomorrowLabel = labelFromScore(tomorrowScore);
 

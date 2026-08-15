@@ -15,7 +15,7 @@ function sleep(ms: number) {
 function assertAiAllowedOutsideCi(task: string) {
   if (process.env.CI === "true" && process.env.TELL_ALLOW_AI_IN_CI !== "1") {
     throw new Error(
-      `Refusing to run ${task} in CI (protects free Gemini/Groq credits). Run locally instead.`,
+      `Refusing to run ${task} in CI. Set TELL_ALLOW_AI_IN_CI=1 to override.`,
     );
   }
 }

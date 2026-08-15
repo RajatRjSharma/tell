@@ -2,7 +2,7 @@ name: Daily ingest
 
 on:
   schedule:
-    # ~06:00 UTC daily — after US equity cash close + FRED publish lag
+    # 06:00 UTC daily
     - cron: "0 6 * * *"
   workflow_dispatch:
 
@@ -37,8 +37,6 @@ jobs:
         env:
           FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
 
-      # IMF DataMapper is often 403 from GitHub cloud IPs → World Bank fallback.
-      # Manual `make ingest-manual` writes true IMF; upserts preserve IMF over World Bank.
       - name: Ingest cross-country (IMF / World Bank)
         run: npm run ingest:imf
 
@@ -56,6 +54,3 @@ jobs:
 
       - name: Evaluate alert rules
         run: npm run compute:alerts
-
-      # Intentionally no Gemini/Groq steps here.
-      # Free AI credits stay local-only: `make compute-briefs` / `TELL_AI_EVAL=1 make test-eval`

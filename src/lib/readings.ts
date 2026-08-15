@@ -64,7 +64,7 @@ export async function upsertReadings(
       row.source,
     ]);
 
-    // Do not let World Bank overwrite existing IMF WEO rows after a manual refresh.
+    // Preserve IMF rows against World Bank overwrites.
     await db.execute({
       sql: `INSERT INTO readings (
               country_code, indicator_id, observed_for, value,

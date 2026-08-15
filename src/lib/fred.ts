@@ -45,7 +45,6 @@ export function parseFredObservations(
       observedFor: obs.date,
       value,
       releasedAt,
-      // ALFRED vintages are keyed by when the print became available.
       vintage: alfred && releasedAt ? releasedAt : undefined,
     });
   }
@@ -58,7 +57,7 @@ export async function fetchFredSeriesObservations(
   options?: {
     apiKey?: string;
     observationStart?: string;
-    /** When set, request the vintage window known to ALFRED / FRED realtime. */
+    /** Point-in-time vintage window (ALFRED / FRED realtime). */
     realtimeStart?: string;
     realtimeEnd?: string;
     alfred?: boolean;

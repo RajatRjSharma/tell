@@ -99,7 +99,7 @@ export async function upsertEvents(
         date: row.date,
       });
     } catch {
-      // FTS is best-effort — schema may not be migrated yet.
+      /* research_fts optional */
     }
   }
   return written;

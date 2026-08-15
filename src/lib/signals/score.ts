@@ -154,9 +154,7 @@ function drawdownContribution(market: MarketFeatures): {
   return { value: 0, detail: `dd ${(market.drawdown63d * 100).toFixed(1)}%` };
 }
 
-/**
- * Rule-based score in [-1, 1]. Research aid only — not a guaranteed forecast.
- */
+/** Rule-based score in [-1, 1]. */
 export function scoreSignal(input: ScoreSignalInput): ScoredSignal {
   const bars = horizonToBars(input.horizon);
   const drivers: SignalDriver[] = [];

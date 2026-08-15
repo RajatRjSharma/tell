@@ -55,7 +55,6 @@ async function ingestFred() {
           realtimeEnd: "9999-12-31",
           alfred: true,
         });
-        // Cap vintage volume — keep the most recent ~2k vintage rows per series.
         const capped = alfredParsed.slice(-2000);
         const alfredRows = toReadingUpserts(
           "US",
@@ -77,7 +76,6 @@ async function ingestFred() {
       throw err;
     }
 
-    // Be polite to FRED free tier
     await new Promise((r) => setTimeout(r, 200));
   }
 

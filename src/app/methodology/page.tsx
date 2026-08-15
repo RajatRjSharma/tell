@@ -229,10 +229,9 @@ export default function MethodologyPage() {
           <section id="ai" className="mt-12 scroll-mt-28">
             <h2 className="text-xl font-semibold tracking-[-0.035em]">AI</h2>
             <p className="mt-3 text-sm leading-7 text-[var(--muted-strong)]">
-              Gemini briefs and Groq chat sit on top of Turso facts (signals,
-              macro, recent policy events). The LLM explains and connects; it is
-              not allowed to invent prices. Free API keys stay local — daily CI
-              never burns Gemini/Groq credits.
+              Gemini briefs and Groq chat reason over Turso facts (signals,
+              macro, recent policy events). They explain and connect evidence;
+              they do not invent prices.
             </p>
           </section>
 

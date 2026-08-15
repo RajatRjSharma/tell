@@ -51,7 +51,6 @@ async function ingestMarkets() {
       throw err;
     }
 
-    // Be polite to Yahoo chart endpoints
     await new Promise((r) => setTimeout(r, 400));
   }
 

@@ -1,5 +1,6 @@
 import type { Client } from "@libsql/client";
 import { generateBrief } from "@/lib/ai/brief";
+import { appUrl } from "@/lib/config";
 import { sendMail } from "@/lib/email/mailer";
 import { watchlistBriefEmailTemplate } from "@/lib/email/templates";
 import { listWatchlist } from "@/lib/watchlist/store";
@@ -30,9 +31,7 @@ async function listUsersWithWatchlists(
 }
 
 /**
- * Build a Gemini brief from the user's starred symbols (uses first symbol as
- * focus when a single star; otherwise a market brief constrained in the prompt
- * via the primary symbol + email lists all).
+ * Gemini brief for a user's watchlist symbols.
  */
 export async function generateWatchlistBriefForUser(
   db: Client,
@@ -64,7 +63,6 @@ export async function generateWatchlistBriefForUser(
     persist: true,
   });
 
-  // When multi-symbol, rewrite title/summary framing in email only.
   let emailed = false;
   if (options.sendEmail !== false && options.email) {
     const template = watchlistBriefEmailTemplate({
@@ -75,7 +73,7 @@ export async function generateWatchlistBriefForUser(
           : brief.summary,
       bullets: brief.bullets,
       symbols,
-      appUrl: process.env.APP_URL,
+      appUrl: appUrl(),
     });
     const result = await sendMail({
       to: options.email,

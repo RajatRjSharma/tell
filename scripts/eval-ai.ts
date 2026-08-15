@@ -1,9 +1,5 @@
 /**
- * Optional live AI eval.
- * Usage: TELL_AI_EVAL=1 npm run test:eval
- *
- * Requires Turso + GEMINI_API_KEY + GROQ_API_KEY.
- * Skips cleanly when TELL_AI_EVAL is unset.
+ * Live AI eval: TELL_AI_EVAL=1 npm run test:eval
  */
 import { resolve } from "node:path";
 import { config } from "dotenv";
@@ -21,7 +17,7 @@ config({ path: resolve(process.cwd(), ".env") });
 async function main() {
   if (process.env.CI === "true" && process.env.TELL_ALLOW_AI_IN_CI !== "1") {
     console.log(
-      "Skipping live AI eval in CI (protects free Gemini/Groq credits).",
+      "Skipping live AI eval in CI. Set TELL_ALLOW_AI_IN_CI=1 to override.",
     );
     return;
   }

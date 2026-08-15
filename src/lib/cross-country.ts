@@ -13,13 +13,8 @@ export type CrossCountryResult = {
 };
 
 /**
- * Prefer IMF DataMapper; fall back to World Bank when IMF blocks cloud IPs (403).
- * Indicator ids in Tell stay the same; readings.source records the provider used.
- *
- * CROSS_COUNTRY_PROVIDER / options.provider:
- * - auto (default): IMF → World Bank fallback
- * - imf: IMF only (for local `make ingest-manual`)
- * - worldbank: World Bank only
+ * Prefer IMF DataMapper; fall back to World Bank on 403.
+ * `CROSS_COUNTRY_PROVIDER`: auto | imf | worldbank
  */
 export async function fetchCrossCountryReadings(
   imfIndicatorCode: string,
