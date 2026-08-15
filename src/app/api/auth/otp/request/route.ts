@@ -56,9 +56,15 @@ export async function POST(request: Request) {
 
     const identityLimited = enforceAuthIdentityRateLimit(
       request,
-      `${email}:${username}`,
+      `otp:register:${email}`,
     );
     if (identityLimited) return identityLimited;
+
+    const usernameLimited = enforceAuthIdentityRateLimit(
+      request,
+      `otp:username:${username}`,
+    );
+    if (usernameLimited) return usernameLimited;
 
     const emailError = validateEmail(email);
     if (emailError) {

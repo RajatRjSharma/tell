@@ -102,11 +102,11 @@ Use the OTP endpoints below to create accounts.
 
 ### `POST /api/auth/login`
 
-Body: `email`, `password`, validated as above.
+Body: `identifier` (email or username) and `password`. Legacy `email` / `username` fields are still accepted as the identifier.
 
-Success: `{ user: { id, email } }` plus session cookie.
+Success: `{ user: { id, email, username } }` plus session cookie.
 
-Errors: 400 validation messages, 401 `Invalid email or password` for both unknown email and wrong password, 500 `Login failed`.
+Errors: 400 validation messages, 401 `Invalid email, username, or password` for both unknown accounts and wrong passwords, 500 `Login failed`.
 
 ### `POST /api/auth/logout`
 
@@ -114,7 +114,7 @@ No body. Clears the cookie and returns `{ ok: true }`.
 
 ### `GET /api/auth/me`
 
-Signed in: `{ user: { id, email } }`. Signed out: status 401 with `{ user: null }`, which is intentionally not an error shape.
+Cookie or Bearer session. Signed in: `{ user: { id, email, username } }`. Signed out: status 401 with `{ user: null }`, which is intentionally not an error shape.
 
 ### `GET /api/auth/config`
 
@@ -126,21 +126,23 @@ Public flags for the login/register UI (no auth):
 
 ### `POST /api/auth/otp/request`
 
-Body: `email`, optional `purpose` (default and only accepted value `register`).
+Body: `email`, `username`, optional `purpose` (default and only accepted value `register`).
 
 Code length comes from `OTP_LENGTH` (default 6, clamped 4 to 8) and lifetime from `OTP_EXPIRE_MINUTES` (default 10, clamped 5 to 60).
 
-Success: `{ ok: true, expiresAt, expireMinutes }`, plus `devCode` only when `TELL_OTP_DEV_ECHO=1`.
+Success: `{ ok: true, expiresAt, expireMinutes }`, plus `devCode` only when `TELL_OTP_DEV_ECHO=1` **and** the environment is not production-like.
 
-Errors: 400 `Enter a valid email address`, 400 `Unsupported purpose`, 403 `Registration is currently closed`, 409 `An account with this email already exists`, 429 auth rate limit, 503 `Email verification is disabled on this server`, 503 `Email delivery is not configured on this server`, 500 `Failed to send verification code`.
+Errors: 400 `Enter a valid email address`, 400 username validation, 400 `Unsupported purpose`, 403 `Registration is currently closed`, 409 email or username already taken, 429 auth rate limit, 503 `Email verification is disabled on this server`, 503 `Email delivery is not configured on this server`, 500 `Failed to send verification code`.
 
 ### `POST /api/auth/otp/verify`
 
-Body: `email`, `password`, `otp` matching `/^\d{4,8}$/`, optional `purpose`.
+Body: `email`, `username`, `password`, `confirmPassword`, `otp` matching `/^\d{4,8}$/`, optional `purpose`.
 
-Success 201: `{ user: { id, email } }`, code consumed, session cookie set.
+New passwords must be at least 12 characters with upper, lower, number, and special character. `confirmPassword` must match.
 
-Errors: 400 `Unsupported purpose`, 400 `Enter a valid email address`, 400 `Password must be at least 8 characters`, 400 `Enter the verification code from your email`, 400 `No verification code found. Request a new one.`, 400 `Too many attempts. Request a new code.` after 5 failures, 400 `Code expired. Request a new one.`, 400 `Invalid verification code.`, 403 `Registration is currently closed`, 409 `An account with this email already exists`, 429 auth rate limit, 503 `Email verification is disabled on this server`, 500 `Verification failed`.
+Success 201: `{ user: { id, email, username } }`, code consumed, session cookie set.
+
+Errors: 400 `Unsupported purpose`, 400 validation (email, username, password policy, confirm mismatch, OTP format), 400 `No verification code found. Request a new one.`, 400 `Too many attempts. Request a new code.` after 5 failures, 400 `Code expired. Request a new one.`, 400 `Invalid verification code.`, 403 `Registration is currently closed`, 409 email or username already taken, 429 auth rate limit, 503 `Email verification is disabled on this server`, 500 `Verification failed`.
 
 ## Market data and outlook
 

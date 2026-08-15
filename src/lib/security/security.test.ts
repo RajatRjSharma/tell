@@ -15,12 +15,16 @@ import {
   enforceBodySize,
   requireJsonContentType,
 } from "@/lib/security/request";
-import { jwtSecretStatus } from "@/lib/security/secrets";
+import {
+  jwtSecretStatus,
+  assertAuthConfigForProduction,
+} from "@/lib/security/secrets";
 import { hashOtp } from "@/lib/auth/otp";
 
 afterEach(() => {
   delete process.env.APP_ENV;
   delete process.env.OTP_PEPPER;
+  delete process.env.TELL_OTP_DEV_ECHO;
 });
 
 describe("csrf", () => {
@@ -161,6 +165,24 @@ describe("jwtSecretStatus", () => {
     expect(jwtSecretStatus().strong).toBe(true);
     if (prev === undefined) delete process.env.JWT_SECRET;
     else process.env.JWT_SECRET = prev;
+  });
+});
+
+describe("assertAuthConfigForProduction", () => {
+  it("blocks OTP echo in production-like environments", () => {
+    const prevEnv = process.env.APP_ENV;
+    const prevEcho = process.env.TELL_OTP_DEV_ECHO;
+    const prevSecret = process.env.JWT_SECRET;
+    process.env.APP_ENV = "production";
+    process.env.JWT_SECRET = "unit-test-jwt-secret-at-least-32-chars!!";
+    process.env.TELL_OTP_DEV_ECHO = "1";
+    expect(() => assertAuthConfigForProduction()).toThrow(/TELL_OTP_DEV_ECHO/);
+    if (prevEnv === undefined) delete process.env.APP_ENV;
+    else process.env.APP_ENV = prevEnv;
+    if (prevEcho === undefined) delete process.env.TELL_OTP_DEV_ECHO;
+    else process.env.TELL_OTP_DEV_ECHO = prevEcho;
+    if (prevSecret === undefined) delete process.env.JWT_SECRET;
+    else process.env.JWT_SECRET = prevSecret;
   });
 });
 

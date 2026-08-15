@@ -6,7 +6,6 @@ test.describe("watchlist", () => {
 
   test("star a symbol, filter watchlist, then remove", async ({ page }) => {
     const email = `e2e.watch.${Date.now()}@tell.test`;
-
     await registerUser(page, email);
 
     await page.getByTestId("asset-filter").selectOption("all");

@@ -74,4 +74,38 @@ describe("session JWT", () => {
 
     expect(await verifySession(token)).toBeNull();
   });
+
+  it("rejects tokens missing username instead of inventing one", async () => {
+    process.env.JWT_ISSUER = "tell";
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET!);
+    const token = await new SignJWT({
+      email: "a@b.com",
+      type: "session",
+    })
+      .setProtectedHeader({ alg: "HS256" })
+      .setSubject("user-1")
+      .setIssuer("tell")
+      .setIssuedAt()
+      .setExpirationTime("1h")
+      .sign(secret);
+
+    expect(await verifySession(token)).toBeNull();
+  });
+
+  it("rejects tokens missing the session type claim", async () => {
+    process.env.JWT_ISSUER = "tell";
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET!);
+    const token = await new SignJWT({
+      email: "a@b.com",
+      username: "alice",
+    })
+      .setProtectedHeader({ alg: "HS256" })
+      .setSubject("user-1")
+      .setIssuer("tell")
+      .setIssuedAt()
+      .setExpirationTime("1h")
+      .sign(secret);
+
+    expect(await verifySession(token)).toBeNull();
+  });
 });

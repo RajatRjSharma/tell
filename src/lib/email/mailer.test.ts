@@ -28,7 +28,6 @@ function configureSmtp() {
 
 afterEach(() => {
   vi.clearAllMocks();
-  delete process.env.TEST_MODE;
   delete process.env.APP_ENV;
   delete process.env.EMAIL_DELIVERY_ENABLED;
   delete process.env.SMTP_HOST;
@@ -40,25 +39,6 @@ afterEach(() => {
 });
 
 describe("sendMail", () => {
-  it("never creates an SMTP transport in test mode", async () => {
-    process.env.TEST_MODE = "1";
-    configureSmtp();
-
-    const result = await sendMail({
-      to: "recipient@example.test",
-      subject: "Test",
-      html: "<p>Test</p>",
-      text: "Test",
-    });
-
-    expect(result).toEqual({
-      sent: false,
-      skipped: "Email disabled in test mode",
-    });
-    expect(createTransportMock).not.toHaveBeenCalled();
-    expect(sendMailMock).not.toHaveBeenCalled();
-  });
-
   it("skips send when EMAIL_DELIVERY_ENABLED is off", async () => {
     process.env.EMAIL_DELIVERY_ENABLED = "false";
     configureSmtp();

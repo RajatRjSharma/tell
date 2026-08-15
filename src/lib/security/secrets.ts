@@ -43,3 +43,11 @@ export function assertJwtSecretForProduction(): void {
     throw new Error(status.message);
   }
 }
+
+/** Fail closed on production misconfiguration (weak JWT, OTP echo). */
+export function assertAuthConfigForProduction(): void {
+  assertJwtSecretForProduction();
+  if (isProductionLike() && process.env.TELL_OTP_DEV_ECHO === "1") {
+    throw new Error("TELL_OTP_DEV_ECHO must not be enabled in production");
+  }
+}

@@ -6,13 +6,17 @@ import {
   briefRateLimitPerMinute,
   chatRateLimitPerMinute,
   emailOtpEnabled,
+  isProductionLike,
   jwtIssuer,
+  liveMarketQuotesEnabled,
+  otpDevEchoEnabled,
   registrationEnabled,
   sessionCookieSameSite,
   sessionExpireDays,
 } from "@/lib/config";
 
 const KEYS = [
+  "APP_ENV",
   "APP_URL",
   "REGISTRATION_ENABLED",
   "EMAIL_OTP_ENABLED",
@@ -23,6 +27,8 @@ const KEYS = [
   "BRIEF_RATE_LIMIT_PER_MINUTE",
   "CHAT_RATE_LIMIT_PER_MINUTE",
   "API_RATE_LIMIT_PER_MINUTE",
+  "LIVE_MARKET_QUOTES",
+  "TELL_OTP_DEV_ECHO",
 ] as const;
 
 afterEach(() => {
@@ -72,5 +78,22 @@ describe("config", () => {
     expect(jwtIssuer()).toBe("tell");
     process.env.JWT_ISSUER = " tell-prod ";
     expect(jwtIssuer()).toBe("tell-prod");
+  });
+
+  it("defaults live market quotes on and respects overrides", () => {
+    expect(liveMarketQuotesEnabled()).toBe(true);
+    process.env.LIVE_MARKET_QUOTES = "false";
+    expect(liveMarketQuotesEnabled()).toBe(false);
+  });
+
+  it("treats APP_ENV as deploy stage over NODE_ENV build mode", () => {
+    process.env.APP_ENV = "test";
+    process.env.TELL_OTP_DEV_ECHO = "1";
+    expect(isProductionLike()).toBe(false);
+    expect(otpDevEchoEnabled()).toBe(true);
+
+    process.env.APP_ENV = "production";
+    expect(isProductionLike()).toBe(true);
+    expect(otpDevEchoEnabled()).toBe(false);
   });
 });

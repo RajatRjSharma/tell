@@ -14,6 +14,7 @@ playwright-report/
 test-results/
 blob-report/
 .tmp/
+e2e/.auth/
 
 
 # next.js

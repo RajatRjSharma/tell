@@ -11,7 +11,6 @@ afterEach(() => {
   resetRateLimits();
   delete process.env.API_RATE_LIMIT_PER_MINUTE;
   delete process.env.AUTH_RATE_LIMIT_PER_MINUTE;
-  delete process.env.TEST_MODE;
 });
 
 describe("clientKey", () => {
@@ -60,18 +59,6 @@ describe("enforceRateLimit", () => {
     const blocked = enforceRateLimit(req);
     expect(blocked?.status).toBe(429);
   });
-
-  it("skips limits when TEST_MODE is enabled", () => {
-    process.env.TEST_MODE = "1";
-    process.env.API_RATE_LIMIT_PER_MINUTE = "1";
-    const req = new Request("http://localhost/api/outlook", {
-      headers: { "x-forwarded-for": "203.0.113.10" },
-    });
-
-    expect(enforceRateLimit(req)).toBeNull();
-    expect(enforceRateLimit(req)).toBeNull();
-    expect(enforceRateLimit(req)).toBeNull();
-  });
 });
 
 describe("enforceAuthIdentityRateLimit", () => {
@@ -94,14 +81,5 @@ describe("enforceAuthIdentityRateLimit", () => {
     expect(enforceAuthIdentityRateLimit(req, "user@example.com")).toBeNull();
     const blocked = enforceAuthIdentityRateLimit(req, "USER@example.com");
     expect(blocked?.status).toBe(429);
-  });
-
-  it("skips identity limits when TEST_MODE is enabled", () => {
-    process.env.TEST_MODE = "1";
-    process.env.AUTH_RATE_LIMIT_PER_MINUTE = "1";
-    const req = new Request("http://localhost/api/auth/login");
-
-    expect(enforceAuthIdentityRateLimit(req, "same@tell.test")).toBeNull();
-    expect(enforceAuthIdentityRateLimit(req, "same@tell.test")).toBeNull();
   });
 });

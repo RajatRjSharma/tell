@@ -6,7 +6,6 @@ test.describe("alerts", () => {
 
   test("create direction-change rule for watched symbol", async ({ page }) => {
     const email = `e2e.alert.${Date.now()}@tell.test`;
-
     await registerUser(page, email);
 
     await page.getByTestId("asset-filter").selectOption("all");

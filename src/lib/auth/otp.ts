@@ -5,6 +5,7 @@ import {
   timingSafeEqual,
 } from "node:crypto";
 import type { Client } from "@libsql/client";
+import { isProductionLike } from "@/lib/config";
 
 export type OtpPurpose = "register";
 
@@ -21,11 +22,14 @@ export function otpExpireMinutes(): number {
 }
 
 function otpPepper(): string {
-  return (
-    process.env.OTP_PEPPER?.trim() ||
-    process.env.JWT_SECRET?.trim() ||
-    "tell-otp-dev-pepper"
-  );
+  const pepper =
+    process.env.OTP_PEPPER?.trim() || process.env.JWT_SECRET?.trim() || "";
+  if (pepper) return pepper;
+  if (isProductionLike()) {
+    throw new Error("OTP_PEPPER or JWT_SECRET is required");
+  }
+  // Local/dev only — never used when APP_ENV is production-like.
+  return "tell-otp-dev-pepper";
 }
 
 export function generateOtpCode(): string {

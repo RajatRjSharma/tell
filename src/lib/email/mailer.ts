@@ -54,11 +54,7 @@ export function isSmtpConfigured(): boolean {
 }
 
 export function isEmailDeliveryAvailable(): boolean {
-  return (
-    process.env.TEST_MODE !== "1" &&
-    isEmailDeliveryEnabled() &&
-    isSmtpConfigured()
-  );
+  return isEmailDeliveryEnabled() && isSmtpConfigured();
 }
 
 function validateMessage(options: {
@@ -95,9 +91,6 @@ export async function sendMail(options: {
   html: string;
   text: string;
 }): Promise<{ sent: boolean; skipped?: string }> {
-  if (process.env.TEST_MODE === "1") {
-    return { sent: false, skipped: "Email disabled in test mode" };
-  }
   if (!isEmailDeliveryEnabled()) {
     return { sent: false, skipped: "Email delivery disabled" };
   }

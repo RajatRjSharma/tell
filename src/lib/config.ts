@@ -25,12 +25,14 @@ export function appEnv(): string {
 }
 
 export function isProductionLike(): boolean {
-  const env = appEnv().toLowerCase();
-  return (
-    env === "production" ||
-    env === "prod" ||
-    process.env.NODE_ENV === "production"
-  );
+  // Prefer APP_ENV when set so `next start` (NODE_ENV=production) can still run
+  // as local/test without production auth/email rules.
+  const raw = process.env.APP_ENV?.trim();
+  if (raw) {
+    const env = raw.toLowerCase();
+    return env === "production" || env === "prod";
+  }
+  return process.env.NODE_ENV === "production";
 }
 
 export function appUrl(): string {
@@ -51,7 +53,14 @@ export function emailOtpEnabled(): boolean {
 }
 
 export function otpDevEchoEnabled(): boolean {
+  // Never echo OTPs in production, even if the env flag is set by mistake.
+  if (isProductionLike()) return false;
   return process.env.TELL_OTP_DEV_ECHO === "1";
+}
+
+/** Live Finnhub/Yahoo quote fetches. Off in CI/e2e so tests use seeded data only. */
+export function liveMarketQuotesEnabled(): boolean {
+  return envFlag("LIVE_MARKET_QUOTES", true);
 }
 
 export function sessionExpireDays(): number {

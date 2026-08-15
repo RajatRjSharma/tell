@@ -1,3 +1,5 @@
+import { liveMarketQuotesEnabled } from "@/lib/config";
+
 export type Quote = {
   symbol: string;
   price: number;
@@ -116,7 +118,7 @@ export async function fetchLiveQuote(
   yahooSymbol: string,
   options?: { fetchImpl?: typeof fetch; apiKey?: string },
 ): Promise<Quote | null> {
-  if (process.env.TEST_MODE === "1") return null;
+  if (!liveMarketQuotesEnabled()) return null;
 
   const fh = await fetchFinnhubQuote(tellSymbol, options);
   if (fh) return fh;

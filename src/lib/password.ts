@@ -93,6 +93,10 @@ export async function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, BCRYPT_ROUNDS);
 }
 
+/** Fixed bcrypt hash used only to equalize login timing on unknown accounts. */
+const LOGIN_TIMING_PAD_HASH =
+  "$2b$12$zqJkyXbMFT66kxw4OHYSpughm7vZFGHQjqAY4GlPdQFERm9.PS9xu";
+
 export async function verifyPassword(
   password: string,
   passwordHash: string,
@@ -101,4 +105,16 @@ export async function verifyPassword(
     return false;
   }
   return bcrypt.compare(password, passwordHash);
+}
+
+/** Compare against a real hash, or burn the same bcrypt work on a miss. */
+export async function verifyPasswordOrPad(
+  password: string,
+  passwordHash: string | null | undefined,
+): Promise<boolean> {
+  if (!passwordHash) {
+    await verifyPassword(password, LOGIN_TIMING_PAD_HASH);
+    return false;
+  }
+  return verifyPassword(password, passwordHash);
 }

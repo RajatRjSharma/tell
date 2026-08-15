@@ -68,6 +68,7 @@ Data providers:
 | -------- | ------- |
 | `FRED_API_KEY` | US macro ingest |
 | `FINNHUB_API_KEY` | Live quotes, optional |
+| `LIVE_MARKET_QUOTES` | Finnhub/Yahoo fetches (default true; set false in e2e) |
 
 AI, local use only:
 
@@ -150,8 +151,11 @@ Never commit `.env`. If a credential is exposed, revoke it at the provider befor
 `make help` prints the same list from target comments.
 
 Playwright tests are isolated from real infrastructure: they create
-`.tmp/playwright.db`, blank SMTP/provider keys, and set `TEST_MODE=1`. Do not
-add production secrets to the CI e2e job.
+`.tmp/playwright.db`, blank SMTP/provider keys, set
+`EMAIL_DELIVERY_ENABLED=false` and `LIVE_MARKET_QUOTES=false`, raise rate-limit
+ceilings (limits still enforced), and reuse one signed-in `storageState` for
+read-only product UI specs. Mutating flows (watchlist/alerts) register their
+own users. Do not add production secrets to the CI e2e job.
 
 ## Scheduled pipeline
 

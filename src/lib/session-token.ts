@@ -43,12 +43,10 @@ export async function verifySession(
     });
     const sub = payload.sub;
     const email = payload.email;
+    const username = payload.username;
     if (typeof sub !== "string" || typeof email !== "string") return null;
-    if (payload.type != null && payload.type !== "session") return null;
-    const username =
-      typeof payload.username === "string" && payload.username.length > 0
-        ? payload.username
-        : (email.split("@")[0] ?? "user");
+    if (typeof username !== "string" || username.length === 0) return null;
+    if (payload.type !== "session") return null;
     return { sub, email, username };
   } catch {
     return null;

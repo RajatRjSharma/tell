@@ -1,9 +1,14 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   fetchFinnhubQuote,
+  fetchLiveQuote,
   fetchYahooQuote,
   toFinnhubQuoteSymbol,
 } from "@/lib/quotes";
+
+afterEach(() => {
+  delete process.env.LIVE_MARKET_QUOTES;
+});
 
 describe("toFinnhubQuoteSymbol", () => {
   it("skips FX on free tier", () => {
@@ -54,5 +59,18 @@ describe("fetchYahooQuote", () => {
     });
     expect(q?.price).toBe(50);
     expect(q?.source).toBe("yahoo");
+  });
+});
+
+describe("fetchLiveQuote", () => {
+  it("skips outbound fetches when LIVE_MARKET_QUOTES is off", async () => {
+    process.env.LIVE_MARKET_QUOTES = "false";
+    const fetchImpl = vi.fn();
+    const q = await fetchLiveQuote("SPY", "SPY", {
+      apiKey: "test",
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+    });
+    expect(q).toBeNull();
+    expect(fetchImpl).not.toHaveBeenCalled();
   });
 });

@@ -62,7 +62,7 @@ Every authenticated route resolves the user from the verified token subject, so 
 
 ## Development shortcut
 
-Setting `TELL_OTP_DEV_ECHO=1` makes `POST /api/auth/otp/request` return the code as `devCode`, and the registration form fills it automatically. This keeps local development and Playwright runs working without SMTP; `playwright.config.ts` sets it for the test server. Never enable it in production, because it hands the verification code to any caller.
+Setting `TELL_OTP_DEV_ECHO=1` makes `POST /api/auth/otp/request` return the code as `devCode`, and the registration form fills it automatically. This keeps local development and Playwright runs working without SMTP; `playwright.config.ts` sets it for the test server. Production-like environments ignore the flag and refuse to boot if it is set.
 
 ## SMTP configuration
 
@@ -81,7 +81,7 @@ Configuration is read at send time in `src/lib/email/mailer.ts`:
 
 Transport rules: `secure` is enabled on port 465; other ports require STARTTLS. Production-like environments cannot disable TLS. Connections use bounded connect, greeting, and socket timeouts, require TLS 1.2 or newer, and verify certificates. Recipient/subject validation blocks header injection and oversized message bodies. If configuration is missing or delivery is switched off, `sendMail` returns a skipped result instead of throwing, so alert evaluation still records inbox entries.
 
-`TEST_MODE=1` is a hard delivery block. Playwright does not load `.env`: it creates a disposable local libSQL database, blanks all provider/SMTP keys, and obtains OTPs through the local-only echo path. CI therefore needs no production SMTP, Turso, or AI secrets.
+`EMAIL_DELIVERY_ENABLED=false` stops outbound mail. Playwright does not load `.env`: it creates a disposable local libSQL database, blanks provider/SMTP keys, disables delivery and live quotes via explicit flags, and obtains OTPs through the local-only echo path. CI therefore needs no production SMTP, Turso, or AI secrets.
 
 Gmail specifics: use an app password from an account with two-factor authentication, host `smtp.gmail.com`, port 587. Treat the app password as a secret; if it is ever committed or pasted into a chat, revoke it in the Google account and issue a new one.
 
@@ -124,7 +124,7 @@ TELL_OTP_DEV_ECHO=1 npm run dev
 # 2. Real delivery: request a code from the running app
 curl -s -X POST http://localhost:3000/api/auth/otp/request \
   -H 'content-type: application/json' \
-  -d '{"email":"you@example.com"}'
+  -d '{"email":"you@example.com","username":"you","purpose":"register"}'
 
 # 3. Alert email path
 npm run compute:alerts     # look for emailed=N in the output
@@ -137,6 +137,6 @@ If step 2 returns 503, SMTP is incomplete. If it returns 500, the credentials or
 1. Set `JWT_SECRET` to a fresh random value of at least 32 characters.
 2. Set all five SMTP variables plus `APP_URL` in the hosting provider.
 3. Leave `TELL_OTP_DEV_ECHO` unset.
-4. Leave `TEST_MODE` unset and set `EMAIL_DELIVERY_ENABLED=true`.
+4. Set `EMAIL_DELIVERY_ENABLED=true` and leave `LIVE_MARKET_QUOTES` on (default).
 5. Confirm SPF, DKIM, and DMARC for the sender domain (or a valid Gmail app password).
 6. If credentials ever leak, revoke first and redeploy with replacements.

@@ -6,7 +6,7 @@ import {
   normalizeEmail,
   normalizeUsername,
   validateLoginCredentials,
-  verifyPassword,
+  verifyPasswordOrPad,
 } from "@/lib/password";
 
 export async function POST(request: Request) {
@@ -51,15 +51,9 @@ export async function POST(request: Request) {
     });
 
     const row = result.rows[0];
-    if (!row) {
-      return NextResponse.json(
-        { error: "Invalid email, username, or password" },
-        { status: 401 },
-      );
-    }
-
-    const ok = await verifyPassword(password, String(row.password_hash));
-    if (!ok) {
+    const passwordHash = row ? String(row.password_hash) : null;
+    const ok = await verifyPasswordOrPad(password, passwordHash);
+    if (!row || !ok) {
       return NextResponse.json(
         { error: "Invalid email, username, or password" },
         { status: 401 },
@@ -68,7 +62,12 @@ export async function POST(request: Request) {
 
     const id = String(row.id);
     const email = String(row.email);
-    const username = String(row.username ?? email.split("@")[0] ?? "user");
+    const username = String(row.username ?? "").trim();
+    if (!username) {
+      console.error("login error: user missing username", { id, email });
+      return NextResponse.json({ error: "Login failed" }, { status: 500 });
+    }
+
     const token = await signSession({ sub: id, email, username });
     await setSessionCookie(token);
 

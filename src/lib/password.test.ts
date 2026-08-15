@@ -7,6 +7,7 @@ import {
   validateRegisterCredentials,
   validateUsername,
   verifyPassword,
+  verifyPasswordOrPad,
 } from "@/lib/password";
 
 describe("normalizeEmail", () => {
@@ -117,5 +118,12 @@ describe("password hashing", () => {
     expect(hash).not.toBe("password123");
     expect(await verifyPassword("password123", hash)).toBe(true);
     expect(await verifyPassword("wrong-password", hash)).toBe(false);
+  });
+
+  it("pads unknown-account verification with bcrypt work", async () => {
+    expect(await verifyPasswordOrPad("password123", null)).toBe(false);
+    const hash = await hashPassword("password123");
+    expect(await verifyPasswordOrPad("password123", hash)).toBe(true);
+    expect(await verifyPasswordOrPad("wrong-password", hash)).toBe(false);
   });
 });

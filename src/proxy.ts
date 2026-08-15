@@ -15,6 +15,15 @@ import {
   newRequestId,
   requireJsonContentType,
 } from "@/lib/security/request";
+import { assertAuthConfigForProduction } from "@/lib/security/secrets";
+
+let productionAuthChecked = false;
+
+function ensureProductionAuthConfig() {
+  if (productionAuthChecked) return;
+  productionAuthChecked = true;
+  assertAuthConfigForProduction();
+}
 
 function withCommonHeaders(
   response: NextResponse,
@@ -43,6 +52,7 @@ function loginRedirect(request: NextRequest): NextResponse {
 }
 
 export async function proxy(request: NextRequest) {
+  ensureProductionAuthConfig();
   const requestId = newRequestId();
 
   if (!request.nextUrl.pathname.startsWith("/api/")) {
