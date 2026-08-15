@@ -13,9 +13,16 @@ Global activity → market outlook research platform.
 
 ```bash
 cp .env.example .env   # fill secrets
+make setup             # install + migrate + seed
+make dev
+```
+
+Or with npm:
+
+```bash
 npm install
-npm run db:migrate     # apply Turso schema
-npm run db:seed        # seed countries, indicators, assets
+npm run db:migrate
+npm run db:seed
 npm run dev
 ```
 
@@ -24,11 +31,12 @@ Never commit `.env`.
 ## Quality
 
 ```bash
-npm run lint
-npm run format:check
-npm run typecheck
-npm run test
-npm run ci          # lint + format + types + test + build
+make lint
+make format-check
+make typecheck
+make test
+make ci                # lint + format + types + test + build
+make help              # list all make targets
 ```
 
 CI runs on every push/PR to `main` via GitHub Actions.
