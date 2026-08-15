@@ -83,7 +83,7 @@ compute-features: ## Compute macro/market features + US regime snapshot
 compute-signals: ## Score 1d/1w/1m (or custom) outlooks into Turso signals
 	npm run compute:signals
 
-compute-briefs: ## Generate Gemini briefs into Turso research_briefs
+compute-briefs: ## Local-only Gemini briefs → Turso (blocked in CI)
 	npm run compute:briefs
 
 setup: install install-browsers db-migrate db-seed ## Install deps + browsers + migrate + seed

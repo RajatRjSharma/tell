@@ -48,9 +48,5 @@ jobs:
       - name: Compute signals
         run: npm run compute:signals
 
-      - name: Compute Gemini briefs
-        run: npm run compute:briefs
-        env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          BRIEF_HORIZONS: 1d,1w,1m
-          BRIEF_DELAY_MS: "500"
+      # Intentionally no Gemini/Groq steps here.
+      # Free AI credits stay local-only: `make compute-briefs` / `TELL_AI_EVAL=1 make test-eval`

@@ -19,6 +19,13 @@ import {
 config({ path: resolve(process.cwd(), ".env") });
 
 async function main() {
+  if (process.env.CI === "true" && process.env.TELL_ALLOW_AI_IN_CI !== "1") {
+    console.log(
+      "Skipping live AI eval in CI (protects free Gemini/Groq credits).",
+    );
+    return;
+  }
+
   if (process.env.TELL_AI_EVAL !== "1") {
     console.log("Skipping live AI eval (set TELL_AI_EVAL=1 to run).");
     return;

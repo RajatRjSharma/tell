@@ -157,13 +157,15 @@ Without keys, endpoints return `503` and the UI shows a soft unavailable state.
 
 Dashboard: evidence panel includes a **Gemini brief** with vs-prior delta; header **Ask Tell** opens Groq chat.
 
-Daily Actions ingest also runs `compute:signals`, then `compute:briefs` when `GEMINI_API_KEY` is set as a repo secret.
-
-Offline AI evals run with unit tests (`src/lib/ai/eval*`). Optional live eval:
+Daily Actions ingest runs data + `compute:signals` only.
+Do **not** add `GEMINI_API_KEY` / `GROQ_API_KEY` to GitHub Actions secrets — briefs and live evals are local-only so free credits are not burned in CI.
 
 ```bash
-TELL_AI_EVAL=1 make test-eval
+make compute-briefs                 # local Gemini brief refresh → Turso
+TELL_AI_EVAL=1 make test-eval       # local live AI eval
 ```
+
+Offline AI evals (mocked, no API keys) still run in `npm test`.
 
 After pulling schema changes:
 

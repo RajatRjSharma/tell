@@ -12,7 +12,17 @@ function sleep(ms: number) {
   return new Promise((resolveSleep) => setTimeout(resolveSleep, ms));
 }
 
+function assertAiAllowedOutsideCi(task: string) {
+  if (process.env.CI === "true" && process.env.TELL_ALLOW_AI_IN_CI !== "1") {
+    throw new Error(
+      `Refusing to run ${task} in CI (protects free Gemini/Groq credits). Run locally instead.`,
+    );
+  }
+}
+
 async function main() {
+  assertAiAllowedOutsideCi("compute-briefs");
+
   const url = process.env.TURSO_DATABASE_URL;
   const authToken = process.env.TURSO_AUTH_TOKEN;
   if (!url || !authToken) {
