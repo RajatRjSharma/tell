@@ -50,7 +50,23 @@ make compute-features   # US macro + market features + regime snapshot from Turs
 ```
 
 Optional: `FEATURE_AS_OF=2024-06-01` or `FEATURE_SYMBOLS=SPY,TLT,GLD` in the environment.
-Pure TypeScript transforms (no ML). Used as inputs for the upcoming signal engine.
+Pure TypeScript transforms (no ML). Used as inputs for the signal engine.
+
+## Signals
+
+```bash
+make compute-signals   # Write bullish/neutral/bearish outlooks to Turso
+```
+
+Defaults: horizons `1d,1w,1m` (≈ 1 / 5 / 21 trading sessions). Custom day horizons:
+
+```bash
+SIGNAL_HORIZONS=1d,1w,1m,10d,60d make compute-signals
+```
+
+Hourly horizons are not supported yet (daily bars only). Near-real-time **last price**
+overlay uses Finnhub quote when `FINNHUB_API_KEY` is set, else Yahoo — printed by
+`compute-signals` for context; scores still use daily features.
 
 ## Daily ingest (GitHub Actions)
 

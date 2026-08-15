@@ -23,7 +23,8 @@
     "ingest:fred": "tsx scripts/ingest-fred.ts",
     "ingest:imf": "tsx scripts/ingest-imf.ts",
     "ingest:markets": "tsx scripts/ingest-markets.ts",
-    "compute:features": "tsx scripts/compute-features.ts"
+    "compute:features": "tsx scripts/compute-features.ts",
+    "compute:signals": "tsx scripts/compute-signals.ts"
   },
   "dependencies": {
     "@libsql/client": "^0.17.4",
