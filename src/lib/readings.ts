@@ -3,6 +3,16 @@ import type { ParsedReading } from "@/lib/fred";
 
 export const CURRENT_VINTAGE = "current";
 
+/** Prefer true IMF WEO over World Bank substitutes when both exist. */
+export function shouldReplaceReadingSource(
+  existingSource: string | null | undefined,
+  incomingSource: string,
+): boolean {
+  if (incomingSource === "IMF") return true;
+  if (existingSource === "IMF" && incomingSource === "WorldBank") return false;
+  return true;
+}
+
 export type ReadingUpsert = {
   countryCode: string;
   indicatorId: string;
@@ -53,6 +63,7 @@ export async function upsertReadings(
       row.source,
     ]);
 
+    // Do not let World Bank overwrite existing IMF WEO rows after a manual refresh.
     await db.execute({
       sql: `INSERT INTO readings (
               country_code, indicator_id, observed_for, value,
@@ -63,7 +74,10 @@ export async function upsertReadings(
               value = excluded.value,
               released_at = excluded.released_at,
               source = excluded.source,
-              fetched_at = datetime('now')`,
+              fetched_at = datetime('now')
+            WHERE excluded.source = 'IMF'
+               OR readings.source IS NULL
+               OR readings.source != 'IMF'`,
       args,
     });
 

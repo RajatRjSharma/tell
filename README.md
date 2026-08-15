@@ -37,8 +37,8 @@ make ingest-manual     # IMF DataMapper cross-country (run on your machine)
 make ingest-all        # FRED + IMF (manual) + markets locally
 ```
 
-`make ingest-manual` is for sources GitHub Actions cannot reach reliably (IMF DataMapper
-returns 403 from cloud IPs). Run it whenever you want — daily, weekly, or after WEO updates.
+`make ingest-manual` pulls **true IMF WEO** when you can (DataMapper is often blocked
+from GitHub cloud IPs). Run it whenever you want — daily, weekly, or after WEO updates.
 Requires `.env` with Turso credentials (no IMF API key).
 
 Optional: set `FRED_OBSERVATION_START`, `IMF_MIN_YEAR`, or `MARKET_OBSERVATION_START=2023-01-01` in `.env`.
@@ -48,8 +48,9 @@ Optional: set `FRED_OBSERVATION_START`, `IMF_MIN_YEAR`, or `MARKET_OBSERVATION_S
 Workflow: `.github/workflows/ingest.yml`
 
 - Runs daily at **06:00 UTC** and on **Actions → Daily ingest → Run workflow**
-- Upserts **FRED + Yahoo markets** into Turso
-- Does **not** run IMF (use `make ingest-manual` locally so Actions cannot overwrite WEO with substitutes)
+- Upserts **FRED → cross-country (IMF, else World Bank) → Yahoo markets**
+- If you miss `make ingest-manual`, Actions still fills cross-country via World Bank
+- If you *did* run manual IMF, later World Bank runs **do not overwrite** those WEO rows
 
 Repo secrets (Settings → Secrets and variables → Actions):
 

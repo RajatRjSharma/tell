@@ -37,8 +37,10 @@ jobs:
         env:
           FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
 
-      # IMF DataMapper is often 403 from GitHub cloud IPs.
-      # Run cross-country locally: `make ingest-manual`
+      # IMF DataMapper is often 403 from GitHub cloud IPs → World Bank fallback.
+      # Manual `make ingest-manual` writes true IMF; upserts preserve IMF over World Bank.
+      - name: Ingest cross-country (IMF / World Bank)
+        run: npm run ingest:imf
 
       - name: Ingest markets (Yahoo)
         run: npm run ingest:markets
