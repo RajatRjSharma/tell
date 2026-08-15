@@ -21,7 +21,8 @@
     "db:migrate": "tsx scripts/migrate.ts",
     "db:seed": "tsx scripts/seed.ts",
     "ingest:fred": "tsx scripts/ingest-fred.ts",
-    "ingest:imf": "tsx scripts/ingest-imf.ts"
+    "ingest:imf": "tsx scripts/ingest-imf.ts",
+    "ingest:markets": "tsx scripts/ingest-markets.ts"
   },
   "dependencies": {
     "@libsql/client": "^0.17.4",

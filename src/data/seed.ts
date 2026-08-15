@@ -151,8 +151,8 @@ export const indicators = [
 ] as const;
 
 /**
- * Assets: Finnhub-friendly ETFs/FX for free-tier reliability.
- * source_symbol is what the market API expects.
+ * Assets: Yahoo Finance daily OHLC (Finnhub free tier blocks candles).
+ * source_symbol is the Yahoo ticker (FX uses =X pairs).
  */
 export const assets = [
   {
@@ -201,7 +201,7 @@ export const assets = [
     asset_class: "fx",
     country_code: "DE",
     currency: "USD",
-    source_symbol: "OANDA:EUR_USD",
+    source_symbol: "EURUSD=X",
   },
   {
     symbol: "GBPUSD",
@@ -209,7 +209,7 @@ export const assets = [
     asset_class: "fx",
     country_code: "GB",
     currency: "USD",
-    source_symbol: "OANDA:GBP_USD",
+    source_symbol: "GBPUSD=X",
   },
   {
     symbol: "USDJPY",
@@ -217,7 +217,7 @@ export const assets = [
     asset_class: "fx",
     country_code: "JP",
     currency: "JPY",
-    source_symbol: "OANDA:USD_JPY",
+    source_symbol: "USDJPY=X",
   },
   {
     symbol: "GLD",
