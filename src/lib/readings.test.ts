@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { CURRENT_VINTAGE, toReadingUpserts } from "@/lib/readings";
+import {
+  CURRENT_VINTAGE,
+  shouldReplaceReadingSource,
+  toReadingUpserts,
+} from "@/lib/readings";
 
 describe("toReadingUpserts", () => {
   it("maps parsed rows to US FRED upsert shape", () => {
@@ -17,5 +21,16 @@ describe("toReadingUpserts", () => {
         vintage: CURRENT_VINTAGE,
       },
     ]);
+  });
+});
+
+describe("shouldReplaceReadingSource", () => {
+  it("lets IMF overwrite anything and blocks World Bank from overwriting IMF", () => {
+    expect(shouldReplaceReadingSource("WorldBank", "IMF")).toBe(true);
+    expect(shouldReplaceReadingSource("IMF", "IMF")).toBe(true);
+    expect(shouldReplaceReadingSource("IMF", "WorldBank")).toBe(false);
+    expect(shouldReplaceReadingSource("WorldBank", "WorldBank")).toBe(true);
+    expect(shouldReplaceReadingSource(null, "WorldBank")).toBe(true);
+    expect(shouldReplaceReadingSource("FRED", "FRED")).toBe(true);
   });
 });
