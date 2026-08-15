@@ -150,6 +150,12 @@ Without keys, endpoints return `503` and the UI shows a soft unavailable state.
 
 Dashboard: evidence panel includes a **Gemini brief**; header **Ask Tell** opens Groq chat.
 
+Offline AI evals run with unit tests (`src/lib/ai/eval*`). Optional live eval:
+
+```bash
+TELL_AI_EVAL=1 make test-eval
+```
+
 ## Disclaimer
 
 Not financial advice. Research tool only.

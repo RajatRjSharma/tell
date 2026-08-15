@@ -1,4 +1,4 @@
-.PHONY: help install install-browsers dev build start lint lint-fix format format-check typecheck test test-watch test-coverage test-e2e test-e2e-ui ci db-migrate db-seed ingest-fred ingest-imf ingest-markets ingest-manual ingest-all compute-features compute-signals setup
+.PHONY: help install install-browsers dev build start lint lint-fix format format-check typecheck test test-watch test-coverage test-eval test-e2e test-e2e-ui ci db-migrate db-seed ingest-fred ingest-imf ingest-markets ingest-manual ingest-all compute-features compute-signals setup
 
 help: ## Show available commands
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-16s\033[0m %s\n", $$1, $$2}'
@@ -41,6 +41,9 @@ test-watch: ## Run tests in watch mode
 
 test-coverage: ## Run tests with coverage
 	npm run test:coverage
+
+test-eval: ## Optional live Gemini/Groq eval (requires TELL_AI_EVAL=1 + API keys)
+	TELL_AI_EVAL=1 npm run test:eval
 
 test-e2e: ## Run Playwright e2e tests
 	npm run test:e2e
