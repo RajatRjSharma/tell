@@ -45,17 +45,24 @@ function hitPct(value: number | null): string {
   return `${Math.round(value * 100)}%`;
 }
 
-export function EventImpactPanel({ symbol }: { symbol?: string }) {
+export function EventImpactPanel({
+  symbol,
+  enabled = true,
+}: {
+  symbol?: string;
+  enabled?: boolean;
+}) {
   const [sentiment, setSentiment] = useState<"any" | "hawkish" | "dovish">(
     "any",
   );
   const [result, setResult] = useState<ImpactState | null>(null);
   const requestKey = `${symbol ?? "market"}:${sentiment}`;
   const active = result?.key === requestKey ? result : null;
-  const state = active ? active.status : "loading";
+  const state = !enabled ? "auth" : active ? active.status : "loading";
   const report = active?.report ?? null;
 
   useEffect(() => {
+    if (!enabled) return;
     const controller = new AbortController();
     const params = new URLSearchParams({
       sentiment,
@@ -94,7 +101,7 @@ export function EventImpactPanel({ symbol }: { symbol?: string }) {
       });
 
     return () => controller.abort();
-  }, [requestKey, sentiment, symbol]);
+  }, [requestKey, sentiment, symbol, enabled]);
 
   const matrix = useMemo(() => {
     if (!report) return [];
@@ -131,6 +138,7 @@ export function EventImpactPanel({ symbol }: { symbol?: string }) {
             id="impact-sentiment"
             className="select-control text-xs"
             value={sentiment}
+            disabled={!enabled}
             onChange={(event) =>
               setSentiment(event.target.value as "any" | "hawkish" | "dovish")
             }
@@ -144,7 +152,11 @@ export function EventImpactPanel({ symbol }: { symbol?: string }) {
       </div>
 
       <div className="px-5 py-4">
-        {state === "error" ? (
+        {state === "auth" ? (
+          <p className="text-sm text-[var(--muted)]">
+            Sign in to load the event impact study.
+          </p>
+        ) : state === "error" ? (
           <p className="text-sm text-[var(--negative)]">{active?.error}</p>
         ) : state === "loading" ? (
           <p className="text-sm text-[var(--muted)]">Computing analogues…</p>

@@ -37,17 +37,20 @@ function sentimentLabel(value: number | null): string | null {
 export function EventsPanel({
   symbol,
   countryCode,
+  enabled = true,
 }: {
   symbol?: string;
   countryCode?: string | null;
+  enabled?: boolean;
 }) {
   const [result, setResult] = useState<EventsState | null>(null);
   const requestKey = `${symbol ?? "all"}:${countryCode ?? "all"}`;
   const active = result?.key === requestKey ? result : null;
-  const state = active ? active.status : "loading";
+  const state = !enabled ? "auth" : active ? active.status : "loading";
   const events = active?.payload?.events ?? [];
 
   useEffect(() => {
+    if (!enabled) return;
     const controller = new AbortController();
     const params = new URLSearchParams({ limit: "12" });
     if (symbol) params.set("symbol", symbol);
@@ -76,7 +79,7 @@ export function EventsPanel({
       });
 
     return () => controller.abort();
-  }, [requestKey, symbol]);
+  }, [requestKey, symbol, enabled]);
 
   const scoped = countryCode
     ? events.filter(
@@ -106,7 +109,11 @@ export function EventsPanel({
       </div>
 
       <div className="px-5 py-4">
-        {state === "error" ? (
+        {state === "auth" ? (
+          <p className="text-sm text-[var(--muted)]">
+            Sign in to load policy events.
+          </p>
+        ) : state === "error" ? (
           <p className="text-sm text-[var(--negative)]">{active?.error}</p>
         ) : state === "loading" ? (
           <p className="text-sm text-[var(--muted)]">Loading events…</p>

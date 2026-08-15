@@ -29,17 +29,20 @@ function pct(rate: number | null): string {
 export function SignalQuality({
   symbol,
   horizon,
+  enabled = true,
 }: {
   symbol?: string;
   horizon: string;
+  enabled?: boolean;
 }) {
   const [result, setResult] = useState<QualityState | null>(null);
   const requestKey = symbol?.trim().toUpperCase() || "all";
   const active = result?.key === requestKey ? result : null;
-  const state = active ? active.status : "loading";
+  const state = !enabled ? "auth" : active ? active.status : "loading";
   const payload = active?.payload ?? null;
 
   useEffect(() => {
+    if (!enabled) return;
     const controller = new AbortController();
     const query =
       requestKey === "all" ? "" : `?symbol=${encodeURIComponent(requestKey)}`;
@@ -68,7 +71,7 @@ export function SignalQuality({
       });
 
     return () => controller.abort();
-  }, [requestKey]);
+  }, [requestKey, enabled]);
 
   const scoped =
     state === "ready" && payload
@@ -93,10 +96,19 @@ export function SignalQuality({
       </div>
 
       <div className="grid gap-px bg-[var(--line)] sm:grid-cols-3">
+        {state === "auth" ? (
+          <div className="metric-cell sm:col-span-3">
+            <p className="text-sm text-[var(--muted)]">
+              Sign in to load signal quality.
+            </p>
+          </div>
+        ) : null}
         <div className="metric-cell">
           <span className="metric-label">Hit rate</span>
           <strong className="metric-value">
-            {state === "loading" ? "…" : pct(scoped?.hitRate ?? null)}
+            {state === "loading" || state === "auth"
+              ? "…"
+              : pct(scoped?.hitRate ?? null)}
           </strong>
           <span className="metric-note">
             {scoped ? `${scoped.hits}/${scoped.n} correct` : "awaiting eval"}

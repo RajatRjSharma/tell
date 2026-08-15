@@ -5,16 +5,32 @@ import {
   generateOtpCode,
   otpExpireMinutes,
 } from "@/lib/auth/otp";
+import {
+  emailOtpEnabled,
+  otpDevEchoEnabled,
+  registrationEnabled,
+} from "@/lib/config";
 import { sendMail, isSmtpConfigured } from "@/lib/email/mailer";
 import { otpEmailTemplate } from "@/lib/email/templates";
+import { enforceAuthIdentityRateLimit } from "@/lib/api/rate-limit";
 import { normalizeEmail } from "@/lib/password";
-
-function otpDevEchoEnabled(): boolean {
-  return process.env.TELL_OTP_DEV_ECHO === "1";
-}
 
 export async function POST(request: Request) {
   try {
+    if (!registrationEnabled()) {
+      return NextResponse.json(
+        { error: "Registration is currently closed" },
+        { status: 403 },
+      );
+    }
+
+    if (!emailOtpEnabled()) {
+      return NextResponse.json(
+        { error: "Email verification is disabled on this server" },
+        { status: 503 },
+      );
+    }
+
     const echo = otpDevEchoEnabled();
     if (!isSmtpConfigured() && !echo) {
       return NextResponse.json(
@@ -30,6 +46,10 @@ export async function POST(request: Request) {
 
     const email = normalizeEmail(body?.email ?? "");
     const purpose = body?.purpose ?? "register";
+
+    const identityLimited = enforceAuthIdentityRateLimit(request, email);
+    if (identityLimited) return identityLimited;
+
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return NextResponse.json(
         { error: "Enter a valid email address" },

@@ -12,11 +12,13 @@ export function ResearchChat({
   horizon,
   open,
   onOpenChange,
+  enabled = true,
 }: {
   symbol: string;
   horizon: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  enabled?: boolean;
 }) {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -32,6 +34,10 @@ export function ResearchChat({
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
     const message = input.trim();
+    if (!enabled) {
+      setError("Sign in to use research chat.");
+      return;
+    }
     if (!message || loading) return;
 
     setInput("");

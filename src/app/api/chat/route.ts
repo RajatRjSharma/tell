@@ -1,29 +1,14 @@
 import type { NextRequest } from "next/server";
 import { answerResearchQuestion } from "@/lib/ai/chat";
 import { AiConfigError, AiProviderError } from "@/lib/ai/gemini";
-import { rateLimit } from "@/lib/ai/rate-limit";
 import type { ChatMessage } from "@/lib/ai/types";
 import { jsonError, jsonOk } from "@/lib/api/http";
 import { getDb } from "@/lib/db";
+import { GENERIC_AI, safePublicDetail } from "@/lib/security/http-errors";
 
 export const dynamic = "force-dynamic";
 
-function clientKey(request: NextRequest): string {
-  return (
-    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-    request.headers.get("x-real-ip") ||
-    "anonymous"
-  );
-}
-
 export async function POST(request: NextRequest) {
-  const limited = rateLimit(`chat:${clientKey(request)}`, 20, 60_000);
-  if (!limited.ok) {
-    return jsonError("Too many chat requests", 429, {
-      retryAfterSec: limited.retryAfterSec,
-    });
-  }
-
   try {
     const body = (await request.json()) as {
       message?: unknown;
@@ -62,10 +47,13 @@ export async function POST(request: NextRequest) {
     return jsonOk(result);
   } catch (err) {
     if (err instanceof AiConfigError) {
-      return jsonError(err.message, 503);
+      return jsonError(safePublicDetail(err, GENERIC_AI), 503);
     }
     if (err instanceof AiProviderError) {
-      return jsonError(err.message, err.status >= 500 ? 502 : err.status);
+      return jsonError(
+        safePublicDetail(err, GENERIC_AI),
+        err.status >= 500 ? 502 : err.status,
+      );
     }
     if (err instanceof Error && err.message === "message is required") {
       return jsonError(err.message, 400);

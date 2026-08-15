@@ -1,28 +1,13 @@
 import type { NextRequest } from "next/server";
 import { generateBrief } from "@/lib/ai/brief";
 import { AiConfigError, AiProviderError } from "@/lib/ai/gemini";
-import { rateLimit } from "@/lib/ai/rate-limit";
 import { jsonError, jsonOk } from "@/lib/api/http";
 import { getDb } from "@/lib/db";
+import { GENERIC_AI, safePublicDetail } from "@/lib/security/http-errors";
 
 export const dynamic = "force-dynamic";
 
-function clientKey(request: NextRequest): string {
-  return (
-    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-    request.headers.get("x-real-ip") ||
-    "anonymous"
-  );
-}
-
 export async function GET(request: NextRequest) {
-  const limited = rateLimit(`brief:${clientKey(request)}`, 20, 60_000);
-  if (!limited.ok) {
-    return jsonError("Too many brief requests", 429, {
-      retryAfterSec: limited.retryAfterSec,
-    });
-  }
-
   try {
     const sp = request.nextUrl.searchParams;
     const symbol = sp.get("symbol");
@@ -42,10 +27,13 @@ export async function GET(request: NextRequest) {
     return jsonOk(brief);
   } catch (err) {
     if (err instanceof AiConfigError) {
-      return jsonError(err.message, 503);
+      return jsonError(safePublicDetail(err, GENERIC_AI), 503);
     }
     if (err instanceof AiProviderError) {
-      return jsonError(err.message, err.status >= 500 ? 502 : err.status);
+      return jsonError(
+        safePublicDetail(err, GENERIC_AI),
+        err.status >= 500 ? 502 : err.status,
+      );
     }
     console.error("brief error", err);
     return jsonError("Failed to generate brief", 500);

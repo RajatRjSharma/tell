@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server";
-import { getSession } from "@/lib/auth";
+import { getRequestSession } from "@/lib/auth";
 import { jsonError, jsonOk } from "@/lib/api/http";
 import { getDb } from "@/lib/db";
 import {
@@ -12,15 +12,9 @@ import {
 
 export const dynamic = "force-dynamic";
 
-async function requireUser() {
-  const session = await getSession();
-  if (!session) return null;
-  return session;
-}
-
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const session = await requireUser();
+    const session = await getRequestSession(request);
     if (!session) {
       return jsonError("Sign in to view your watchlist", 401);
     }
@@ -35,7 +29,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await requireUser();
+    const session = await getRequestSession(request);
     if (!session) {
       return jsonError("Sign in to save symbols", 401);
     }
@@ -63,7 +57,7 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const session = await requireUser();
+    const session = await getRequestSession(request);
     if (!session) {
       return jsonError("Sign in to update your watchlist", 401);
     }

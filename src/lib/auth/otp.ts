@@ -1,4 +1,9 @@
-import { createHash, randomInt } from "node:crypto";
+import {
+  createHash,
+  createHmac,
+  randomInt,
+  timingSafeEqual,
+} from "node:crypto";
 import type { Client } from "@libsql/client";
 
 export type OtpPurpose = "register";
@@ -15,6 +20,14 @@ export function otpExpireMinutes(): number {
   return Math.min(Math.max(Math.floor(n), 5), 60);
 }
 
+function otpPepper(): string {
+  return (
+    process.env.OTP_PEPPER?.trim() ||
+    process.env.JWT_SECRET?.trim() ||
+    "tell-otp-dev-pepper"
+  );
+}
+
 export function generateOtpCode(): string {
   const len = otpLength();
   const max = 10 ** len;
@@ -22,7 +35,18 @@ export function generateOtpCode(): string {
 }
 
 export function hashOtp(code: string): string {
-  return createHash("sha256").update(code).digest("hex");
+  return createHmac("sha256", otpPepper()).update(code.trim()).digest("hex");
+}
+
+function hashesEqual(a: string, b: string): boolean {
+  const left = Buffer.from(a);
+  const right = Buffer.from(b);
+  if (left.length !== right.length) {
+    // Still run a compare to reduce trivial timing leaks on length.
+    timingSafeEqual(left, left);
+    return false;
+  }
+  return timingSafeEqual(left, right);
 }
 
 export async function createAuthOtp(
@@ -70,6 +94,8 @@ export async function consumeAuthOtp(
 
   const row = result.rows[0];
   if (!row) {
+    // Burn a hash to keep timing closer to the hit path.
+    hashOtp(options.code);
     return {
       ok: false,
       error: "No verification code found. Request a new one.",
@@ -87,8 +113,8 @@ export async function consumeAuthOtp(
   }
 
   const expected = String(row.code_hash);
-  const incoming = hashOtp(options.code.trim());
-  if (expected !== incoming) {
+  const incoming = hashOtp(options.code);
+  if (!hashesEqual(expected, incoming)) {
     await db.execute({
       sql: `UPDATE auth_otps SET attempts = attempts + 1 WHERE id = ?`,
       args: [Number(row.id)],
@@ -102,4 +128,9 @@ export async function consumeAuthOtp(
   });
 
   return { ok: true };
+}
+
+/** @deprecated kept for tests that assert hash shape */
+export function sha256Hex(value: string): string {
+  return createHash("sha256").update(value).digest("hex");
 }

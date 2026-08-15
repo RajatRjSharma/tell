@@ -28,7 +28,7 @@ test.describe("alerts", () => {
 
   test("create direction-change rule for watched symbol", async ({ page }) => {
     const email = `e2e.alert.${Date.now()}@tell.test`;
-    const password = "Password123!";
+    const password = "TellSecure99!";
 
     await registerUser(page, email, password);
 

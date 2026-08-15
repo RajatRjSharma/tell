@@ -76,7 +76,7 @@ describe("checkConfig", () => {
 
     process.env.TURSO_DATABASE_URL = "libsql://x";
     process.env.TURSO_AUTH_TOKEN = "t";
-    process.env.JWT_SECRET = "secret";
+    process.env.JWT_SECRET = "unit-test-jwt-secret-at-least-32-chars";
     delete process.env.FRED_API_KEY;
 
     try {
@@ -87,7 +87,35 @@ describe("checkConfig", () => {
         TURSO_AUTH_TOKEN: true,
         JWT_SECRET: true,
       });
-      expect(c.optional).toMatchObject({ FRED_API_KEY: false });
+      expect(c.optional).toMatchObject({
+        FRED_API_KEY: false,
+        JWT_SECRET_STRONG: true,
+      });
+    } finally {
+      for (const k of keys) {
+        if (saved[k] === undefined) delete process.env[k];
+        else process.env[k] = saved[k];
+      }
+    }
+  });
+
+  it("marks placeholder JWT secrets as degraded", () => {
+    const keys = [
+      "TURSO_DATABASE_URL",
+      "TURSO_AUTH_TOKEN",
+      "JWT_SECRET",
+    ] as const;
+    const saved: Record<string, string | undefined> = {};
+    for (const k of keys) saved[k] = process.env[k];
+
+    process.env.TURSO_DATABASE_URL = "libsql://x";
+    process.env.TURSO_AUTH_TOKEN = "t";
+    process.env.JWT_SECRET = "secret";
+
+    try {
+      const c = checkConfig();
+      expect(["degraded", "error"]).toContain(c.status);
+      expect(c.optional).toMatchObject({ JWT_SECRET_STRONG: false });
     } finally {
       for (const k of keys) {
         if (saved[k] === undefined) delete process.env[k];

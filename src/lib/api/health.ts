@@ -1,4 +1,6 @@
 import type { Client } from "@libsql/client";
+import { appEnv, isProductionLike } from "@/lib/config";
+import { jwtSecretStatus } from "@/lib/security/secrets";
 import { SIGNAL_MODEL_VERSION } from "@/lib/signals/score";
 
 export type CheckStatus = "ok" | "degraded" | "error" | "skip";
@@ -30,39 +32,54 @@ export function checkApp(): HealthCheck {
     message: "Next.js app process responding",
     node: process.version,
     env: process.env.NODE_ENV ?? "unknown",
+    appEnv: appEnv(),
   };
 }
 
 export function checkConfig(): HealthCheck {
   const tursoUrl = envPresent("TURSO_DATABASE_URL");
   const tursoToken = envPresent("TURSO_AUTH_TOKEN");
-  const jwt = envPresent("JWT_SECRET");
+  const jwt = jwtSecretStatus();
   const fred = envPresent("FRED_API_KEY");
   const finnhub = envPresent("FINNHUB_API_KEY");
   const gemini = envPresent("GEMINI_API_KEY");
   const groq = envPresent("GROQ_API_KEY");
+  const smtp =
+    envPresent("SMTP_HOST") &&
+    envPresent("SMTP_USER") &&
+    envPresent("SMTP_PASSWORD");
 
-  const requiredOk = tursoUrl && tursoToken && jwt;
+  const requiredOk = tursoUrl && tursoToken && jwt.present;
   const missingRequired: string[] = [];
   if (!tursoUrl) missingRequired.push("TURSO_DATABASE_URL");
   if (!tursoToken) missingRequired.push("TURSO_AUTH_TOKEN");
-  if (!jwt) missingRequired.push("JWT_SECRET");
+  if (!jwt.present) missingRequired.push("JWT_SECRET");
+
+  let status: CheckStatus = requiredOk ? "ok" : "error";
+  let message = requiredOk
+    ? "Required env present (values not exposed)"
+    : `Missing required env: ${missingRequired.join(", ")}`;
+
+  if (requiredOk && !jwt.strong) {
+    status = isProductionLike() ? "error" : "degraded";
+    message = jwt.message;
+  }
 
   return {
-    status: requiredOk ? "ok" : "error",
-    message: requiredOk
-      ? "Required env present (values not exposed)"
-      : `Missing required env: ${missingRequired.join(", ")}`,
+    status,
+    message,
     required: {
       TURSO_DATABASE_URL: tursoUrl,
       TURSO_AUTH_TOKEN: tursoToken,
-      JWT_SECRET: jwt,
+      JWT_SECRET: jwt.present,
     },
     optional: {
       FRED_API_KEY: fred,
       FINNHUB_API_KEY: finnhub,
       GEMINI_API_KEY: gemini,
       GROQ_API_KEY: groq,
+      SMTP: smtp,
+      JWT_SECRET_STRONG: jwt.strong,
     },
   };
 }

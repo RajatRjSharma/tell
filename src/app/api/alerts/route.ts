@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server";
-import { getSession } from "@/lib/auth";
+import { getRequestSession } from "@/lib/auth";
 import { jsonError, jsonOk, parseLimit } from "@/lib/api/http";
 import { getDb } from "@/lib/db";
 import {
@@ -25,7 +25,7 @@ const HORIZONS = new Set(["1d", "1w", "1m"]);
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getSession();
+    const session = await getRequestSession(request);
     if (!session) {
       return jsonError("Sign in to view alerts", 401);
     }
@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getSession();
+    const session = await getRequestSession(request);
     if (!session) {
       return jsonError("Sign in to create alerts", 401);
     }

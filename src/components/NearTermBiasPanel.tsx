@@ -84,7 +84,7 @@ export function NearTermBiasPanel({
           </h2>
           <p className="mt-1 text-sm text-[var(--muted)]">
             Ensemble of 1d outlooks across the asset universe. Tomorrow is a
-            dampened carry-forward — daily data only, not intraday.
+            dampened carry-forward of today.
           </p>
         </div>
         {bias?.asOf ? (

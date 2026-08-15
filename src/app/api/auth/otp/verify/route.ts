@@ -3,14 +3,29 @@ import { randomUUID } from "node:crypto";
 import { getDb } from "@/lib/db";
 import { setSessionCookie, signSession } from "@/lib/auth";
 import { consumeAuthOtp } from "@/lib/auth/otp";
+import { emailOtpEnabled, registrationEnabled } from "@/lib/config";
+import { enforceAuthIdentityRateLimit } from "@/lib/api/rate-limit";
 import {
   hashPassword,
   normalizeEmail,
-  validateCredentials,
+  validateRegisterCredentials,
 } from "@/lib/password";
 
 export async function POST(request: Request) {
   try {
+    if (!registrationEnabled()) {
+      return NextResponse.json(
+        { error: "Registration is currently closed" },
+        { status: 403 },
+      );
+    }
+    if (!emailOtpEnabled()) {
+      return NextResponse.json(
+        { error: "Email verification is disabled on this server" },
+        { status: 503 },
+      );
+    }
+
     const body = (await request.json().catch(() => null)) as {
       email?: string;
       otp?: string;
@@ -23,6 +38,9 @@ export async function POST(request: Request) {
     const password = body?.password ?? "";
     const purpose = body?.purpose ?? "register";
 
+    const identityLimited = enforceAuthIdentityRateLimit(request, email);
+    if (identityLimited) return identityLimited;
+
     if (purpose !== "register") {
       return NextResponse.json(
         { error: "Unsupported purpose" },
@@ -30,7 +48,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const credentialsError = validateCredentials(email, password);
+    const credentialsError = validateRegisterCredentials(email, password);
     if (credentialsError) {
       return NextResponse.json({ error: credentialsError }, { status: 400 });
     }

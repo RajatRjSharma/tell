@@ -251,7 +251,7 @@ export function OutlookDashboard({
   const regime = latestSignal?.regime ?? "neutral";
 
   useEffect(() => {
-    if (!effectiveSelectedSymbol) return;
+    if (!user || !effectiveSelectedSymbol) return;
 
     const controller = new AbortController();
 
@@ -280,7 +280,7 @@ export function OutlookDashboard({
       });
 
     return () => controller.abort();
-  }, [effectiveSelectedSymbol]);
+  }, [effectiveSelectedSymbol, user]);
 
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -321,6 +321,7 @@ export function OutlookDashboard({
               horizon={horizon}
               open={chatOpen}
               onOpenChange={setChatOpen}
+              enabled={Boolean(user)}
             />
             <Link
               className="nav-link"
@@ -438,14 +439,19 @@ export function OutlookDashboard({
         <SignalQuality
           symbol={effectiveSelectedSymbol || undefined}
           horizon={horizon}
+          enabled={Boolean(user)}
         />
 
         <EventsPanel
           symbol={effectiveSelectedSymbol || undefined}
           countryCode={selectedAsset?.countryCode ?? null}
+          enabled={Boolean(user)}
         />
 
-        <EventImpactPanel symbol={effectiveSelectedSymbol || undefined} />
+        <EventImpactPanel
+          symbol={effectiveSelectedSymbol || undefined}
+          enabled={Boolean(user)}
+        />
 
         <AlertsPanel
           user={user}
@@ -760,6 +766,7 @@ export function OutlookDashboard({
                 <PriceChart
                   symbol={effectiveSelectedSymbol}
                   horizon={horizon}
+                  enabled={Boolean(user)}
                 />
 
                 <div className="mt-6 border-t border-[var(--line)] pt-5">
@@ -809,6 +816,7 @@ export function OutlookDashboard({
                 <ResearchBrief
                   symbol={effectiveSelectedSymbol}
                   horizon={horizon}
+                  enabled={Boolean(user)}
                 />
               </>
             ) : (

@@ -4,6 +4,23 @@ type Bucket = {
 };
 
 const buckets = new Map<string, Bucket>();
+const MAX_KEYS = 10_000;
+
+function pruneExpired(now: number): void {
+  if (buckets.size < MAX_KEYS) return;
+  for (const [key, bucket] of buckets) {
+    if (now >= bucket.resetAt) buckets.delete(key);
+  }
+  if (buckets.size < MAX_KEYS) return;
+  // Drop oldest windows if still over cap (memory safety under abuse).
+  const overflow = buckets.size - Math.floor(MAX_KEYS * 0.8);
+  let removed = 0;
+  for (const key of buckets.keys()) {
+    if (removed >= overflow) break;
+    buckets.delete(key);
+    removed += 1;
+  }
+}
 
 export function rateLimit(
   key: string,
@@ -11,6 +28,7 @@ export function rateLimit(
   windowMs: number,
 ): { ok: boolean; remaining: number; retryAfterSec: number } {
   const now = Date.now();
+  pruneExpired(now);
   const existing = buckets.get(key);
 
   if (!existing || now >= existing.resetAt) {

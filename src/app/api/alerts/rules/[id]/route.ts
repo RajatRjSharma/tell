@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server";
-import { getSession } from "@/lib/auth";
+import { getRequestSession } from "@/lib/auth";
 import { jsonError, jsonOk } from "@/lib/api/http";
 import { getDb } from "@/lib/db";
 import { deleteAlertRule, setAlertRuleEnabled } from "@/lib/alerts/store";
@@ -11,7 +11,7 @@ export async function PATCH(
   context: { params: Promise<{ id: string }> },
 ) {
   try {
-    const session = await getSession();
+    const session = await getRequestSession(request);
     if (!session) {
       return jsonError("Sign in to update alerts", 401);
     }
@@ -47,11 +47,11 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   context: { params: Promise<{ id: string }> },
 ) {
   try {
-    const session = await getSession();
+    const session = await getRequestSession(request);
     if (!session) {
       return jsonError("Sign in to delete alerts", 401);
     }

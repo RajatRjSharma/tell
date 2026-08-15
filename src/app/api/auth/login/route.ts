@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { setSessionCookie, signSession } from "@/lib/auth";
+import { enforceAuthIdentityRateLimit } from "@/lib/api/rate-limit";
 import {
   normalizeEmail,
   validateCredentials,
@@ -16,6 +17,10 @@ export async function POST(request: Request) {
 
     const email = normalizeEmail(body.email ?? "");
     const password = body.password ?? "";
+
+    const identityLimited = enforceAuthIdentityRateLimit(request, email);
+    if (identityLimited) return identityLimited;
+
     const error = validateCredentials(email, password);
     if (error) {
       return NextResponse.json({ error }, { status: 400 });

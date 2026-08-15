@@ -40,18 +40,20 @@ function formatCompact(value: number): string {
 export function PriceChart({
   symbol,
   horizon,
+  enabled = true,
 }: {
   symbol: string;
   horizon: string;
+  enabled?: boolean;
 }) {
   const [result, setResult] = useState<ChartState | null>(null);
   const requestKey = `${symbol}:${horizon}`;
   const active = result?.key === requestKey ? result : null;
-  const state = active ? active.status : "loading";
+  const state = !enabled ? "auth" : active ? active.status : "loading";
   const payload = active?.payload ?? null;
 
   useEffect(() => {
-    if (!symbol) return;
+    if (!enabled || !symbol) return;
     const controller = new AbortController();
 
     fetch(
@@ -81,7 +83,7 @@ export function PriceChart({
       });
 
     return () => controller.abort();
-  }, [symbol, horizon, requestKey]);
+  }, [symbol, horizon, requestKey, enabled]);
 
   const geometry = useMemo(
     () => buildChartGeometry(payload?.bars ?? [], WIDTH, HEIGHT),
@@ -130,6 +132,12 @@ export function PriceChart({
       </div>
 
       <div className="mt-3">
+        {state === "auth" ? (
+          <p className="text-sm text-[var(--muted)]">
+            Sign in to load the price chart.
+          </p>
+        ) : null}
+
         {state === "loading" ? (
           <div className="chart-skeleton" aria-label="Loading chart" />
         ) : null}

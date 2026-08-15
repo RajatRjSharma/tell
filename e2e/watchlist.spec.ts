@@ -28,7 +28,7 @@ test.describe("watchlist", () => {
 
   test("star a symbol, filter watchlist, then remove", async ({ page }) => {
     const email = `e2e.watch.${Date.now()}@tell.test`;
-    const password = "Password123!";
+    const password = "TellSecure99!";
 
     await registerUser(page, email, password);
 

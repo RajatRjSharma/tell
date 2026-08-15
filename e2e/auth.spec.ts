@@ -51,7 +51,7 @@ test.describe("auth flow", () => {
 
   test("register, stay signed in, then log out", async ({ page }) => {
     const email = `e2e.${Date.now()}@tell.test`;
-    const password = "Password123!";
+    const password = "TellSecure99!";
 
     await registerUser(page, email, password);
     await expect(page.getByTestId("logout-button")).toBeVisible();
@@ -64,7 +64,7 @@ test.describe("auth flow", () => {
 
   test("rejects duplicate registration", async ({ page }) => {
     const email = `e2e.dup.${Date.now()}@tell.test`;
-    const password = "Password123!";
+    const password = "TellSecure99!";
 
     await registerUser(page, email, password);
     await page.getByTestId("logout-button").click();
@@ -81,7 +81,7 @@ test.describe("auth flow", () => {
 
   test("login works after register", async ({ page }) => {
     const email = `e2e.login.${Date.now()}@tell.test`;
-    const password = "Password123!";
+    const password = "TellSecure99!";
 
     await registerUser(page, email, password);
     await page.getByTestId("logout-button").click();
@@ -99,7 +99,7 @@ test.describe("auth flow", () => {
 
   test("login fails with wrong password", async ({ page }) => {
     const email = `e2e.wrong.${Date.now()}@tell.test`;
-    const password = "Password123!";
+    const password = "TellSecure99!";
 
     await registerUser(page, email, password);
     await page.getByTestId("logout-button").click();

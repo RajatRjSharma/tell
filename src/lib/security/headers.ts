@@ -1,4 +1,4 @@
-import type { NextConfig } from "next";
+export type SecurityHeader = { key: string; value: string };
 
 function productionLike(): boolean {
   const env = (process.env.APP_ENV ?? process.env.NODE_ENV ?? "local")
@@ -11,8 +11,9 @@ function productionLike(): boolean {
   );
 }
 
-function securityHeaders(): Array<{ key: string; value: string }> {
-  const headers: Array<{ key: string; value: string }> = [
+/** Baseline browser security headers for all responses. */
+export function securityHeaders(options?: { csp?: boolean }): SecurityHeader[] {
+  const headers: SecurityHeader[] = [
     { key: "X-Content-Type-Options", value: "nosniff" },
     { key: "X-Frame-Options", value: "DENY" },
     { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
@@ -24,7 +25,10 @@ function securityHeaders(): Array<{ key: string; value: string }> {
     { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
     { key: "Cross-Origin-Resource-Policy", value: "same-origin" },
     { key: "X-DNS-Prefetch-Control", value: "off" },
-    {
+  ];
+
+  if (options?.csp !== false) {
+    headers.push({
       key: "Content-Security-Policy",
       value: [
         "default-src 'self'",
@@ -40,8 +44,8 @@ function securityHeaders(): Array<{ key: string; value: string }> {
         "worker-src 'self' blob:",
         "manifest-src 'self'",
       ].join("; "),
-    },
-  ];
+    });
+  }
 
   if (productionLike()) {
     headers.push({
@@ -53,27 +57,24 @@ function securityHeaders(): Array<{ key: string; value: string }> {
   return headers;
 }
 
-const nextConfig: NextConfig = {
-  poweredByHeader: false,
-  reactStrictMode: true,
-  allowedDevOrigins: ["127.0.0.1", "localhost"],
-  async headers() {
+export function applySecurityHeaders(headers: Headers): void {
+  for (const { key, value } of securityHeaders()) {
+    if (!headers.has(key)) headers.set(key, value);
+  }
+}
+
+export function apiCacheHeaders(pathname: string): SecurityHeader[] {
+  if (pathname.startsWith("/api/auth")) {
     return [
       {
-        source: "/:path*",
-        headers: securityHeaders(),
+        key: "Cache-Control",
+        value: "no-store, no-cache, must-revalidate, private",
       },
-      {
-        source: "/api/:path*",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "private, no-store",
-          },
-        ],
-      },
+      { key: "Pragma", value: "no-cache" },
     ];
-  },
-};
-
-export default nextConfig;
+  }
+  if (pathname === "/api/health" || pathname === "/api/ready") {
+    return [{ key: "Cache-Control", value: "no-store" }];
+  }
+  return [{ key: "Cache-Control", value: "private, no-store" }];
+}

@@ -37,9 +37,11 @@ type BriefResultState = {
 export function ResearchBrief({
   symbol,
   horizon,
+  enabled = true,
 }: {
   symbol: string;
   horizon: string;
+  enabled?: boolean;
 }) {
   const [refreshToken, setRefreshToken] = useState(0);
   const [result, setResult] = useState<BriefResultState | null>(null);
@@ -48,10 +50,10 @@ export function ResearchBrief({
     result && result.key === requestKey && result.refreshToken === refreshToken
       ? result
       : null;
-  const state = active ? active.status : "loading";
+  const state = !enabled ? "auth" : active ? active.status : "loading";
 
   useEffect(() => {
-    if (!symbol) return;
+    if (!enabled || !symbol) return;
 
     const controller = new AbortController();
     const refresh = refreshToken > 0 ? "&refresh=1" : "";
@@ -87,7 +89,7 @@ export function ResearchBrief({
       });
 
     return () => controller.abort();
-  }, [symbol, horizon, refreshToken, requestKey]);
+  }, [symbol, horizon, refreshToken, requestKey, enabled]);
 
   const delta = active?.brief?.delta ?? null;
 
@@ -99,7 +101,8 @@ export function ResearchBrief({
         </h4>
         <button
           type="button"
-          className="font-mono text-[10px] text-[var(--muted)] transition-colors hover:text-[var(--text)]"
+          className="font-mono text-[10px] text-[var(--muted)] transition-colors hover:text-[var(--text)] disabled:opacity-40"
+          disabled={!enabled}
           onClick={() => setRefreshToken((value) => value + 1)}
         >
           Refresh
@@ -107,6 +110,12 @@ export function ResearchBrief({
       </div>
 
       <div className="mt-3 min-h-28">
+        {state === "auth" ? (
+          <p className="text-sm text-[var(--muted)]">
+            Sign in to load the research brief.
+          </p>
+        ) : null}
+
         {state === "loading" ? (
           <div className="space-y-2" aria-label="Loading brief">
             <div className="quote-skeleton w-full" />

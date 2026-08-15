@@ -1,11 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 type Mode = "login" | "register";
 type RegisterStep = "email" | "verify";
+
+type AuthPublicConfig = {
+  registrationEnabled: boolean;
+  emailOtpEnabled: boolean;
+};
+
+const REGISTER_PASSWORD_MIN = 12;
 
 export function AuthForm({ mode }: { mode: Mode }) {
   const router = useRouter();
@@ -16,17 +23,44 @@ export function AuthForm({ mode }: { mode: Mode }) {
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [config, setConfig] = useState<AuthPublicConfig | null>(null);
 
   const isRegister = mode === "register";
-  const title = isRegister
-    ? registerStep === "email"
-      ? "Create account"
-      : "Verify email"
-    : "Sign in";
+  const registrationClosed =
+    isRegister && config != null && !config.registrationEnabled;
+  const otpDisabled =
+    isRegister && config != null && !config.emailOtpEnabled;
+  const registerBlocked = registrationClosed || otpDisabled;
+
+  const title = registrationClosed
+    ? "Registration closed"
+    : otpDisabled
+      ? "Registration unavailable"
+      : isRegister
+        ? registerStep === "email"
+          ? "Create account"
+          : "Verify email"
+        : "Sign in";
   const altHref = isRegister ? "/login" : "/register";
   const altLabel = isRegister
     ? "Already have an account? Sign in"
     : "Need an account? Register";
+
+  useEffect(() => {
+    let cancelled = false;
+    void fetch("/api/auth/config")
+      .then(async (res) => {
+        if (!res.ok) return null;
+        return (await res.json()) as AuthPublicConfig;
+      })
+      .then((data) => {
+        if (!cancelled && data) setConfig(data);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -48,6 +82,15 @@ export function AuthForm({ mode }: { mode: Mode }) {
         }
         router.push("/");
         router.refresh();
+        return;
+      }
+
+      if (registerBlocked) {
+        setError(
+          registrationClosed
+            ? "Registration is currently closed"
+            : "Email verification is disabled on this server",
+        );
         return;
       }
 
@@ -155,13 +198,27 @@ export function AuthForm({ mode }: { mode: Mode }) {
             {title}
           </h1>
           <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
-            {isRegister
-              ? registerStep === "email"
-                ? "We will email a one-time code to verify ownership."
-                : "Enter the code and choose a password."
-              : "Continue to your latest macro and market outlook."}
+            {registrationClosed
+              ? "New accounts are not being accepted right now. Sign in if you already have one."
+              : otpDisabled
+                ? "This host cannot send verification email. Contact the operator."
+                : isRegister
+                  ? registerStep === "email"
+                    ? "We will email a one-time code to verify ownership."
+                    : "Enter the code and choose a password."
+                  : "Continue to your latest macro and market outlook."}
           </p>
 
+          {registerBlocked ? (
+            <div className="mt-9 flex flex-col gap-3 text-sm">
+              <Link
+                href="/login"
+                className="button-primary inline-flex min-h-12 items-center justify-center"
+              >
+                Sign in
+              </Link>
+            </div>
+          ) : (
           <form
             data-testid="auth-form"
             method="post"
@@ -210,14 +267,15 @@ export function AuthForm({ mode }: { mode: Mode }) {
                     isRegister ? "new-password" : "current-password"
                   }
                   required
-                  minLength={8}
+                  minLength={isRegister ? REGISTER_PASSWORD_MIN : 8}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="min-h-12 rounded-[12px] border border-[var(--line-strong)] bg-[var(--surface)] px-3.5 text-sm text-[var(--text)] transition-colors placeholder:text-[var(--muted)] hover:border-[var(--muted)] focus:border-[var(--accent)] focus:outline-none"
                 />
                 {isRegister ? (
                   <span className="font-normal text-[var(--muted)]">
-                    Use at least 8 characters.
+                    At least {REGISTER_PASSWORD_MIN} characters with upper,
+                    lower, number, and special character.
                   </span>
                 ) : null}
               </label>
@@ -272,8 +330,10 @@ export function AuthForm({ mode }: { mode: Mode }) {
               </button>
             ) : null}
           </form>
+          )}
 
           <div className="mt-7 flex flex-col gap-3 text-sm">
+            {!registerBlocked || !isRegister ? (
             <Link
               data-testid="auth-alt-link"
               href={altHref}
@@ -281,6 +341,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
             >
               {altLabel}
             </Link>
+            ) : null}
             <Link
               href="/"
               className="w-fit text-[var(--muted)] transition-colors hover:text-[var(--text)]"
