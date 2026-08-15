@@ -21,7 +21,7 @@ test.describe("methodology", () => {
     });
     await expect(cpiHelp).toBeVisible();
     await cpiHelp.click();
-    await expect(page.getByRole("tooltip")).toContainText(
+    await expect(page.getByTestId("info-tip")).toContainText(
       "Consumer Price Index",
     );
 

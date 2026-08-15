@@ -25,7 +25,9 @@ export function InfoTip({
 }) {
   const id = useId();
   const triggerRef = useRef<HTMLButtonElement>(null);
+  const ignoreScrollUntilRef = useRef(0);
   const [open, setOpen] = useState(false);
+  const [pinned, setPinned] = useState(false);
   const [position, setPosition] = useState<Position | null>(null);
 
   const placeTooltip = useCallback(() => {
@@ -44,18 +46,39 @@ export function InfoTip({
     });
   }, []);
 
+  const show = useCallback(() => {
+    ignoreScrollUntilRef.current = Date.now() + 250;
+    setOpen(true);
+    placeTooltip();
+  }, [placeTooltip]);
+
+  const hide = useCallback(() => {
+    setPinned(false);
+    setOpen(false);
+  }, []);
+
   useEffect(() => {
     if (!open) return;
     placeTooltip();
 
-    const close = () => setOpen(false);
-    window.addEventListener("resize", close);
-    window.addEventListener("scroll", close, true);
-    return () => {
-      window.removeEventListener("resize", close);
-      window.removeEventListener("scroll", close, true);
+    const onResize = () => hide();
+    const onScroll = () => {
+      if (Date.now() < ignoreScrollUntilRef.current) return;
+      hide();
     };
-  }, [open, placeTooltip]);
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") hide();
+    };
+
+    window.addEventListener("resize", onResize);
+    window.addEventListener("scroll", onScroll, true);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("scroll", onScroll, true);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [open, placeTooltip, hide]);
 
   return (
     <span className="inline-flex align-middle">
@@ -67,19 +90,25 @@ export function InfoTip({
         aria-describedby={open ? id : undefined}
         aria-expanded={open}
         onClick={() => {
-          setOpen(true);
-          placeTooltip();
+          if (pinned) {
+            hide();
+            return;
+          }
+          setPinned(true);
+          show();
         }}
         onMouseEnter={() => {
-          setOpen(true);
-          placeTooltip();
+          if (!pinned) show();
         }}
-        onMouseLeave={() => setOpen(false)}
+        onMouseLeave={() => {
+          if (!pinned) setOpen(false);
+        }}
         onFocus={() => {
-          setOpen(true);
-          placeTooltip();
+          if (!pinned) show();
         }}
-        onBlur={() => setOpen(false)}
+        onBlur={() => {
+          if (!pinned) setOpen(false);
+        }}
       >
         i
       </button>
@@ -88,6 +117,7 @@ export function InfoTip({
             <span
               id={id}
               role="tooltip"
+              data-testid="info-tip"
               className="info-tip-content"
               data-placement={position.placement}
               style={{ left: position.left, top: position.top }}
