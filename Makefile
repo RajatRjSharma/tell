@@ -1,10 +1,13 @@
-.PHONY: help install dev build start lint lint-fix format format-check typecheck test test-watch test-coverage test-e2e test-e2e-ui ci db-migrate db-seed setup
+.PHONY: help install install-browsers dev build start lint lint-fix format format-check typecheck test test-watch test-coverage test-e2e test-e2e-ui ci db-migrate db-seed setup
 
 help: ## Show available commands
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-16s\033[0m %s\n", $$1, $$2}'
 
 install: ## Install npm dependencies
 	npm install
+
+install-browsers: ## Download Playwright Chromium (required once for e2e)
+	npm run playwright:install
 
 dev: ## Start Next.js dev server
 	npm run dev
@@ -54,4 +57,4 @@ db-migrate: ## Apply Turso schema
 db-seed: ## Seed countries, indicators, assets
 	npm run db:seed
 
-setup: install db-migrate db-seed ## Install deps + migrate + seed
+setup: install install-browsers db-migrate db-seed ## Install deps + browsers + migrate + seed

@@ -43,7 +43,14 @@ make help              # list all make targets
 First time for Playwright browsers:
 
 ```bash
-npx playwright install chromium
+make install-browsers
+# or: npx playwright install chromium
+```
+
+Then:
+
+```bash
+make ci
 ```
 
 CI runs on every push/PR to `main` via GitHub Actions (unit + e2e).
