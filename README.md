@@ -6,7 +6,7 @@ Global activity → market outlook research platform.
 
 - Next.js (Vercel)
 - Turso
-- GitHub Actions (later)
+- GitHub Actions (CI + daily ingest)
 - Free data + Gemini / Groq
 
 ## Setup
@@ -38,6 +38,24 @@ make ingest-markets    # Asset OHLC from Yahoo Finance → Turso asset_readings
 
 Optional: set `FRED_OBSERVATION_START`, `IMF_MIN_YEAR`, or `MARKET_OBSERVATION_START=2023-01-01` in `.env`.
 
+## Daily ingest (GitHub Actions)
+
+Workflow: `.github/workflows/ingest.yml`
+
+- Runs daily at **06:00 UTC** and on **Actions → Daily ingest → Run workflow**
+- Upserts FRED → IMF → Yahoo markets into Turso
+
+Repo secrets (Settings → Secrets and variables → Actions):
+
+| Secret | Required for |
+|--------|----------------|
+| `TURSO_DATABASE_URL` | ingest + e2e |
+| `TURSO_AUTH_TOKEN` | ingest + e2e |
+| `FRED_API_KEY` | FRED ingest |
+| `JWT_SECRET` | e2e only |
+
+Optional repo **variables** are not required; scripts use built-in start defaults (`2015` / `2023-01-01`). Override locally via `.env` if needed.
+
 ## Quality
 
 ```bash
@@ -64,6 +82,7 @@ make ci
 ```
 
 CI runs on every push/PR to `main` via GitHub Actions (unit + e2e).
+Daily data refresh is a separate scheduled workflow (see above).
 For full auth e2e in CI, add repo secrets: `JWT_SECRET`, `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`.
 
 ## Auth
