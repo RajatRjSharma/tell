@@ -24,9 +24,7 @@ test.describe("methodology", () => {
     );
 
     await expect(
-      page
-        .getByRole("button", { name: "What does Yield curve mean?" })
-        .first(),
+      page.getByRole("button", { name: "What does Yield curve mean?" }).first(),
     ).toBeVisible();
     await expect(
       page.getByRole("button", { name: "What does VIX mean?" }).first(),
