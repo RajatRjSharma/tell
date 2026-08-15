@@ -51,5 +51,8 @@ jobs:
       - name: Evaluate forecast hit rates
         run: npm run compute:forecasts
 
+      - name: Evaluate alert rules
+        run: npm run compute:alerts
+
       # Intentionally no Gemini/Groq steps here.
       # Free AI credits stay local-only: `make compute-briefs` / `TELL_AI_EVAL=1 make test-eval`

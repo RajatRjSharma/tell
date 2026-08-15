@@ -162,3 +162,44 @@ CREATE TABLE IF NOT EXISTS watchlist_items (
 
 CREATE INDEX IF NOT EXISTS idx_watchlist_user
   ON watchlist_items (user_id, created_at ASC);
+
+CREATE TABLE IF NOT EXISTS alert_rules (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id TEXT NOT NULL,
+  symbol TEXT NOT NULL,
+  horizon TEXT NOT NULL,
+  rule_type TEXT NOT NULL,
+  rule_value TEXT,
+  enabled INTEGER NOT NULL DEFAULT 1,
+  last_triggered_at TEXT,
+  last_seen_direction TEXT,
+  last_seen_confidence REAL,
+  last_seen_as_of TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_alert_rules_user
+  ON alert_rules (user_id, enabled);
+
+CREATE INDEX IF NOT EXISTS idx_alert_rules_eval
+  ON alert_rules (enabled, symbol, horizon);
+
+CREATE TABLE IF NOT EXISTS alert_events (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  rule_id INTEGER NOT NULL,
+  user_id TEXT NOT NULL,
+  symbol TEXT NOT NULL,
+  horizon TEXT NOT NULL,
+  rule_type TEXT NOT NULL,
+  title TEXT NOT NULL,
+  body TEXT NOT NULL,
+  signal_direction TEXT,
+  signal_confidence REAL,
+  as_of_date TEXT NOT NULL,
+  read_at TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE (rule_id, as_of_date)
+);
+
+CREATE INDEX IF NOT EXISTS idx_alert_events_user
+  ON alert_events (user_id, created_at DESC);

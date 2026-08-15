@@ -57,6 +57,7 @@ Pure TypeScript transforms (no ML). Used as inputs for the signal engine.
 ```bash
 make compute-signals   # Write bullish/neutral/bearish outlooks to Turso
 make compute-forecasts # Score resolved signals into forecast_log (hit rate)
+make compute-alerts    # Evaluate watchlist alert rules → in-app inbox
 ```
 
 Defaults: horizons `1d,1w,1m` (≈ 1 / 5 / 21 trading sessions). Custom day horizons:
@@ -72,6 +73,10 @@ overlay uses Finnhub quote when `FINNHUB_API_KEY` is set, else Yahoo — printed
 `compute-forecasts` compares each stored signal to the realized forward return once
 enough bars exist. Neutral is graded with a small band that widens with horizon length.
 Daily Actions runs this after `compute:signals` (no AI keys).
+
+`compute-alerts` checks enabled rules (direction flip, became direction, confidence
+below) against the latest signals and writes unread `alert_events`. First observation
+after creating a rule is a baseline only (no false fire).
 
 ## Daily ingest (GitHub Actions)
 
@@ -128,6 +133,7 @@ For full auth e2e in CI, add repo secrets: `JWT_SECRET`, `TURSO_DATABASE_URL`, `
 - Cookie JWT (`tell_session`) backed by Turso `users`
 - APIs: `/api/auth/register` · `login` · `logout` · `me`
 - Watchlist (signed-in): `GET/POST/DELETE /api/watchlist` — saved symbols filter the dashboard by default when non-empty
+- Alerts (signed-in): `GET/POST /api/alerts`, `PATCH/DELETE /api/alerts/rules/:id`, `POST /api/alerts/read` — rules on watchlist symbols; in-app inbox after daily evaluate
 
 ## Read APIs
 

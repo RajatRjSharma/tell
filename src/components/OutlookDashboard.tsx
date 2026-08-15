@@ -8,6 +8,7 @@ import { ResearchBrief } from "@/components/ResearchBrief";
 import { ResearchChat } from "@/components/ResearchChat";
 import { PriceChart } from "@/components/PriceChart";
 import { SignalQuality } from "@/components/SignalQuality";
+import { AlertsPanel } from "@/components/AlertsPanel";
 
 type User = { id: string; email: string };
 
@@ -416,6 +417,13 @@ export function OutlookDashboard({
         <SignalQuality
           symbol={effectiveSelectedSymbol || undefined}
           horizon={horizon}
+        />
+
+        <AlertsPanel
+          user={user}
+          defaultSymbol={effectiveSelectedSymbol || "SPY"}
+          defaultHorizon={horizon}
+          watchlist={watchlist}
         />
 
         <div className="mt-10 flex flex-col gap-5 border-b border-[var(--line)] pb-5 lg:flex-row lg:items-end lg:justify-between">

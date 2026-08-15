@@ -1,4 +1,4 @@
-.PHONY: help install install-browsers dev build start lint lint-fix format format-check typecheck test test-watch test-coverage test-eval test-e2e test-e2e-ui ci db-migrate db-seed ingest-fred ingest-imf ingest-markets ingest-manual ingest-all compute-features compute-signals compute-forecasts compute-briefs setup
+.PHONY: help install install-browsers dev build start lint lint-fix format format-check typecheck test test-watch test-coverage test-eval test-e2e test-e2e-ui ci db-migrate db-seed ingest-fred ingest-imf ingest-markets ingest-manual ingest-all compute-features compute-signals compute-forecasts compute-alerts compute-briefs setup
 
 help: ## Show available commands
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-16s\033[0m %s\n", $$1, $$2}'
@@ -85,6 +85,9 @@ compute-signals: ## Score 1d/1w/1m (or custom) outlooks into Turso signals
 
 compute-forecasts: ## Evaluate resolved signals into forecast_log hit rates
 	npm run compute:forecasts
+
+compute-alerts: ## Evaluate watchlist alert rules → in-app alert_events
+	npm run compute:alerts
 
 compute-briefs: ## Local-only Gemini briefs → Turso (blocked in CI)
 	npm run compute:briefs
