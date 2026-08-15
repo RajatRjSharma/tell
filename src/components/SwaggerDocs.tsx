@@ -13,7 +13,11 @@ const SwaggerUI = dynamic(() => import("swagger-ui-react"), {
 export function SwaggerDocs() {
   return (
     <div className="swagger-wrap min-h-[100dvh] bg-white">
-      <SwaggerUI url="/api/openapi" docExpansion="list" defaultModelsExpandDepth={0} />
+      <SwaggerUI
+        url="/api/openapi"
+        docExpansion="list"
+        defaultModelsExpandDepth={0}
+      />
     </div>
   );
 }

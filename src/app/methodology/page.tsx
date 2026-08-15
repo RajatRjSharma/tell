@@ -34,10 +34,10 @@ export default async function MethodologyPage() {
       </a>
 
       <header className="sticky top-0 z-20 border-b border-[var(--line)] bg-[color-mix(in_srgb,var(--page)_92%,transparent)] backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-[1480px] items-center justify-between px-4 sm:px-6 lg:px-8">
+        <div className="site-header-inner mx-auto flex h-16 max-w-[1480px] items-center justify-between px-4 sm:px-6 lg:px-8">
           <Link
             href="/"
-            className="group flex items-center gap-3 focus-visible:outline-none"
+            className="site-header-brand group flex items-center gap-3 focus-visible:outline-none"
             aria-label="Tell home"
           >
             <span className="grid h-8 w-8 place-items-center rounded-[10px] bg-[var(--text)] font-mono text-[11px] font-semibold text-[var(--page)] transition-transform group-hover:-translate-y-0.5">
@@ -52,7 +52,7 @@ export default async function MethodologyPage() {
             </span>
           </Link>
 
-          <div className="flex items-center gap-2 text-sm">
+          <div className="site-header-nav flex items-center gap-2 text-sm">
             <Link className="nav-link" href="/">
               Outlook
             </Link>

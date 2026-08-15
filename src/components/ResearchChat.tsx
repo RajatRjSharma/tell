@@ -232,7 +232,8 @@ export function ResearchChat({
         aria-controls={open ? dialogId : undefined}
         onClick={() => onOpenChange(!open)}
       >
-        Ask Tell
+        <span className="ask-tell-label-short">Ask</span>
+        <span className="ask-tell-label-full">Ask Tell</span>
       </button>
       {drawer}
     </>

@@ -23,9 +23,7 @@ const sessionSecurity: OpenAPIV3.SecurityRequirementObject[] = [
 ];
 
 /** OpenAPI 3.0 document for Tell HTTP APIs. */
-export function buildOpenApiDocument(
-  serverUrl?: string,
-): OpenAPIV3.Document {
+export function buildOpenApiDocument(serverUrl?: string): OpenAPIV3.Document {
   return {
     openapi: "3.0.3",
     info: {
@@ -364,7 +362,9 @@ export function buildOpenApiDocument(
             },
           ],
           responses: {
-            "200": { description: "{ countryCode, indicatorId, count, readings }" },
+            "200": {
+              description: "{ countryCode, indicatorId, count, readings }",
+            },
             "400": { $ref: "#/components/responses/BadRequest" },
             "401": { $ref: "#/components/responses/Unauthorized" },
           },
@@ -397,7 +397,8 @@ export function buildOpenApiDocument(
           ],
           responses: {
             "200": {
-              description: "{ asOf, modelVersion, count, bySymbol, signals, disclaimer }",
+              description:
+                "{ asOf, modelVersion, count, bySymbol, signals, disclaimer }",
             },
             "401": { $ref: "#/components/responses/Unauthorized" },
           },

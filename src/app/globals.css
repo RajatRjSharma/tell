@@ -55,6 +55,7 @@
 
 html {
   scroll-behavior: smooth;
+  overflow-x: clip;
 }
 
 body {
@@ -62,6 +63,7 @@ body {
   color: var(--text);
   font-family: var(--font-geist-sans), sans-serif;
   text-rendering: optimizeLegibility;
+  overflow-x: clip;
 }
 
 button,
@@ -661,10 +663,31 @@ button:disabled {
   }
 }
 
+.ask-tell-label-short {
+  display: none;
+}
+
 @media (max-width: 639px) {
   .nav-system-link,
-  .nav-register-link {
+  .nav-register-link,
+  .nav-method-link {
     display: none;
+  }
+
+  .ask-tell-label-full {
+    display: none;
+  }
+
+  .ask-tell-label-short {
+    display: inline;
+  }
+
+  .site-header-inner {
+    gap: 0.5rem;
+  }
+
+  .site-header-nav {
+    gap: 0.35rem;
   }
 
   .outlook-grid {
@@ -680,6 +703,41 @@ button:disabled {
   .row-arrow {
     display: none;
   }
+}
+
+.site-header-inner {
+  min-width: 0;
+}
+
+.site-header-brand {
+  min-width: 0;
+  flex-shrink: 1;
+}
+
+.site-header-nav {
+  min-width: 0;
+  flex-shrink: 0;
+}
+
+.swagger-wrap {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.swagger-wrap .swagger-ui {
+  max-width: 100%;
+}
+
+.swagger-wrap .swagger-ui .wrapper {
+  padding-inline: 1rem;
+}
+
+.swagger-wrap .swagger-ui .info,
+.swagger-wrap .swagger-ui .scheme-container,
+.swagger-wrap .swagger-ui table {
+  max-width: 100%;
 }
 
 @media (prefers-reduced-motion: reduce) {

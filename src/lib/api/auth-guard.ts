@@ -28,7 +28,11 @@ export function isPublicApiRoute(pathname: string, method: string): boolean {
   const path = normalizeApiPath(pathname);
   const verb = method.toUpperCase();
 
-  if (path === "/api/health" || path === "/api/ready" || path === "/api/openapi") {
+  if (
+    path === "/api/health" ||
+    path === "/api/ready" ||
+    path === "/api/openapi"
+  ) {
     return verb === "GET" || verb === "HEAD";
   }
   if (path === "/api/auth/me") return verb === "GET" || verb === "HEAD";
@@ -45,7 +49,8 @@ export function isPublicApiRoute(pathname: string, method: string): boolean {
 /** Pages that work without a session (everything else redirects to login). */
 export function isPublicPageRoute(pathname: string): boolean {
   const path = normalizeApiPath(pathname);
-  if (path === "/login" || path === "/register" || path === "/docs") return true;
+  if (path === "/login" || path === "/register" || path === "/docs")
+    return true;
   if (path.startsWith("/.well-known/")) return true;
   return false;
 }

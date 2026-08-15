@@ -143,9 +143,9 @@ export async function registerViaApi(
   });
   expect(verifyRes.status(), await verifyRes.text()).toBe(201);
 
-  const setCookie = verifyRes.headersArray().filter((h) =>
-    h.name.toLowerCase() === "set-cookie",
-  );
+  const setCookie = verifyRes
+    .headersArray()
+    .filter((h) => h.name.toLowerCase() === "set-cookie");
   // Next may attach the session via cookies(); assert the jar picked it up when possible.
   const jar = await request.storageState();
   const hasSession = jar.cookies.some(

@@ -11,7 +11,9 @@ export async function GET(request: NextRequest) {
     request.headers.get("x-forwarded-host") ?? request.headers.get("host");
   const proto =
     request.headers.get("x-forwarded-proto") ??
-    (host?.includes("localhost") || host?.startsWith("127.") ? "http" : "https");
+    (host?.includes("localhost") || host?.startsWith("127.")
+      ? "http"
+      : "https");
   const fromRequest = host ? `${proto}://${host}` : null;
   const doc = buildOpenApiDocument(fromRequest ?? appUrl());
 
