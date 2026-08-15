@@ -1,0 +1,102 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="svgTitle svgDesc">
+  <title id="svgTitle">Tell platform architecture</title>
+  <desc id="svgDesc">External data sources feed scheduled ingestion into Turso, a research engine computes signals, and the Next.js application serves dashboards, alerts and email.</desc>
+
+  <defs>
+    <linearGradient id="pageBg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b1511" />
+      <stop offset="1" stop-color="#17271f" />
+    </linearGradient>
+    <marker id="arrowHead" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#8ab9a0" />
+    </marker>
+    <style>
+      .eyebrow { font: 600 18px monospace; letter-spacing: 4px; fill: #8fd0aa; }
+      .title { font: 700 68px sans-serif; letter-spacing: -3px; fill: #f5f4ed; }
+      .subtitle { font: 400 24px sans-serif; fill: #b9c5bf; }
+      .lane { font: 600 16px monospace; letter-spacing: 2px; fill: #7fae96; }
+      .cardTitle { font: 700 25px sans-serif; fill: #f5f4ed; }
+      .cardTitleDark { font: 700 25px sans-serif; fill: #14231c; }
+      .body { font: 400 18px sans-serif; fill: #bdc8c2; }
+      .bodyDark { font: 400 18px sans-serif; fill: #4d5e55; }
+      .small { font: 500 14px monospace; fill: #91a39a; }
+      .smallDark { font: 500 14px monospace; fill: #42634f; }
+      .flow { stroke: #8ab9a0; stroke-width: 3; fill: none; marker-end: url(#arrowHead); }
+      .rule { stroke: #345440; stroke-width: 1; }
+      .ruleLight { stroke: #ced7d1; stroke-width: 1; }
+    </style>
+  </defs>
+
+  <rect width="1600" height="900" rx="34" fill="url(#pageBg)" />
+  <circle cx="1460" cy="80" r="250" fill="#315f48" opacity="0.16" />
+  <circle cx="80" cy="860" r="290" fill="#3d6f55" opacity="0.11" />
+
+  <text x="88" y="80" class="eyebrow">TELL RESEARCH PLATFORM</text>
+  <text x="88" y="158" class="title">Global signals, clearly connected.</text>
+  <text x="88" y="204" class="subtitle">Macro data to explainable multi-asset outlooks to personal research</text>
+
+  <text x="88" y="282" class="lane">01 / SOURCES</text>
+  <text x="424" y="282" class="lane">02 / DATA</text>
+  <text x="760" y="282" class="lane">03 / INTELLIGENCE</text>
+  <text x="1096" y="282" class="lane">04 / EXPERIENCE</text>
+
+  <g>
+    <rect x="72" y="310" width="284" height="436" rx="22" fill="#14231c" stroke="#345440" />
+    <text x="102" y="360" class="cardTitle">External feeds</text>
+    <text x="102" y="412" class="body">FRED and ALFRED</text>
+    <text x="102" y="452" class="body">IMF and World Bank</text>
+    <text x="102" y="492" class="body">Yahoo Finance</text>
+    <text x="102" y="532" class="body">Finnhub quotes</text>
+    <text x="102" y="572" class="body">Fed, ECB, BoE RSS</text>
+    <line x1="102" y1="612" x2="326" y2="612" class="rule" />
+    <text x="102" y="652" class="small">DAILY 06:00 UTC</text>
+    <text x="102" y="684" class="small">GITHUB ACTIONS</text>
+  </g>
+
+  <g>
+    <rect x="408" y="310" width="284" height="436" rx="22" fill="#14231c" stroke="#345440" />
+    <text x="438" y="360" class="cardTitle">Turso database</text>
+    <text x="438" y="412" class="body">Macro readings</text>
+    <text x="438" y="452" class="body">Market OHLC bars</text>
+    <text x="438" y="492" class="body">Policy events</text>
+    <text x="438" y="532" class="body">Signals and forecasts</text>
+    <text x="438" y="572" class="body">Users and watchlists</text>
+    <text x="438" y="612" class="body">Alerts and research</text>
+    <line x1="438" y1="648" x2="662" y2="648" class="rule" />
+    <text x="438" y="688" class="small">SYSTEM OF RECORD</text>
+  </g>
+
+  <g>
+    <rect x="744" y="310" width="284" height="436" rx="22" fill="#14231c" stroke="#345440" />
+    <text x="774" y="360" class="cardTitle">Research engine</text>
+    <text x="774" y="412" class="body">Feature transforms</text>
+    <text x="774" y="452" class="body">Regime detection</text>
+    <text x="774" y="492" class="body">1d, 1w, 1m signals</text>
+    <text x="774" y="532" class="body">Forecast evaluation</text>
+    <text x="774" y="572" class="body">Event impact studies</text>
+    <text x="774" y="612" class="body">Grounded retrieval</text>
+    <line x1="774" y1="648" x2="998" y2="648" class="rule" />
+    <text x="774" y="688" class="small">RULES, GEMINI, GROQ</text>
+  </g>
+
+  <g>
+    <rect x="1080" y="310" width="448" height="436" rx="22" fill="#f3f4ee" />
+    <text x="1114" y="360" class="cardTitleDark">Next.js application</text>
+    <text x="1114" y="412" class="bodyDark">Market outlook dashboard</text>
+    <text x="1114" y="452" class="bodyDark">Today and tomorrow risk bias</text>
+    <text x="1114" y="492" class="bodyDark">Charts, events and quality</text>
+    <text x="1114" y="532" class="bodyDark">OTP auth and watchlists</text>
+    <text x="1114" y="572" class="bodyDark">In-app and email alerts</text>
+    <text x="1114" y="612" class="bodyDark">Research briefs and chat</text>
+    <line x1="1114" y1="648" x2="1494" y2="648" class="ruleLight" />
+    <text x="1114" y="688" class="smallDark">VERCEL, REACT 19, SMTP</text>
+  </g>
+
+  <path d="M356 528 L400 528" class="flow" />
+  <path d="M692 528 L736 528" class="flow" />
+  <path d="M1028 528 L1072 528" class="flow" />
+
+  <line x1="88" y1="800" x2="1512" y2="800" class="rule" />
+  <text x="88" y="844" class="small">EVIDENCE FIRST, EXPLAINABLE SIGNALS, RESEARCH AID NOT FINANCIAL ADVICE</text>
+  <text x="1512" y="844" text-anchor="end" class="small">tell-gamma.vercel.app</text>
+</svg>
