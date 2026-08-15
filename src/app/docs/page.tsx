@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { BrandMark } from "@/components/BrandMark";
 import { SwaggerDocs } from "@/components/SwaggerDocs";
 
 export const metadata: Metadata = {
@@ -15,9 +16,7 @@ export default function DocsPage() {
           href="/login"
           className="flex min-w-0 items-center gap-2 text-sm font-semibold tracking-[-0.02em]"
         >
-          <span className="grid h-7 w-7 shrink-0 place-items-center rounded-md bg-neutral-900 font-mono text-[10px] text-white">
-            T
-          </span>
+          <BrandMark />
           Tell API
         </Link>
         <div className="flex shrink-0 items-center gap-3 text-xs text-neutral-500">
