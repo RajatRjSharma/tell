@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { OutlookSignalDto } from "@/lib/api/outlook";
 import { ResearchBrief } from "@/components/ResearchBrief";
 import { ResearchChat } from "@/components/ResearchChat";
+import { PriceChart } from "@/components/PriceChart";
 import { SignalQuality } from "@/components/SignalQuality";
 
 type User = { id: string; email: string };
@@ -563,6 +564,11 @@ export function OutlookDashboard({
                     )}
                   </div>
                 </div>
+
+                <PriceChart
+                  symbol={effectiveSelectedSymbol}
+                  horizon={horizon}
+                />
 
                 <div className="mt-6 border-t border-[var(--line)] pt-5">
                   <h4 className="text-xs font-semibold text-[var(--muted-strong)]">

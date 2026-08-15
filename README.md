@@ -139,6 +139,7 @@ Public JSON endpoints (Turso-backed):
 | `GET /api/assets` | Asset universe |
 | `GET /api/outlook` | Latest signals (`?symbols=SPY,TLT&horizons=1d,1w&asOf=YYYY-MM-DD`) |
 | `GET /api/outlook/SPY` | One asset (`?live=1` adds near-real-time quote) |
+| `GET /api/charts/SPY` | Daily OHLC series + signal markers (`?horizon=1d&limit=90`) |
 | `GET /api/quality` | Signal hit-rate report (`?symbol=SPY`) |
 | `GET /api/readings?country=US&indicator=CPI` | Macro series (`from`/`to`/`limit`) |
 
