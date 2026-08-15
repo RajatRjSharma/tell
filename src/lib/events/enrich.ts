@@ -23,6 +23,8 @@ const SOURCE_ASSETS: Record<string, string[]> = {
   BoE: ["EWU", "GBPUSD", "TLT", "GLD"],
 };
 
+export { SOURCE_ASSETS };
+
 export function buildEventId(source: string, item: RssItem): string {
   const material =
     item.guid || item.link || `${item.title}|${item.pubDate ?? ""}`;

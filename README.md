@@ -45,6 +45,10 @@ Requires `.env` with Turso credentials (no IMF API key).
 `make ingest-events` pulls free central-bank RSS (no API key). Keyword tags add a light
 hawkish/dovish tilt and likely asset relevance for the dashboard + AI context.
 
+`GET /api/events/impact` (and the dashboard **Event impact study** panel) measures median
+forward returns at 1d / 1w / 1m after similar Fed/ECB/BoE releases. Optional
+`sentiment=hawkish|dovish`. Historical analogues only — not predictions.
+
 Optional: set `FRED_OBSERVATION_START`, `IMF_MIN_YEAR`, or `MARKET_OBSERVATION_START=2023-01-01` in `.env`.
 
 ## Features / regimes
@@ -160,6 +164,7 @@ Public JSON endpoints (Turso-backed):
 | `GET /api/charts/SPY` | Daily OHLC series + signal markers (`?horizon=1d&limit=90`) |
 | `GET /api/quality` | Signal hit-rate report (`?symbol=SPY`) |
 | `GET /api/events` | Policy events (`?source=Fed&country=US&symbol=SPY&since=YYYY-MM-DD&limit=30`) |
+| `GET /api/events/impact` | Historical forward returns after similar events (`?symbol=SPY&source=Fed&sentiment=any`) |
 | `GET /api/readings?country=US&indicator=CPI` | Macro series (`from`/`to`/`limit`) |
 
 ## AI (Gemini + Groq)

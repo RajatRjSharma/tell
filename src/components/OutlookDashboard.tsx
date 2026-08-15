@@ -10,6 +10,7 @@ import { PriceChart } from "@/components/PriceChart";
 import { SignalQuality } from "@/components/SignalQuality";
 import { AlertsPanel } from "@/components/AlertsPanel";
 import { EventsPanel } from "@/components/EventsPanel";
+import { EventImpactPanel } from "@/components/EventImpactPanel";
 
 type User = { id: string; email: string };
 
@@ -424,6 +425,8 @@ export function OutlookDashboard({
           symbol={effectiveSelectedSymbol || undefined}
           countryCode={selectedAsset?.countryCode ?? null}
         />
+
+        <EventImpactPanel symbol={effectiveSelectedSymbol || undefined} />
 
         <AlertsPanel
           user={user}
