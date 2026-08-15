@@ -21,6 +21,12 @@ npm run dev
 
 Never commit `.env`.
 
+## Auth
+
+- `/register` · `/login`
+- Cookie JWT (`tell_session`) backed by Turso `users`
+- APIs: `/api/auth/register` · `login` · `logout` · `me`
+
 ## Disclaimer
 
 Not financial advice. Research tool only.
