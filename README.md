@@ -207,3 +207,5 @@ make db-migrate
 ## Disclaimer
 
 Not financial advice. Research tool only.
+
+See live product copy on [`/methodology`](https://tell-gamma.vercel.app/methodology) — how regimes, `rules-v1` signals, hit rates, events, and AI grounding work.

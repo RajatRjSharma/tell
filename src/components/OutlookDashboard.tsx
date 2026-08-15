@@ -314,6 +314,13 @@ export function OutlookDashboard({
               open={chatOpen}
               onOpenChange={setChatOpen}
             />
+            <Link
+              className="nav-link"
+              href="/methodology"
+              data-testid="nav-methodology"
+            >
+              Method
+            </Link>
             <Link className="nav-link nav-system-link" href="/api/health">
               System
             </Link>
@@ -807,7 +814,15 @@ export function OutlookDashboard({
       <footer className="border-t border-[var(--line)]">
         <div className="mx-auto flex max-w-[1480px] flex-col gap-3 px-4 py-6 text-xs text-[var(--muted)] sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
           <span>Tell turns macro data into explainable market context.</span>
-          <span className="font-mono">Not financial advice.</span>
+          <span className="flex flex-wrap items-center gap-3 font-mono">
+            <Link
+              href="/methodology"
+              className="underline-offset-2 hover:underline"
+            >
+              Methodology
+            </Link>
+            <span>Not financial advice.</span>
+          </span>
         </div>
       </footer>
     </div>

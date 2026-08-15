@@ -180,6 +180,12 @@ export function AuthForm({ mode }: { mode: Mode }) {
             >
               Back to outlook
             </Link>
+            <Link
+              href="/methodology"
+              className="w-fit text-[var(--muted)] transition-colors hover:text-[var(--text)]"
+            >
+              Methodology
+            </Link>
           </div>
         </div>
       </section>
