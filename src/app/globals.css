@@ -206,7 +206,14 @@ button:disabled {
 }
 
 .nav-link {
+  border: 1px solid transparent;
   color: var(--muted);
+}
+
+.nav-link-active {
+  border-color: var(--text);
+  background: var(--surface-hover);
+  color: var(--text);
 }
 
 .button-primary:active,

@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import type { OutlookSignalDto } from "@/lib/api/outlook";
-import { BrandMark } from "@/components/BrandMark";
 import { EconomicTerm, type EconomicTermKey } from "@/components/EconomicTerm";
 import { ResearchBrief } from "@/components/ResearchBrief";
 import { ResearchChat } from "@/components/ResearchChat";
@@ -15,6 +14,7 @@ import { EventsPanel } from "@/components/EventsPanel";
 import { EventImpactPanel } from "@/components/EventImpactPanel";
 import { MacroSparklineStrip } from "@/components/MacroSparklineStrip";
 import { NearTermBiasPanel } from "@/components/NearTermBiasPanel";
+import { SiteHeader } from "@/components/SiteHeader";
 import type { MacroStrip } from "@/lib/macro/sparklines";
 import type { NearTermBias } from "@/lib/risk/near-term";
 
@@ -125,7 +125,7 @@ export function OutlookDashboard({
   initialNearTermBias?: NearTermBias | null;
 }) {
   const router = useRouter();
-  const [sessionUser, setSessionUser] = useState<User | null>(user);
+  const sessionUser = user;
   const [horizon, setHorizon] = useState<string>("1d");
   const [watchlist, setWatchlist] = useState<string[]>(initialWatchlist);
   const [assetClass, setAssetClass] = useState<AssetClass>(() =>
@@ -293,108 +293,26 @@ export function OutlookDashboard({
     return () => controller.abort();
   }, [effectiveSelectedSymbol, sessionUser]);
 
-  async function logout() {
-    try {
-      await fetch("/api/auth/logout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: "{}",
-      });
-    } finally {
-      setSessionUser(null);
-      router.push("/login");
-      router.refresh();
-    }
-  }
-
   return (
     <div className="min-h-[100dvh] bg-[var(--page)] text-[var(--text)]">
       <a className="skip-link" href="#market-outlook">
         Skip to market outlook
       </a>
 
-      <header className="sticky top-0 z-20 border-b border-[var(--line)] bg-[color-mix(in_srgb,var(--page)_92%,transparent)] backdrop-blur-xl">
-        <div className="site-header-inner mx-auto flex h-16 max-w-[1480px] items-center justify-between px-4 sm:px-6 lg:px-8">
-          <Link
-            href="/"
-            className="site-header-brand group flex items-center gap-3 focus-visible:outline-none"
-            aria-label="Tell home"
-          >
-            <BrandMark className="group-hover:-translate-y-0.5" />
-
-            <span className="text-[15px] font-semibold tracking-[-0.02em]">
-              Tell
-            </span>
-            <span className="hidden h-4 w-px bg-[var(--line-strong)] sm:block" />
-            <span className="hidden text-xs text-[var(--muted)] sm:block">
-              Global macro research
-            </span>
-          </Link>
-
-          <div
-            data-testid="auth-nav"
-            className="site-header-nav flex items-center gap-2 text-sm"
-          >
-            <ResearchChat
-              symbol={effectiveSelectedSymbol || "SPY"}
-              horizon={horizon}
-              open={chatOpen}
-              onOpenChange={setChatOpen}
-              enabled={Boolean(sessionUser)}
-            />
-            <Link
-              className="nav-link nav-method-link"
-              href="/methodology"
-              data-testid="nav-methodology"
-            >
-              Method
-            </Link>
-            <Link
-              className="nav-link nav-system-link"
-              href="/system"
-              data-testid="nav-system"
-            >
-              System
-            </Link>
-            {sessionUser ? (
-              <>
-                <span
-                  data-testid="user-email"
-                  className="hidden max-w-48 truncate text-xs text-[var(--muted)] md:block"
-                  title={sessionUser.email}
-                >
-                  @{sessionUser.username}
-                </span>
-                <button
-                  data-testid="logout-button"
-                  type="button"
-                  onClick={logout}
-                  className="button-secondary"
-                >
-                  Log out
-                </button>
-              </>
-            ) : (
-              <>
-                <Link
-                  data-testid="nav-signin"
-                  href="/login"
-                  className="button-secondary"
-                >
-                  Sign in
-                </Link>
-                <Link
-                  data-testid="nav-register"
-                  href="/register"
-                  className="button-primary nav-register-link"
-                >
-                  Register
-                </Link>
-              </>
-            )}
-          </div>
-        </div>
-      </header>
+      <SiteHeader
+        sectionLabel="Global macro research"
+        active="outlook"
+        user={sessionUser}
+        leadingActions={
+          <ResearchChat
+            symbol={effectiveSelectedSymbol || "SPY"}
+            horizon={horizon}
+            open={chatOpen}
+            onOpenChange={setChatOpen}
+            enabled={Boolean(sessionUser)}
+          />
+        }
+      />
 
       <main
         id="market-outlook"

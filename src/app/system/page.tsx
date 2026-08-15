@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { BrandMark } from "@/components/BrandMark";
 import {
   buildHealthReport,
   type CheckStatus,
   type HealthCheck,
   type HealthReport,
 } from "@/lib/api/health";
+import { SiteHeader } from "@/components/SiteHeader";
 import { getSession } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import packageJson from "../../../package.json";
@@ -177,7 +177,8 @@ export default async function SystemPage({
 }: {
   searchParams: Promise<{ deep?: string }>;
 }) {
-  if (!(await getSession())) {
+  const session = await getSession();
+  if (!session) {
     redirect("/login?next=/system");
   }
 
@@ -202,36 +203,11 @@ export default async function SystemPage({
         Skip to system status
       </a>
 
-      <header className="sticky top-0 z-20 border-b border-[var(--line)] bg-[color-mix(in_srgb,var(--page)_92%,transparent)] backdrop-blur-xl">
-        <div className="site-header-inner mx-auto flex h-16 max-w-[1480px] items-center justify-between px-4 sm:px-6 lg:px-8">
-          <Link
-            href="/"
-            className="site-header-brand group flex items-center gap-3 focus-visible:outline-none"
-            aria-label="Tell home"
-          >
-            <BrandMark className="group-hover:-translate-y-0.5" />
-            <span className="text-[15px] font-semibold tracking-[-0.02em]">
-              Tell
-            </span>
-            <span className="hidden h-4 w-px bg-[var(--line-strong)] sm:block" />
-            <span className="hidden text-xs text-[var(--muted)] sm:block">
-              System
-            </span>
-          </Link>
-
-          <div className="site-header-nav flex items-center gap-2 text-sm">
-            <Link className="nav-link" href="/">
-              Outlook
-            </Link>
-            <Link className="nav-link" href="/methodology">
-              Method
-            </Link>
-            <Link className="nav-link nav-system-link" href="/system">
-              System
-            </Link>
-          </div>
-        </div>
-      </header>
+      <SiteHeader
+        sectionLabel="System"
+        active="system"
+        user={{ email: session.email, username: session.username }}
+      />
 
       <main
         id="system-content"
