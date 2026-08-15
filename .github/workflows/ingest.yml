@@ -48,5 +48,8 @@ jobs:
       - name: Compute signals
         run: npm run compute:signals
 
+      - name: Evaluate forecast hit rates
+        run: npm run compute:forecasts
+
       # Intentionally no Gemini/Groq steps here.
       # Free AI credits stay local-only: `make compute-briefs` / `TELL_AI_EVAL=1 make test-eval`

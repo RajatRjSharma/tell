@@ -26,6 +26,7 @@
     "ingest:markets": "tsx scripts/ingest-markets.ts",
     "compute:features": "tsx scripts/compute-features.ts",
     "compute:signals": "tsx scripts/compute-signals.ts",
+    "compute:forecasts": "tsx scripts/compute-forecasts.ts",
     "compute:briefs": "tsx scripts/compute-briefs.ts"
   },
   "dependencies": {

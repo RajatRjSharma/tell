@@ -56,6 +56,7 @@ Pure TypeScript transforms (no ML). Used as inputs for the signal engine.
 
 ```bash
 make compute-signals   # Write bullish/neutral/bearish outlooks to Turso
+make compute-forecasts # Score resolved signals into forecast_log (hit rate)
 ```
 
 Defaults: horizons `1d,1w,1m` (≈ 1 / 5 / 21 trading sessions). Custom day horizons:
@@ -67,6 +68,10 @@ SIGNAL_HORIZONS=1d,1w,1m,10d,60d make compute-signals
 Hourly horizons are not supported yet (daily bars only). Near-real-time **last price**
 overlay uses Finnhub quote when `FINNHUB_API_KEY` is set, else Yahoo — printed by
 `compute-signals` for context; scores still use daily features.
+
+`compute-forecasts` compares each stored signal to the realized forward return once
+enough bars exist. Neutral is graded with a small band that widens with horizon length.
+Daily Actions runs this after `compute:signals` (no AI keys).
 
 ## Daily ingest (GitHub Actions)
 
@@ -134,6 +139,7 @@ Public JSON endpoints (Turso-backed):
 | `GET /api/assets` | Asset universe |
 | `GET /api/outlook` | Latest signals (`?symbols=SPY,TLT&horizons=1d,1w&asOf=YYYY-MM-DD`) |
 | `GET /api/outlook/SPY` | One asset (`?live=1` adds near-real-time quote) |
+| `GET /api/quality` | Signal hit-rate report (`?symbol=SPY`) |
 | `GET /api/readings?country=US&indicator=CPI` | Macro series (`from`/`to`/`limit`) |
 
 ## AI (Gemini + Groq)

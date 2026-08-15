@@ -36,6 +36,8 @@ async function migrate() {
     await db.execute(statement);
   }
 
+  await softUpgradeForecastLog(db);
+
   const tables = await db.execute(
     "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name",
   );
@@ -46,6 +48,26 @@ async function migrate() {
   }
 
   console.log("Migration complete.");
+}
+
+async function softUpgradeForecastLog(db: ReturnType<typeof createClient>) {
+  const info = await db.execute("PRAGMA table_info(forecast_log)");
+  const columns = new Set(info.rows.map((row) => String(row.name)));
+
+  if (!columns.has("model_version")) {
+    console.log("Upgrading forecast_log: add model_version");
+    await db.execute(
+      "ALTER TABLE forecast_log ADD COLUMN model_version TEXT DEFAULT 'rules-v1'",
+    );
+    await db.execute(
+      "UPDATE forecast_log SET model_version = 'rules-v1' WHERE model_version IS NULL",
+    );
+  }
+
+  await db.execute(
+    `CREATE UNIQUE INDEX IF NOT EXISTS idx_forecast_log_uq
+     ON forecast_log (symbol, horizon, as_of_date, model_version)`,
+  );
 }
 
 migrate().catch((err) => {

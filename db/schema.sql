@@ -143,8 +143,10 @@ CREATE TABLE IF NOT EXISTS forecast_log (
   confidence REAL,
   actual_return REAL,
   correct INTEGER,
+  model_version TEXT NOT NULL DEFAULT 'rules-v1',
   evaluated_at TEXT,
-  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE (symbol, horizon, as_of_date, model_version)
 );
 
 CREATE INDEX IF NOT EXISTS idx_forecast_log_lookup

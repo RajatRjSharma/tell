@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { OutlookSignalDto } from "@/lib/api/outlook";
 import { ResearchBrief } from "@/components/ResearchBrief";
 import { ResearchChat } from "@/components/ResearchChat";
+import { SignalQuality } from "@/components/SignalQuality";
 
 type User = { id: string; email: string };
 
@@ -349,6 +350,11 @@ export function OutlookDashboard({
             <span className="metric-note">rules-v1 model</span>
           </div>
         </section>
+
+        <SignalQuality
+          symbol={effectiveSelectedSymbol || undefined}
+          horizon={horizon}
+        />
 
         <div className="mt-10 flex flex-col gap-5 border-b border-[var(--line)] pb-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
