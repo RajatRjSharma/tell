@@ -25,14 +25,24 @@ const sample: ResearchContext = {
       source: "FRED",
     },
   ],
+  events: [
+    {
+      date: "2026-07-29",
+      source: "Fed",
+      title: "Federal Reserve issues FOMC statement",
+      type: "policy",
+    },
+  ],
 };
 
 describe("formatResearchContext", () => {
-  it("serializes regime, signals, and macro", () => {
+  it("serializes regime, signals, macro, and events", () => {
     const text = formatResearchContext(sample);
     expect(text).toContain("regime=inflationary");
     expect(text).toContain("SPY 1d: neutral");
     expect(text).toContain("CPI 2026-07-01=314.2");
+    expect(text).toContain("recent_policy_events:");
+    expect(text).toContain("FOMC statement");
   });
 });
 
@@ -44,6 +54,7 @@ describe("extractCitations", () => {
         "signals_as_of:2026-08-14",
         "SPY:1d:neutral",
         "CPI:2026-07-01",
+        "event:Fed:2026-07-29:Federal Reserve issues FOMC statement",
       ]),
     );
   });

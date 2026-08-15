@@ -1,0 +1,176 @@
+"use client";
+
+import { useEffect, useState } from "react";
+
+type PolicyEvent = {
+  id: string;
+  date: string;
+  countryCode: string | null;
+  type: string | null;
+  title: string;
+  summary: string | null;
+  url: string | null;
+  sentiment: number | null;
+  assetsImpact: string[];
+  source: string | null;
+};
+
+type EventsPayload = {
+  events: PolicyEvent[];
+  error?: string;
+};
+
+type EventsState = {
+  key: string;
+  status: "ready" | "error";
+  payload: EventsPayload | null;
+  error: string | null;
+};
+
+function sentimentLabel(value: number | null): string | null {
+  if (value == null) return null;
+  if (value > 0.1) return "hawkish tilt";
+  if (value < -0.1) return "dovish tilt";
+  return "mixed";
+}
+
+export function EventsPanel({
+  symbol,
+  countryCode,
+}: {
+  symbol?: string;
+  countryCode?: string | null;
+}) {
+  const [result, setResult] = useState<EventsState | null>(null);
+  const requestKey = `${symbol ?? "all"}:${countryCode ?? "all"}`;
+  const active = result?.key === requestKey ? result : null;
+  const state = active ? active.status : "loading";
+  const events = active?.payload?.events ?? [];
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const params = new URLSearchParams({ limit: "12" });
+    if (symbol) params.set("symbol", symbol);
+
+    fetch(`/api/events?${params}`, { signal: controller.signal })
+      .then(async (response) => {
+        const data = (await response.json()) as EventsPayload;
+        if (!response.ok) {
+          throw new Error(data.error ?? "Events unavailable");
+        }
+        setResult({
+          key: requestKey,
+          status: "ready",
+          payload: data,
+          error: null,
+        });
+      })
+      .catch((err: unknown) => {
+        if (err instanceof DOMException && err.name === "AbortError") return;
+        setResult({
+          key: requestKey,
+          status: "error",
+          payload: null,
+          error: err instanceof Error ? err.message : "Events unavailable",
+        });
+      });
+
+    return () => controller.abort();
+  }, [requestKey, symbol]);
+
+  const scoped = countryCode
+    ? events.filter(
+        (event) => !event.countryCode || event.countryCode === countryCode,
+      )
+    : events;
+  const visible = scoped.length > 0 ? scoped.slice(0, 8) : events.slice(0, 8);
+
+  return (
+    <section
+      className="mt-10 overflow-hidden rounded-[16px] border border-[var(--line)] bg-[var(--surface)]"
+      data-testid="events-panel"
+    >
+      <div className="flex flex-wrap items-end justify-between gap-3 border-b border-[var(--line)] px-5 py-4">
+        <div>
+          <h2 className="text-sm font-semibold tracking-[-0.02em]">
+            Policy events
+          </h2>
+          <p className="mt-1 text-xs text-[var(--muted)]">
+            Fed, ECB, and BoE releases from free RSS feeds.
+            {symbol ? ` Highlighting relevance to ${symbol}.` : ""}
+          </p>
+        </div>
+        <span className="font-mono text-[10px] text-[var(--muted)]">
+          {state === "loading" ? "…" : `${visible.length} recent`}
+        </span>
+      </div>
+
+      <div className="px-5 py-4">
+        {state === "error" ? (
+          <p className="text-sm text-[var(--negative)]">{active?.error}</p>
+        ) : state === "loading" ? (
+          <p className="text-sm text-[var(--muted)]">Loading events…</p>
+        ) : visible.length === 0 ? (
+          <p className="text-sm text-[var(--muted)]">
+            No events yet — run{" "}
+            <code className="font-mono">make ingest-events</code>.
+          </p>
+        ) : (
+          <ul className="space-y-3">
+            {visible.map((event) => {
+              const tone = sentimentLabel(event.sentiment);
+              const body = (
+                <>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-[var(--muted)]">
+                      {event.source ?? "source"} · {event.date}
+                    </span>
+                    {event.type ? (
+                      <span className="rounded-[6px] bg-[var(--surface-raised)] px-1.5 py-0.5 font-mono text-[10px] text-[var(--muted-strong)]">
+                        {event.type}
+                      </span>
+                    ) : null}
+                    {tone ? (
+                      <span className="font-mono text-[10px] text-[var(--muted)]">
+                        {tone}
+                      </span>
+                    ) : null}
+                  </div>
+                  <p className="mt-1 text-sm font-medium tracking-[-0.02em]">
+                    {event.title}
+                  </p>
+                  {event.summary ? (
+                    <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-[var(--muted-strong)]">
+                      {event.summary}
+                    </p>
+                  ) : null}
+                </>
+              );
+
+              return (
+                <li
+                  key={event.id}
+                  className="rounded-[12px] border border-[var(--line)] px-3 py-3"
+                  data-testid={`event-${event.id}`}
+                >
+                  {event.url ? (
+                    <a
+                      href={event.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="block transition-opacity hover:opacity-80"
+                    >
+                      {body}
+                    </a>
+                  ) : (
+                    body
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+    </section>
+  );
+}

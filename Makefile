@@ -1,4 +1,4 @@
-.PHONY: help install install-browsers dev build start lint lint-fix format format-check typecheck test test-watch test-coverage test-eval test-e2e test-e2e-ui ci db-migrate db-seed ingest-fred ingest-imf ingest-markets ingest-manual ingest-all compute-features compute-signals compute-forecasts compute-alerts compute-briefs setup
+.PHONY: help install install-browsers dev build start lint lint-fix format format-check typecheck test test-watch test-coverage test-eval test-e2e test-e2e-ui ci db-migrate db-seed ingest-fred ingest-imf ingest-markets ingest-events ingest-manual ingest-all compute-features compute-signals compute-forecasts compute-alerts compute-briefs setup
 
 help: ## Show available commands
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-16s\033[0m %s\n", $$1, $$2}'
@@ -69,13 +69,17 @@ ingest-imf: ## Fetch cross-country macro from IMF into Turso
 ingest-markets: ## Fetch daily asset prices from Yahoo Finance into Turso
 	npm run ingest:markets
 
+ingest-events: ## Fetch Fed/ECB/BoE RSS policy events into Turso
+	npm run ingest:events
+
 ingest-manual: ## Local-only: IMF DataMapper (blocked on GitHub Actions) → Turso
 	CROSS_COUNTRY_PROVIDER=imf npm run ingest:imf
 
-ingest-all: ## Run FRED + IMF + markets ingest locally
+ingest-all: ## Run FRED + IMF + markets + events ingest locally
 	npm run ingest:fred
 	$(MAKE) ingest-manual
 	npm run ingest:markets
+	npm run ingest:events
 
 compute-features: ## Compute macro/market features + US regime snapshot
 	npm run compute:features

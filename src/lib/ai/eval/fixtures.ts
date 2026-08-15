@@ -32,6 +32,14 @@ export const spyNeutralContext: ResearchContext = {
       source: "FRED",
     },
   ],
+  events: [
+    {
+      date: "2026-07-29",
+      source: "Fed",
+      title: "Federal Reserve issues FOMC statement",
+      type: "policy",
+    },
+  ],
 };
 
 export const tltBearishContext: ResearchContext = {
@@ -60,6 +68,7 @@ export const tltBearishContext: ResearchContext = {
       source: "FRED",
     },
   ],
+  events: [],
 };
 
 export const marketOverviewContext: ResearchContext = {
@@ -93,6 +102,7 @@ export const marketOverviewContext: ResearchContext = {
       source: "FRED",
     },
   ],
+  events: [],
 };
 
 export const emptyContext: ResearchContext = {
@@ -102,4 +112,5 @@ export const emptyContext: ResearchContext = {
   symbol: "ZZZ",
   signals: [],
   macro: [],
+  events: [],
 };

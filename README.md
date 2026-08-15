@@ -33,13 +33,17 @@ Never commit `.env`.
 ```bash
 make ingest-fred       # US macro from FRED → Turso readings
 make ingest-markets    # Asset OHLC from Yahoo Finance → Turso asset_readings
+make ingest-events     # Fed / ECB / BoE RSS → Turso events
 make ingest-manual     # IMF DataMapper cross-country (run on your machine)
-make ingest-all        # FRED + IMF (manual) + markets locally
+make ingest-all        # FRED + IMF (manual) + markets + events locally
 ```
 
 `make ingest-manual` pulls **true IMF WEO** when you can (DataMapper is often blocked
 from GitHub cloud IPs). Run it whenever you want — daily, weekly, or after WEO updates.
 Requires `.env` with Turso credentials (no IMF API key).
+
+`make ingest-events` pulls free central-bank RSS (no API key). Keyword tags add a light
+hawkish/dovish tilt and likely asset relevance for the dashboard + AI context.
 
 Optional: set `FRED_OBSERVATION_START`, `IMF_MIN_YEAR`, or `MARKET_OBSERVATION_START=2023-01-01` in `.env`.
 
@@ -83,7 +87,7 @@ after creating a rule is a baseline only (no false fire).
 Workflow: `.github/workflows/ingest.yml`
 
 - Runs daily at **06:00 UTC** and on **Actions → Daily ingest → Run workflow**
-- Upserts **FRED → cross-country (IMF, else World Bank) → Yahoo markets**
+- Upserts **FRED → cross-country (IMF, else World Bank) → Yahoo markets → policy RSS**
 - If you miss `make ingest-manual`, Actions still fills cross-country via World Bank
 - If you *did* run manual IMF, later World Bank runs **do not overwrite** those WEO rows
 
@@ -148,6 +152,7 @@ Public JSON endpoints (Turso-backed):
 | `GET /api/outlook/SPY` | One asset (`?live=1` adds near-real-time quote) |
 | `GET /api/charts/SPY` | Daily OHLC series + signal markers (`?horizon=1d&limit=90`) |
 | `GET /api/quality` | Signal hit-rate report (`?symbol=SPY`) |
+| `GET /api/events` | Policy events (`?source=Fed&country=US&symbol=SPY&since=YYYY-MM-DD&limit=30`) |
 | `GET /api/readings?country=US&indicator=CPI` | Macro series (`from`/`to`/`limit`) |
 
 ## AI (Gemini + Groq)

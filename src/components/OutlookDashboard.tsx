@@ -9,6 +9,7 @@ import { ResearchChat } from "@/components/ResearchChat";
 import { PriceChart } from "@/components/PriceChart";
 import { SignalQuality } from "@/components/SignalQuality";
 import { AlertsPanel } from "@/components/AlertsPanel";
+import { EventsPanel } from "@/components/EventsPanel";
 
 type User = { id: string; email: string };
 
@@ -417,6 +418,11 @@ export function OutlookDashboard({
         <SignalQuality
           symbol={effectiveSelectedSymbol || undefined}
           horizon={horizon}
+        />
+
+        <EventsPanel
+          symbol={effectiveSelectedSymbol || undefined}
+          countryCode={selectedAsset?.countryCode ?? null}
         />
 
         <AlertsPanel

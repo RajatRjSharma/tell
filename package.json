@@ -24,6 +24,7 @@
     "ingest:fred": "tsx scripts/ingest-fred.ts",
     "ingest:imf": "tsx scripts/ingest-imf.ts",
     "ingest:markets": "tsx scripts/ingest-markets.ts",
+    "ingest:events": "tsx scripts/ingest-events.ts",
     "compute:features": "tsx scripts/compute-features.ts",
     "compute:signals": "tsx scripts/compute-signals.ts",
     "compute:forecasts": "tsx scripts/compute-forecasts.ts",

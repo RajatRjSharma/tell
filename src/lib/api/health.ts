@@ -88,10 +88,11 @@ export async function checkDatabase(db: Client): Promise<HealthCheck> {
 export async function checkDataFreshness(db: Client): Promise<HealthCheck> {
   const started = Date.now();
   try {
-    const [signals, readings, assets, latest] = await Promise.all([
+    const [signals, readings, assets, events, latest] = await Promise.all([
       db.execute("SELECT COUNT(*) AS n FROM signals"),
       db.execute("SELECT COUNT(*) AS n FROM readings"),
       db.execute("SELECT COUNT(*) AS n FROM asset_readings"),
+      db.execute("SELECT COUNT(*) AS n FROM events"),
       db.execute({
         sql: `SELECT MAX(as_of_date) AS d FROM signals WHERE model_version = ?`,
         args: [SIGNAL_MODEL_VERSION],
@@ -101,6 +102,7 @@ export async function checkDataFreshness(db: Client): Promise<HealthCheck> {
     const signalCount = Number(signals.rows[0]?.n ?? 0);
     const readingCount = Number(readings.rows[0]?.n ?? 0);
     const assetCount = Number(assets.rows[0]?.n ?? 0);
+    const eventCount = Number(events.rows[0]?.n ?? 0);
     const latestAsOf =
       latest.rows[0]?.d == null ? null : String(latest.rows[0].d);
 
@@ -123,6 +125,7 @@ export async function checkDataFreshness(db: Client): Promise<HealthCheck> {
         signals: signalCount,
         readings: readingCount,
         assetReadings: assetCount,
+        events: eventCount,
       },
       latestSignalAsOf: latestAsOf,
       modelVersion: SIGNAL_MODEL_VERSION,

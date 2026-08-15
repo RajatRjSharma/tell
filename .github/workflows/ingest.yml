@@ -45,6 +45,9 @@ jobs:
       - name: Ingest markets (Yahoo)
         run: npm run ingest:markets
 
+      - name: Ingest policy events (Fed/ECB/BoE RSS)
+        run: npm run ingest:events
+
       - name: Compute signals
         run: npm run compute:signals
 

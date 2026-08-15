@@ -17,6 +17,12 @@ export type ResearchContext = {
     value: number;
     source: string | null;
   }>;
+  events: Array<{
+    date: string;
+    source: string | null;
+    title: string;
+    type: string | null;
+  }>;
 };
 
 export type BriefResult = {

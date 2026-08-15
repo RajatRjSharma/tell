@@ -1,6 +1,7 @@
 import type { Client } from "@libsql/client";
 import { listLatestOutlook } from "@/lib/api/outlook";
 import { listReadings } from "@/lib/api/readings-query";
+import { listEvents } from "@/lib/events/store";
 import type { ResearchContext } from "@/lib/ai/types";
 
 const DEFAULT_MACRO_INDICATORS = [
@@ -42,6 +43,17 @@ export function formatResearchContext(context: ResearchContext): string {
     );
   }
 
+  lines.push("", "recent_policy_events:");
+  if (context.events.length === 0) {
+    lines.push("- none");
+  } else {
+    for (const event of context.events) {
+      lines.push(
+        `- ${event.date} ${event.source ?? "source"} [${event.type ?? "event"}]: ${event.title}`,
+      );
+    }
+  }
+
   return lines.join("\n");
 }
 
@@ -54,6 +66,11 @@ export function extractCitations(context: ResearchContext): string[] {
   }
   for (const reading of context.macro.slice(0, 6)) {
     citations.add(`${reading.indicatorId}:${reading.observedFor}`);
+  }
+  for (const event of context.events.slice(0, 4)) {
+    citations.add(
+      `event:${event.source ?? "policy"}:${event.date}:${event.title.slice(0, 48)}`,
+    );
   }
   return [...citations];
 }
@@ -79,15 +96,21 @@ export async function buildResearchContext(
       : (await listLatestOutlook(db, { horizons: [horizon] })).slice(0, 12);
 
   const macroIndicators = options?.macroIndicators ?? DEFAULT_MACRO_INDICATORS;
-  const macroRows = await Promise.all(
-    macroIndicators.map((indicatorId) =>
-      listReadings(db, {
-        countryCode: "US",
-        indicatorId,
-        limit: 1,
-      }),
+  const [macroRows, events] = await Promise.all([
+    Promise.all(
+      macroIndicators.map((indicatorId) =>
+        listReadings(db, {
+          countryCode: "US",
+          indicatorId,
+          limit: 1,
+        }),
+      ),
     ),
-  );
+    listEvents(db, {
+      limit: 6,
+      symbol,
+    }),
+  ]);
 
   const regime =
     marketSignals.find((row) => row.regime)?.regime ??
@@ -117,6 +140,12 @@ export async function buildResearchContext(
       observedFor: row.observedFor,
       value: row.value,
       source: row.source,
+    })),
+    events: events.map((event) => ({
+      date: event.date,
+      source: event.source,
+      title: event.title,
+      type: event.type,
     })),
   };
 }
