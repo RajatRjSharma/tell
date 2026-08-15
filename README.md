@@ -32,9 +32,14 @@ Never commit `.env`.
 
 ```bash
 make ingest-fred       # US macro from FRED → Turso readings
-make ingest-imf        # Cross-country macro (IMF, World Bank fallback) → Turso
 make ingest-markets    # Asset OHLC from Yahoo Finance → Turso asset_readings
+make ingest-manual     # IMF DataMapper cross-country (run on your machine)
+make ingest-all        # FRED + IMF (manual) + markets locally
 ```
+
+`make ingest-manual` is for sources GitHub Actions cannot reach reliably (IMF DataMapper
+returns 403 from cloud IPs). Run it whenever you want — daily, weekly, or after WEO updates.
+Requires `.env` with Turso credentials (no IMF API key).
 
 Optional: set `FRED_OBSERVATION_START`, `IMF_MIN_YEAR`, or `MARKET_OBSERVATION_START=2023-01-01` in `.env`.
 
@@ -43,11 +48,8 @@ Optional: set `FRED_OBSERVATION_START`, `IMF_MIN_YEAR`, or `MARKET_OBSERVATION_S
 Workflow: `.github/workflows/ingest.yml`
 
 - Runs daily at **06:00 UTC** and on **Actions → Daily ingest → Run workflow**
-- Upserts FRED → cross-country (IMF / World Bank fallback) → Yahoo markets into Turso
-
-Cross-country note: IMF DataMapper often returns **403** from GitHub’s cloud IPs.
-Ingest tries IMF first, then **World Bank** equivalents so GDP growth, inflation,
-unemployment, and current account still refresh for US/IN/DE/JP/GB.
+- Upserts **FRED + Yahoo markets** into Turso
+- Does **not** run IMF (use `make ingest-manual` locally so Actions cannot overwrite WEO with substitutes)
 
 Repo secrets (Settings → Secrets and variables → Actions):
 

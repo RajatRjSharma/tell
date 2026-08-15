@@ -23,7 +23,12 @@ async function ingestImf() {
   console.log(
     `Ingesting ${imfIndicators.length} cross-country indicators for ${IMF_COUNTRY_CODES.join(", ")} (from ${minYear})...`,
   );
-  console.log("  (IMF DataMapper preferred; World Bank fallback if blocked)");
+  const provider = process.env.CROSS_COUNTRY_PROVIDER ?? "auto";
+  console.log(
+    provider.toLowerCase() === "imf"
+      ? "  (IMF DataMapper only — local manual mode)"
+      : "  (IMF preferred; World Bank fallback if blocked)",
+  );
 
   let total = 0;
   const sourcesUsed = new Set<string>();

@@ -15,6 +15,11 @@ export type CrossCountryResult = {
 /**
  * Prefer IMF DataMapper; fall back to World Bank when IMF blocks cloud IPs (403).
  * Indicator ids in Tell stay the same; readings.source records the provider used.
+ *
+ * CROSS_COUNTRY_PROVIDER / options.provider:
+ * - auto (default): IMF → World Bank fallback
+ * - imf: IMF only (for local `make ingest-manual`)
+ * - worldbank: World Bank only
  */
 export async function fetchCrossCountryReadings(
   imfIndicatorCode: string,
@@ -23,8 +28,25 @@ export async function fetchCrossCountryReadings(
     fetchImpl?: typeof fetch;
     minYear?: number;
     maxYear?: number;
+    provider?: "auto" | "IMF" | "WorldBank" | "imf" | "worldbank";
   },
 ): Promise<CrossCountryResult> {
+  const raw = options?.provider ?? process.env.CROSS_COUNTRY_PROVIDER ?? "auto";
+  const provider = String(raw).toLowerCase();
+
+  if (provider === "worldbank") {
+    const wbId = worldBankIdForImf(imfIndicatorCode);
+    if (!wbId) {
+      throw new Error(`No World Bank mapping for ${imfIndicatorCode}`);
+    }
+    const byCountry = await fetchWorldBankIndicator(wbId, countryCodes, {
+      fetchImpl: options?.fetchImpl,
+      minYear: options?.minYear,
+      maxYear: options?.maxYear,
+    });
+    return { source: "WorldBank", byCountry };
+  }
+
   try {
     const byCountry = await fetchImfOnly(
       imfIndicatorCode,
@@ -33,6 +55,8 @@ export async function fetchCrossCountryReadings(
     );
     return { source: "IMF", byCountry };
   } catch (err) {
+    if (provider === "imf") throw err;
+
     const message = err instanceof Error ? err.message : String(err);
     const wbId = worldBankIdForImf(imfIndicatorCode);
     if (!wbId) throw err;

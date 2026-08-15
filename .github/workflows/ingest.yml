@@ -2,7 +2,7 @@ name: Daily ingest
 
 on:
   schedule:
-    # ~06:00 UTC daily — after US equity cash close + FRED/IMF publish lag
+    # ~06:00 UTC daily — after US equity cash close + FRED publish lag
     - cron: "0 6 * * *"
   workflow_dispatch:
 
@@ -37,8 +37,8 @@ jobs:
         env:
           FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
 
-      - name: Ingest IMF
-        run: npm run ingest:imf
+      # IMF DataMapper is often 403 from GitHub cloud IPs.
+      # Run cross-country locally: `make ingest-manual`
 
       - name: Ingest markets (Yahoo)
         run: npm run ingest:markets

@@ -45,6 +45,7 @@ describe("fetchCrossCountryReadings", () => {
     const result = await fetchCrossCountryReadings("NGDP_RPCH", ["US"], {
       fetchImpl: fetchImpl as unknown as typeof fetch,
       minYear: 2015,
+      provider: "auto",
     });
 
     expect(result.source).toBe("WorldBank");
@@ -53,5 +54,19 @@ describe("fetchCrossCountryReadings", () => {
     ]);
     expect(warn).toHaveBeenCalled();
     warn.mockRestore();
+  });
+
+  it("does not fall back when provider is imf-only", async () => {
+    const fetchImpl = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 403,
+    });
+
+    await expect(
+      fetchCrossCountryReadings("NGDP_RPCH", ["US"], {
+        fetchImpl: fetchImpl as unknown as typeof fetch,
+        provider: "imf",
+      }),
+    ).rejects.toThrow(/IMF HTTP 403/);
   });
 });
