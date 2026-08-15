@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import type { OutlookSignalDto } from "@/lib/api/outlook";
+import { ResearchBrief } from "@/components/ResearchBrief";
+import { ResearchChat } from "@/components/ResearchChat";
 
 type User = { id: string; email: string };
 
@@ -109,6 +111,7 @@ export function OutlookDashboard({
     quote: Quote | null;
     state: "ready" | "unavailable";
   } | null>(null);
+  const [chatOpen, setChatOpen] = useState(false);
 
   const signalMap = useMemo(() => {
     const map = new Map<string, OutlookSignalDto>();
@@ -239,6 +242,12 @@ export function OutlookDashboard({
             data-testid="auth-nav"
             className="flex items-center gap-2 text-sm"
           >
+            <ResearchChat
+              symbol={effectiveSelectedSymbol || "SPY"}
+              horizon={horizon}
+              open={chatOpen}
+              onOpenChange={setChatOpen}
+            />
             <Link className="nav-link nav-system-link" href="/api/health">
               System
             </Link>
@@ -592,6 +601,11 @@ export function OutlookDashboard({
                     ))}
                   </div>
                 </div>
+
+                <ResearchBrief
+                  symbol={effectiveSelectedSymbol}
+                  horizon={horizon}
+                />
               </>
             ) : (
               <div className="py-10 text-center">

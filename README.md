@@ -136,6 +136,20 @@ Public JSON endpoints (Turso-backed):
 | `GET /api/outlook/SPY` | One asset (`?live=1` adds near-real-time quote) |
 | `GET /api/readings?country=US&indicator=CPI` | Macro series (`from`/`to`/`limit`) |
 
+## AI (Gemini + Groq)
+
+Optional research layer on top of Turso signals and macro readings.
+
+| Route | Purpose |
+|-------|---------|
+| `GET /api/brief?symbol=SPY&horizon=1d` | Gemini structured brief (`&refresh=1` bypasses 15m cache) |
+| `POST /api/chat` | Groq Q&A grounded in latest evidence (`{ message, history?, symbol?, horizon? }`) |
+
+Set `GEMINI_API_KEY` and `GROQ_API_KEY` in `.env`. Optional: `GEMINI_MODEL` (default `gemini-3.1-flash-lite`, with fallbacks), `GROQ_MODEL`.
+Without keys, endpoints return `503` and the UI shows a soft unavailable state.
+
+Dashboard: evidence panel includes a **Gemini brief**; header **Ask Tell** opens Groq chat.
+
 ## Disclaimer
 
 Not financial advice. Research tool only.
