@@ -291,6 +291,7 @@ button:disabled {
   border-bottom: 1px solid var(--line);
   padding: 0.8rem 1rem;
   color: var(--text);
+  cursor: pointer;
   transition:
     background-color 180ms ease,
     transform 180ms ease;
@@ -307,6 +308,35 @@ button:disabled {
 
 .outlook-row:active {
   transform: translateY(1px);
+}
+
+.watch-star {
+  margin-top: 0.1rem;
+  flex-shrink: 0;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1;
+  transition:
+    color 160ms ease,
+    background-color 160ms ease,
+    transform 160ms ease;
+}
+
+.watch-star:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--text) 6%, transparent);
+  color: var(--text);
+  transform: scale(1.06);
+}
+
+.watch-star-on {
+  color: #b7791f;
+}
+
+.watch-star:disabled {
+  opacity: 0.55;
 }
 
 .direction {

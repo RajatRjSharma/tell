@@ -151,3 +151,14 @@ CREATE TABLE IF NOT EXISTS forecast_log (
 
 CREATE INDEX IF NOT EXISTS idx_forecast_log_lookup
   ON forecast_log (symbol, horizon, as_of_date DESC);
+
+CREATE TABLE IF NOT EXISTS watchlist_items (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id TEXT NOT NULL,
+  symbol TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE (user_id, symbol)
+);
+
+CREATE INDEX IF NOT EXISTS idx_watchlist_user
+  ON watchlist_items (user_id, created_at ASC);

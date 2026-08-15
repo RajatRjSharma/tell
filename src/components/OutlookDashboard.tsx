@@ -29,10 +29,11 @@ type Quote = {
   source: "finnhub" | "yahoo";
 };
 
-type AssetClass = "all" | "equity" | "fx" | "commodity" | "rates";
+type AssetClass = "watchlist" | "all" | "equity" | "fx" | "commodity" | "rates";
 
 const HORIZONS = ["1d", "1w", "1m"] as const;
 const ASSET_CLASSES: { value: AssetClass; label: string }[] = [
+  { value: "watchlist", label: "Watchlist" },
   { value: "all", label: "All markets" },
   { value: "equity", label: "Equity" },
   { value: "fx", label: "FX" },
@@ -95,25 +96,46 @@ export function OutlookDashboard({
   user,
   assets,
   initialSignals,
+  initialWatchlist = [],
 }: {
   user: User | null;
   assets: Asset[];
   initialSignals: OutlookSignalDto[];
+  initialWatchlist?: string[];
 }) {
   const router = useRouter();
   const [horizon, setHorizon] = useState<string>("1d");
-  const [assetClass, setAssetClass] = useState<AssetClass>("all");
-  const [selectedSymbol, setSelectedSymbol] = useState(
-    initialSignals.find((signal) => signal.symbol === "SPY")?.symbol ??
-      assets[0]?.symbol ??
-      "",
+  const [watchlist, setWatchlist] = useState<string[]>(initialWatchlist);
+  const [assetClass, setAssetClass] = useState<AssetClass>(() =>
+    user && initialWatchlist.length > 0 ? "watchlist" : "all",
   );
+  const [watchBusy, setWatchBusy] = useState<string | null>(null);
+  const [selectedSymbol, setSelectedSymbol] = useState(() => {
+    if (user && initialWatchlist.length > 0) {
+      return (
+        initialWatchlist.find((symbol) =>
+          initialSignals.some(
+            (signal) => signal.symbol === symbol && signal.horizon === "1d",
+          ),
+        ) ??
+        initialWatchlist[0] ??
+        ""
+      );
+    }
+    return (
+      initialSignals.find((signal) => signal.symbol === "SPY")?.symbol ??
+      assets[0]?.symbol ??
+      ""
+    );
+  });
   const [quoteResult, setQuoteResult] = useState<{
     symbol: string;
     quote: Quote | null;
     state: "ready" | "unavailable";
   } | null>(null);
   const [chatOpen, setChatOpen] = useState(false);
+
+  const watchSet = useMemo(() => new Set(watchlist), [watchlist]);
 
   const signalMap = useMemo(() => {
     const map = new Map<string, OutlookSignalDto>();
@@ -125,13 +147,52 @@ export function OutlookDashboard({
 
   const visibleAssets = useMemo(
     () =>
-      assets.filter(
-        (asset) =>
-          (assetClass === "all" || asset.assetClass === assetClass) &&
-          signalMap.has(`${asset.symbol}:${horizon}`),
-      ),
-    [assetClass, assets, horizon, signalMap],
+      assets.filter((asset) => {
+        if (!signalMap.has(`${asset.symbol}:${horizon}`)) return false;
+        if (assetClass === "watchlist") return watchSet.has(asset.symbol);
+        if (assetClass === "all") return true;
+        return asset.assetClass === assetClass;
+      }),
+    [assetClass, assets, horizon, signalMap, watchSet],
   );
+
+  async function toggleWatch(symbol: string) {
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+    if (watchBusy) return;
+
+    const watched = watchSet.has(symbol);
+    const previous = watchlist;
+    const optimistic = watched
+      ? previous.filter((item) => item !== symbol)
+      : [...previous, symbol];
+    setWatchlist(optimistic);
+    setWatchBusy(symbol);
+
+    try {
+      const response = await fetch(
+        watched
+          ? `/api/watchlist?symbol=${encodeURIComponent(symbol)}`
+          : "/api/watchlist",
+        {
+          method: watched ? "DELETE" : "POST",
+          headers: watched ? undefined : { "Content-Type": "application/json" },
+          body: watched ? undefined : JSON.stringify({ symbol }),
+        },
+      );
+      if (!response.ok) {
+        throw new Error("Watchlist update failed");
+      }
+      const data = (await response.json()) as { symbols: string[] };
+      setWatchlist(data.symbols);
+    } catch {
+      setWatchlist(previous);
+    } finally {
+      setWatchBusy(null);
+    }
+  }
 
   const currentSignals = useMemo(
     () =>
@@ -363,7 +424,8 @@ export function OutlookDashboard({
               Market outlook
             </h2>
             <p className="mt-1 text-sm text-[var(--muted)]">
-              Select a row to inspect the evidence and live quote.
+              Star symbols to build a watchlist
+              {user ? "" : " (sign in required)"}. Select a row for evidence.
             </p>
           </div>
 
@@ -395,10 +457,14 @@ export function OutlookDashboard({
                 setAssetClass(event.target.value as AssetClass)
               }
               className="select-control"
+              data-testid="asset-filter"
             >
               {ASSET_CLASSES.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
+                  {option.value === "watchlist" && watchlist.length > 0
+                    ? ` (${watchlist.length})`
+                    : ""}
                 </option>
               ))}
             </select>
@@ -422,25 +488,56 @@ export function OutlookDashboard({
                 {visibleAssets.map((asset) => {
                   const signal = signalMap.get(`${asset.symbol}:${horizon}`)!;
                   const selected = asset.symbol === effectiveSelectedSymbol;
+                  const watched = watchSet.has(asset.symbol);
                   return (
-                    <button
+                    <div
                       key={asset.symbol}
-                      type="button"
+                      role="button"
+                      tabIndex={0}
                       onClick={() => setSelectedSymbol(asset.symbol)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          setSelectedSymbol(asset.symbol);
+                        }
+                      }}
                       aria-pressed={selected}
                       className="outlook-grid outlook-row"
+                      data-testid={`outlook-row-${asset.symbol}`}
                     >
                       <span className="min-w-0 text-left">
-                        <span className="flex items-baseline gap-2">
-                          <strong className="font-mono text-sm font-semibold tracking-[-0.02em]">
-                            {asset.symbol}
-                          </strong>
-                          <span className="hidden truncate text-xs text-[var(--muted)] md:inline">
-                            {asset.countryCode}
+                        <span className="flex items-start gap-2">
+                          <button
+                            type="button"
+                            className={`watch-star ${watched ? "watch-star-on" : ""}`}
+                            aria-label={
+                              watched
+                                ? `Remove ${asset.symbol} from watchlist`
+                                : `Add ${asset.symbol} to watchlist`
+                            }
+                            aria-pressed={watched}
+                            disabled={watchBusy === asset.symbol}
+                            data-testid={`watch-toggle-${asset.symbol}`}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              void toggleWatch(asset.symbol);
+                            }}
+                          >
+                            {watched ? "★" : "☆"}
+                          </button>
+                          <span className="min-w-0">
+                            <span className="flex items-baseline gap-2">
+                              <strong className="font-mono text-sm font-semibold tracking-[-0.02em]">
+                                {asset.symbol}
+                              </strong>
+                              <span className="hidden truncate text-xs text-[var(--muted)] md:inline">
+                                {asset.countryCode}
+                              </span>
+                            </span>
+                            <span className="mt-1 block truncate text-xs text-[var(--muted-strong)]">
+                              {shortName(asset)}
+                            </span>
                           </span>
-                        </span>
-                        <span className="mt-1 block truncate text-xs text-[var(--muted-strong)]">
-                          {shortName(asset)}
                         </span>
                       </span>
                       <span
@@ -470,16 +567,54 @@ export function OutlookDashboard({
                           ↗
                         </span>
                       </span>
-                    </button>
+                    </div>
                   );
                 })}
               </div>
             ) : (
-              <div className="px-6 py-16 text-center">
-                <p className="font-medium">No signals in this view</p>
-                <p className="mt-2 text-sm text-[var(--muted)]">
-                  Choose another market class or compute more signals.
-                </p>
+              <div
+                className="px-6 py-16 text-center"
+                data-testid="outlook-empty"
+              >
+                {assetClass === "watchlist" ? (
+                  <>
+                    <p className="font-medium">
+                      {user ? "Watchlist is empty" : "Sign in to use watchlist"}
+                    </p>
+                    <p className="mt-2 text-sm text-[var(--muted)]">
+                      {user ? (
+                        <>
+                          Star any instrument in{" "}
+                          <button
+                            type="button"
+                            className="underline underline-offset-2"
+                            onClick={() => setAssetClass("all")}
+                          >
+                            All markets
+                          </button>{" "}
+                          to pin it here.
+                        </>
+                      ) : (
+                        <>
+                          <Link
+                            href="/login"
+                            className="underline underline-offset-2"
+                          >
+                            Sign in
+                          </Link>{" "}
+                          to save symbols and jump back to them quickly.
+                        </>
+                      )}
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="font-medium">No signals in this view</p>
+                    <p className="mt-2 text-sm text-[var(--muted)]">
+                      Choose another market class or compute more signals.
+                    </p>
+                  </>
+                )}
               </div>
             )}
           </div>
@@ -502,11 +637,32 @@ export function OutlookDashboard({
                       {shortName(selectedAsset)}
                     </p>
                   </div>
-                  <span
-                    className={`direction direction-${selectedSignal.direction}`}
-                  >
-                    {directionLabel(selectedSignal.direction)}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      className={`watch-star ${
+                        watchSet.has(selectedAsset.symbol)
+                          ? "watch-star-on"
+                          : ""
+                      }`}
+                      aria-label={
+                        watchSet.has(selectedAsset.symbol)
+                          ? `Remove ${selectedAsset.symbol} from watchlist`
+                          : `Add ${selectedAsset.symbol} to watchlist`
+                      }
+                      aria-pressed={watchSet.has(selectedAsset.symbol)}
+                      disabled={watchBusy === selectedAsset.symbol}
+                      data-testid={`watch-detail-${selectedAsset.symbol}`}
+                      onClick={() => void toggleWatch(selectedAsset.symbol)}
+                    >
+                      {watchSet.has(selectedAsset.symbol) ? "★" : "☆"}
+                    </button>
+                    <span
+                      className={`direction direction-${selectedSignal.direction}`}
+                    >
+                      {directionLabel(selectedSignal.direction)}
+                    </span>
+                  </div>
                 </div>
 
                 <div className="mt-6 grid grid-cols-2 gap-px overflow-hidden rounded-[12px] bg-[var(--line)]">

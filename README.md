@@ -127,6 +127,7 @@ For full auth e2e in CI, add repo secrets: `JWT_SECRET`, `TURSO_DATABASE_URL`, `
 - `/register` · `/login`
 - Cookie JWT (`tell_session`) backed by Turso `users`
 - APIs: `/api/auth/register` · `login` · `logout` · `me`
+- Watchlist (signed-in): `GET/POST/DELETE /api/watchlist` — saved symbols filter the dashboard by default when non-empty
 
 ## Read APIs
 
