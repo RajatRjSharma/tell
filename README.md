@@ -123,6 +123,18 @@ For full auth e2e in CI, add repo secrets: `JWT_SECRET`, `TURSO_DATABASE_URL`, `
 - Cookie JWT (`tell_session`) backed by Turso `users`
 - APIs: `/api/auth/register` · `login` · `logout` · `me`
 
+## Read APIs
+
+Public JSON endpoints (Turso-backed):
+
+| Route | Purpose |
+|-------|---------|
+| `GET /api/health` | DB ping |
+| `GET /api/assets` | Asset universe |
+| `GET /api/outlook` | Latest signals (`?symbols=SPY,TLT&horizons=1d,1w&asOf=YYYY-MM-DD`) |
+| `GET /api/outlook/SPY` | One asset (`?live=1` adds near-real-time quote) |
+| `GET /api/readings?country=US&indicator=CPI` | Macro series (`from`/`to`/`limit`) |
+
 ## Disclaimer
 
 Not financial advice. Research tool only.
