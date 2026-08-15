@@ -13,6 +13,8 @@ type AuthPublicConfig = {
 };
 
 const REGISTER_PASSWORD_MIN = 12;
+const inputClassName =
+  "min-h-12 rounded-[12px] border border-[var(--line-strong)] bg-[var(--surface)] px-3.5 text-sm text-[var(--text)] transition-colors placeholder:text-[var(--muted)] hover:border-[var(--muted)] focus:border-[var(--accent)] focus:outline-none disabled:opacity-70";
 
 function safeNextPath(): string {
   if (typeof window === "undefined") return "/";
@@ -24,8 +26,11 @@ function safeNextPath(): string {
 
 export function AuthForm({ mode }: { mode: Mode }) {
   const router = useRouter();
+  const [identifier, setIdentifier] = useState("");
   const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [otp, setOtp] = useState("");
   const [registerStep, setRegisterStep] = useState<RegisterStep>("email");
   const [error, setError] = useState<string | null>(null);
@@ -80,7 +85,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
         const res = await fetch("/api/auth/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password }),
+          body: JSON.stringify({ identifier, password }),
         });
         const data = (await res.json()) as { error?: string };
         if (!res.ok) {
@@ -105,7 +110,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
         const res = await fetch("/api/auth/otp/request", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, purpose: "register" }),
+          body: JSON.stringify({ email, username, purpose: "register" }),
         });
         const data = (await res.json()) as {
           error?: string;
@@ -128,13 +133,20 @@ export function AuthForm({ mode }: { mode: Mode }) {
         return;
       }
 
+      if (password !== confirmPassword) {
+        setError("Passwords do not match");
+        return;
+      }
+
       const res = await fetch("/api/auth/otp/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email,
+          username,
           otp,
           password,
+          confirmPassword,
           purpose: "register",
         }),
       });
@@ -211,9 +223,9 @@ export function AuthForm({ mode }: { mode: Mode }) {
                 ? "This host cannot send verification email. Contact the operator."
                 : isRegister
                   ? registerStep === "email"
-                    ? "We will email a one-time code to verify ownership."
-                    : "Enter the code and choose a password."
-                  : "Continue to your latest macro and market outlook."}
+                    ? "Pick a username and email. We will send a one-time code."
+                    : "Enter the code, then set and confirm your password."
+                  : "Sign in with your email or username."}
           </p>
 
           {registerBlocked ? (
@@ -233,19 +245,55 @@ export function AuthForm({ mode }: { mode: Mode }) {
               onSubmit={onSubmit}
               className="mt-9 flex flex-col gap-5"
             >
-              <label className="flex flex-col gap-2 text-xs font-medium text-[var(--muted-strong)]">
-                Email address
-                <input
-                  data-testid="auth-email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  value={email}
-                  disabled={isRegister && registerStep === "verify"}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="min-h-12 rounded-[12px] border border-[var(--line-strong)] bg-[var(--surface)] px-3.5 text-sm text-[var(--text)] transition-colors placeholder:text-[var(--muted)] hover:border-[var(--muted)] focus:border-[var(--accent)] focus:outline-none disabled:opacity-70"
-                />
-              </label>
+              {!isRegister ? (
+                <label className="flex flex-col gap-2 text-xs font-medium text-[var(--muted-strong)]">
+                  Email or username
+                  <input
+                    data-testid="auth-identifier"
+                    type="text"
+                    autoComplete="username"
+                    required
+                    value={identifier}
+                    onChange={(e) => setIdentifier(e.target.value)}
+                    className={inputClassName}
+                  />
+                </label>
+              ) : (
+                <>
+                  <label className="flex flex-col gap-2 text-xs font-medium text-[var(--muted-strong)]">
+                    Username
+                    <input
+                      data-testid="auth-username"
+                      type="text"
+                      autoComplete="username"
+                      required
+                      minLength={3}
+                      maxLength={32}
+                      pattern="[A-Za-z][A-Za-z0-9_]{2,31}"
+                      value={username}
+                      disabled={registerStep === "verify"}
+                      onChange={(e) => setUsername(e.target.value)}
+                      className={inputClassName}
+                    />
+                    <span className="font-normal text-[var(--muted)]">
+                      3–32 characters, start with a letter; letters, numbers, _
+                    </span>
+                  </label>
+                  <label className="flex flex-col gap-2 text-xs font-medium text-[var(--muted-strong)]">
+                    Email address
+                    <input
+                      data-testid="auth-email"
+                      type="email"
+                      autoComplete="email"
+                      required
+                      value={email}
+                      disabled={registerStep === "verify"}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className={inputClassName}
+                    />
+                  </label>
+                </>
+              )}
 
               {isRegister && registerStep === "verify" ? (
                 <label className="flex flex-col gap-2 text-xs font-medium text-[var(--muted-strong)]">
@@ -259,33 +307,50 @@ export function AuthForm({ mode }: { mode: Mode }) {
                     pattern="\d{4,8}"
                     value={otp}
                     onChange={(e) => setOtp(e.target.value)}
-                    className="min-h-12 rounded-[12px] border border-[var(--line-strong)] bg-[var(--surface)] px-3.5 font-mono text-sm tracking-[0.2em] text-[var(--text)] transition-colors focus:border-[var(--accent)] focus:outline-none"
+                    className={`${inputClassName} font-mono tracking-[0.2em]`}
                   />
                 </label>
               ) : null}
 
               {!isRegister || registerStep === "verify" ? (
-                <label className="flex flex-col gap-2 text-xs font-medium text-[var(--muted-strong)]">
-                  Password
-                  <input
-                    data-testid="auth-password"
-                    type="password"
-                    autoComplete={
-                      isRegister ? "new-password" : "current-password"
-                    }
-                    required
-                    minLength={isRegister ? REGISTER_PASSWORD_MIN : 8}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="min-h-12 rounded-[12px] border border-[var(--line-strong)] bg-[var(--surface)] px-3.5 text-sm text-[var(--text)] transition-colors placeholder:text-[var(--muted)] hover:border-[var(--muted)] focus:border-[var(--accent)] focus:outline-none"
-                  />
+                <>
+                  <label className="flex flex-col gap-2 text-xs font-medium text-[var(--muted-strong)]">
+                    Password
+                    <input
+                      data-testid="auth-password"
+                      type="password"
+                      autoComplete={
+                        isRegister ? "new-password" : "current-password"
+                      }
+                      required
+                      minLength={isRegister ? REGISTER_PASSWORD_MIN : 8}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className={inputClassName}
+                    />
+                    {isRegister ? (
+                      <span className="font-normal text-[var(--muted)]">
+                        At least {REGISTER_PASSWORD_MIN} characters with upper,
+                        lower, number, and special character.
+                      </span>
+                    ) : null}
+                  </label>
                   {isRegister ? (
-                    <span className="font-normal text-[var(--muted)]">
-                      At least {REGISTER_PASSWORD_MIN} characters with upper,
-                      lower, number, and special character.
-                    </span>
+                    <label className="flex flex-col gap-2 text-xs font-medium text-[var(--muted-strong)]">
+                      Confirm password
+                      <input
+                        data-testid="auth-confirm-password"
+                        type="password"
+                        autoComplete="new-password"
+                        required
+                        minLength={REGISTER_PASSWORD_MIN}
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        className={inputClassName}
+                      />
+                    </label>
                   ) : null}
-                </label>
+                </>
               ) : null}
 
               {info ? (
@@ -329,6 +394,8 @@ export function AuthForm({ mode }: { mode: Mode }) {
                   onClick={() => {
                     setRegisterStep("email");
                     setOtp("");
+                    setPassword("");
+                    setConfirmPassword("");
                     setInfo(null);
                     setError(null);
                   }}

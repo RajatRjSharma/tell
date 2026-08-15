@@ -10,10 +10,11 @@ const errorSchema: OpenAPIV3.SchemaObject = {
 
 const userSchema: OpenAPIV3.SchemaObject = {
   type: "object",
-  required: ["id", "email"],
+  required: ["id", "email", "username"],
   properties: {
     id: { type: "string" },
     email: { type: "string", format: "email" },
+    username: { type: "string" },
   },
 };
 
@@ -146,16 +147,21 @@ export function buildOpenApiDocument(serverUrl?: string): OpenAPIV3.Document {
       "/api/auth/login": {
         post: {
           tags: ["Auth"],
-          summary: "Sign in",
+          summary: "Sign in with email or username",
           requestBody: {
             required: true,
             content: {
               "application/json": {
                 schema: {
                   type: "object",
-                  required: ["email", "password"],
+                  required: ["password"],
                   properties: {
+                    identifier: {
+                      type: "string",
+                      description: "Email address or username",
+                    },
                     email: { type: "string", format: "email" },
+                    username: { type: "string" },
                     password: { type: "string", minLength: 8 },
                   },
                 },
@@ -238,6 +244,7 @@ export function buildOpenApiDocument(serverUrl?: string): OpenAPIV3.Document {
                   required: ["email"],
                   properties: {
                     email: { type: "string", format: "email" },
+                    username: { type: "string" },
                     purpose: {
                       type: "string",
                       enum: ["register"],
@@ -281,10 +288,18 @@ export function buildOpenApiDocument(serverUrl?: string): OpenAPIV3.Document {
               "application/json": {
                 schema: {
                   type: "object",
-                  required: ["email", "password", "otp"],
+                  required: [
+                    "email",
+                    "username",
+                    "password",
+                    "confirmPassword",
+                    "otp",
+                  ],
                   properties: {
                     email: { type: "string", format: "email" },
+                    username: { type: "string" },
                     password: { type: "string", minLength: 12 },
+                    confirmPassword: { type: "string", minLength: 12 },
                     otp: { type: "string", pattern: "^\\d{4,8}$" },
                     purpose: {
                       type: "string",

@@ -5,6 +5,7 @@ import { jwtIssuer, sessionExpireDays } from "@/lib/config";
 export type SessionPayload = {
   sub: string;
   email: string;
+  username: string;
 };
 
 function getSecret() {
@@ -17,7 +18,11 @@ function getSecret() {
 
 export async function signSession(payload: SessionPayload): Promise<string> {
   const days = sessionExpireDays();
-  return new SignJWT({ email: payload.email, type: "session" })
+  return new SignJWT({
+    email: payload.email,
+    username: payload.username,
+    type: "session",
+  })
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(payload.sub)
     .setIssuer(jwtIssuer())
@@ -40,7 +45,11 @@ export async function verifySession(
     const email = payload.email;
     if (typeof sub !== "string" || typeof email !== "string") return null;
     if (payload.type != null && payload.type !== "session") return null;
-    return { sub, email };
+    const username =
+      typeof payload.username === "string" && payload.username.length > 0
+        ? payload.username
+        : email.split("@")[0] ?? "user";
+    return { sub, email, username };
   } catch {
     return null;
   }

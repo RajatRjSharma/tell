@@ -13,7 +13,12 @@ import {
 import { isEmailDeliveryAvailable, sendMail } from "@/lib/email/mailer";
 import { otpEmailTemplate } from "@/lib/email/templates";
 import { enforceAuthIdentityRateLimit } from "@/lib/api/rate-limit";
-import { normalizeEmail } from "@/lib/password";
+import {
+  normalizeEmail,
+  normalizeUsername,
+  validateEmail,
+  validateUsername,
+} from "@/lib/password";
 
 export async function POST(request: Request) {
   try {
@@ -41,20 +46,27 @@ export async function POST(request: Request) {
 
     const body = (await request.json().catch(() => null)) as {
       email?: string;
+      username?: string;
       purpose?: string;
     } | null;
 
     const email = normalizeEmail(body?.email ?? "");
+    const username = normalizeUsername(body?.username ?? "");
     const purpose = body?.purpose ?? "register";
 
-    const identityLimited = enforceAuthIdentityRateLimit(request, email);
+    const identityLimited = enforceAuthIdentityRateLimit(
+      request,
+      `${email}:${username}`,
+    );
     if (identityLimited) return identityLimited;
 
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      return NextResponse.json(
-        { error: "Enter a valid email address" },
-        { status: 400 },
-      );
+    const emailError = validateEmail(email);
+    if (emailError) {
+      return NextResponse.json({ error: emailError }, { status: 400 });
+    }
+    const usernameError = validateUsername(username);
+    if (usernameError) {
+      return NextResponse.json({ error: usernameError }, { status: 400 });
     }
     if (purpose !== "register") {
       return NextResponse.json(
@@ -64,13 +76,23 @@ export async function POST(request: Request) {
     }
 
     const db = getDb();
-    const existing = await db.execute({
+    const existingEmail = await db.execute({
       sql: "SELECT id FROM users WHERE email = ?",
       args: [email],
     });
-    if (existing.rows.length > 0) {
+    if (existingEmail.rows.length > 0) {
       return NextResponse.json(
         { error: "An account with this email already exists" },
+        { status: 409 },
+      );
+    }
+    const existingUsername = await db.execute({
+      sql: "SELECT id FROM users WHERE username = ?",
+      args: [username],
+    });
+    if (existingUsername.rows.length > 0) {
+      return NextResponse.json(
+        { error: "That username is already taken" },
         { status: 409 },
       );
     }

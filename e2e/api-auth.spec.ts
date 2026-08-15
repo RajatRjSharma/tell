@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import {
   E2E_PASSWORD,
   e2eOrigin,
+  e2eUsername,
   getSessionCookie,
   hasTurso,
   pageApiGet,
@@ -82,13 +83,17 @@ test.describe("api auth (signed in)", () => {
     baseURL,
   }) => {
     const email = `e2e.apionly.${Date.now()}@tell.test`;
-    await registerViaApi(request, email, { origin: e2eOrigin(baseURL) });
+    const username = e2eUsername(email);
+    await registerViaApi(request, email, {
+      origin: e2eOrigin(baseURL),
+      username,
+    });
 
     await page.goto("/login");
-    await page.getByTestId("auth-email").fill(email);
+    await page.getByTestId("auth-identifier").fill(email);
     await page.getByTestId("auth-password").fill(E2E_PASSWORD);
     await page.getByTestId("auth-submit").click();
     await expect(page).toHaveURL("/");
-    await expect(page.getByTestId("user-email")).toHaveText(email);
+    await expect(page.getByTestId("user-email")).toHaveText(`@${username}`);
   });
 });

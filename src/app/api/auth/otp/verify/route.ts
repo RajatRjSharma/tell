@@ -8,7 +8,9 @@ import { enforceAuthIdentityRateLimit } from "@/lib/api/rate-limit";
 import {
   hashPassword,
   normalizeEmail,
+  normalizeUsername,
   validateRegisterCredentials,
+  validateUsername,
 } from "@/lib/password";
 
 export async function POST(request: Request) {
@@ -28,17 +30,24 @@ export async function POST(request: Request) {
 
     const body = (await request.json().catch(() => null)) as {
       email?: string;
+      username?: string;
       otp?: string;
       password?: string;
+      confirmPassword?: string;
       purpose?: string;
     } | null;
 
     const email = normalizeEmail(body?.email ?? "");
+    const username = normalizeUsername(body?.username ?? "");
     const otp = (body?.otp ?? "").trim();
     const password = body?.password ?? "";
+    const confirmPassword = body?.confirmPassword ?? "";
     const purpose = body?.purpose ?? "register";
 
-    const identityLimited = enforceAuthIdentityRateLimit(request, email);
+    const identityLimited = enforceAuthIdentityRateLimit(
+      request,
+      `${email}:${username}`,
+    );
     if (identityLimited) return identityLimited;
 
     if (purpose !== "register") {
@@ -48,7 +57,15 @@ export async function POST(request: Request) {
       );
     }
 
-    const credentialsError = validateRegisterCredentials(email, password);
+    const usernameError = validateUsername(username);
+    if (usernameError) {
+      return NextResponse.json({ error: usernameError }, { status: 400 });
+    }
+
+    const credentialsError = validateRegisterCredentials(email, password, {
+      username,
+      confirmPassword,
+    });
     if (credentialsError) {
       return NextResponse.json({ error: credentialsError }, { status: 400 });
     }
@@ -60,13 +77,23 @@ export async function POST(request: Request) {
     }
 
     const db = getDb();
-    const existing = await db.execute({
+    const existingEmail = await db.execute({
       sql: "SELECT id FROM users WHERE email = ?",
       args: [email],
     });
-    if (existing.rows.length > 0) {
+    if (existingEmail.rows.length > 0) {
       return NextResponse.json(
         { error: "An account with this email already exists" },
+        { status: 409 },
+      );
+    }
+    const existingUsername = await db.execute({
+      sql: "SELECT id FROM users WHERE username = ?",
+      args: [username],
+    });
+    if (existingUsername.rows.length > 0) {
+      return NextResponse.json(
+        { error: "That username is already taken" },
         { status: 409 },
       );
     }
@@ -83,14 +110,17 @@ export async function POST(request: Request) {
     const id = randomUUID();
     const passwordHash = await hashPassword(password);
     await db.execute({
-      sql: "INSERT INTO users (id, email, password_hash) VALUES (?, ?, ?)",
-      args: [id, email, passwordHash],
+      sql: "INSERT INTO users (id, email, username, password_hash) VALUES (?, ?, ?, ?)",
+      args: [id, email, username, passwordHash],
     });
 
-    const token = await signSession({ sub: id, email });
+    const token = await signSession({ sub: id, email, username });
     await setSessionCookie(token);
 
-    return NextResponse.json({ user: { id, email } }, { status: 201 });
+    return NextResponse.json(
+      { user: { id, email, username } },
+      { status: 201 },
+    );
   } catch (err) {
     console.error("otp verify error", err);
     return NextResponse.json({ error: "Verification failed" }, { status: 500 });

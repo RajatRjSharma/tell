@@ -2,8 +2,10 @@ import { describe, expect, it } from "vitest";
 import {
   hashPassword,
   normalizeEmail,
-  validateCredentials,
+  normalizeUsername,
+  validateLoginCredentials,
   validateRegisterCredentials,
+  validateUsername,
   verifyPassword,
 } from "@/lib/password";
 
@@ -13,23 +15,53 @@ describe("normalizeEmail", () => {
   });
 });
 
-describe("validateCredentials", () => {
-  it("rejects invalid email", () => {
-    expect(validateCredentials("not-an-email", "password123")).toMatch(
+describe("normalizeUsername", () => {
+  it("trims and lowercases", () => {
+    expect(normalizeUsername("  Rajat_01 ")).toBe("rajat_01");
+  });
+});
+
+describe("validateUsername", () => {
+  it("rejects short or invalid usernames", () => {
+    expect(validateUsername("ab")).toMatch(/3–32|3-32|start with a letter/i);
+    expect(validateUsername("1abc")).toMatch(/start with a letter/i);
+    expect(validateUsername("Bad-Name")).toMatch(
+      /start with a letter|letters/i,
+    );
+  });
+
+  it("accepts valid usernames", () => {
+    expect(validateUsername("rajat_01")).toBeNull();
+  });
+});
+
+describe("validateLoginCredentials", () => {
+  it("rejects invalid email identifiers", () => {
+    expect(validateLoginCredentials("bad@domain", "password123")).toMatch(
       /valid email/i,
     );
   });
 
+  it("rejects invalid username identifiers", () => {
+    expect(validateLoginCredentials("1bad", "password123")).toMatch(
+      /start with a letter|3–32/i,
+    );
+  });
+
+  it("accepts username identifiers", () => {
+    expect(validateLoginCredentials("rajat_01", "password123")).toBeNull();
+  });
+
   it("rejects short passwords", () => {
-    expect(validateCredentials("a@b.com", "short")).toMatch(/at least 8/i);
+    expect(validateLoginCredentials("a@b.com", "short")).toMatch(/at least 8/i);
   });
 
   it("accepts legacy-length passwords on login", () => {
-    expect(validateCredentials("a@b.com", "password123")).toBeNull();
+    expect(validateLoginCredentials("a@b.com", "password123")).toBeNull();
   });
 
   it("rejects oversized passwords", () => {
-    expect(validateCredentials("a@b.com", "x".repeat(73))).toMatch(
+    expect(validateLoginCredentials("a@b.com", "x".repeat(73))).toMatch(
       /at most 72/i,
     );
   });
@@ -44,14 +76,38 @@ describe("validateRegisterCredentials", () => {
 
   it("accepts strong passwords", () => {
     expect(
-      validateRegisterCredentials("user@example.com", "TellSecure99!"),
+      validateRegisterCredentials("user@example.com", "TellSecure99!", {
+        username: "macro_reader",
+        confirmPassword: "TellSecure99!",
+      }),
     ).toBeNull();
+  });
+
+  it("rejects mismatched confirm password", () => {
+    expect(
+      validateRegisterCredentials("user@example.com", "TellSecure99!", {
+        username: "macro_reader",
+        confirmPassword: "TellSecure98!",
+      }),
+    ).toMatch(/do not match/i);
   });
 
   it("rejects email local-part in password", () => {
     expect(
-      validateRegisterCredentials("alice@example.com", "AliceSecure1!"),
+      validateRegisterCredentials("alice@example.com", "AliceSecure1!", {
+        username: "macro_reader",
+        confirmPassword: "AliceSecure1!",
+      }),
     ).toMatch(/email/i);
+  });
+
+  it("rejects username in password", () => {
+    expect(
+      validateRegisterCredentials("user@example.com", "Macro_reader99!", {
+        username: "macro_reader",
+        confirmPassword: "Macro_reader99!",
+      }),
+    ).toMatch(/username/i);
   });
 });
 

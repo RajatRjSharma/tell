@@ -37,6 +37,7 @@ async function migrate() {
   }
 
   await softUpgradeForecastLog(db);
+  await softUpgradeUsers(db);
 
   const tables = await db.execute(
     "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name",
@@ -67,6 +68,51 @@ async function softUpgradeForecastLog(db: ReturnType<typeof createClient>) {
   await db.execute(
     `CREATE UNIQUE INDEX IF NOT EXISTS idx_forecast_log_uq
      ON forecast_log (symbol, horizon, as_of_date, model_version)`,
+  );
+}
+
+async function softUpgradeUsers(db: ReturnType<typeof createClient>) {
+  const info = await db.execute("PRAGMA table_info(users)");
+  const columns = new Set(info.rows.map((row) => String(row.name)));
+
+  if (!columns.has("username")) {
+    console.log("Upgrading users: add username");
+    await db.execute("ALTER TABLE users ADD COLUMN username TEXT");
+  }
+
+  const missing = await db.execute(
+    `SELECT id, email FROM users
+     WHERE username IS NULL OR trim(username) = ''`,
+  );
+  for (const row of missing.rows) {
+    const id = String(row.id);
+    const email = String(row.email);
+    const local = email.split("@")[0] ?? "user";
+    const cleaned = local
+      .toLowerCase()
+      .replace(/[^a-z0-9_]+/g, "_")
+      .replace(/^_+|_+$/g, "")
+      .slice(0, 20);
+    const base = cleaned.length >= 3 ? cleaned : `user_${id.slice(0, 6)}`;
+    let candidate = base;
+    let n = 0;
+    while (true) {
+      const clash = await db.execute({
+        sql: "SELECT id FROM users WHERE username = ? AND id != ?",
+        args: [candidate, id],
+      });
+      if (clash.rows.length === 0) break;
+      n += 1;
+      candidate = `${base}_${n}`.slice(0, 32);
+    }
+    await db.execute({
+      sql: "UPDATE users SET username = ? WHERE id = ?",
+      args: [candidate, id],
+    });
+  }
+
+  await db.execute(
+    `CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username ON users (username)`,
   );
 }
 

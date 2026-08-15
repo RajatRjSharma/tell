@@ -11,12 +11,14 @@ describe("session JWT", () => {
     const token = await signSession({
       sub: "user-1",
       email: "rajat@example.com",
+      username: "rajat",
     });
 
     const session = await verifySession(token);
     expect(session).toEqual({
       sub: "user-1",
       email: "rajat@example.com",
+      username: "rajat",
     });
   });
 
@@ -24,6 +26,7 @@ describe("session JWT", () => {
     const token = await signSession({
       sub: "user-1",
       email: "rajat@example.com",
+      username: "rajat",
     });
 
     expect(await verifySession(`${token}tampered`)).toBeNull();

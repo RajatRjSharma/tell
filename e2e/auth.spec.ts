@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import {
   E2E_PASSWORD,
+  e2eUsername,
   hasTurso,
   logoutUser,
   registerUser,
@@ -12,21 +13,13 @@ test.describe("auth validation", () => {
     page,
   }) => {
     await page.goto("/login");
-    await page.getByTestId("auth-email").fill("not-an-email");
-    await page.getByTestId("auth-password").fill("short");
+    await page.getByTestId("auth-identifier").fill("not-an-email");
+    await page.getByTestId("auth-password").fill("password1");
     await page.getByTestId("auth-submit").click();
 
-    const emailInput = page.getByTestId("auth-email");
-    const validationMessage = await emailInput.evaluate(
-      (el: HTMLInputElement) => el.validationMessage,
+    await expect(page.getByTestId("auth-error")).toContainText(
+      /username must be|valid email|email or username/i,
     );
-
-    if (validationMessage) {
-      expect(validationMessage.length).toBeGreaterThan(0);
-      return;
-    }
-
-    await expect(page.getByTestId("auth-error")).toBeVisible();
   });
 
   test("login page links to API docs", async ({ page }) => {
@@ -53,11 +46,13 @@ test.describe("auth flow", () => {
 
   test("rejects duplicate registration", async ({ page }) => {
     const email = `e2e.dup.${Date.now()}@tell.test`;
+    const username = e2eUsername(email);
 
-    await registerUser(page, email);
+    await registerUser(page, email, E2E_PASSWORD, username);
     await logoutUser(page);
 
     await page.goto("/register");
+    await page.getByTestId("auth-username").fill(username);
     await page.getByTestId("auth-email").fill(email);
     await page.getByTestId("auth-submit").click();
 
@@ -68,18 +63,36 @@ test.describe("auth flow", () => {
 
   test("login works after register", async ({ page }) => {
     const email = `e2e.login.${Date.now()}@tell.test`;
+    const username = e2eUsername(email);
 
-    await registerUser(page, email);
+    await registerUser(page, email, E2E_PASSWORD, username);
     await logoutUser(page);
 
     await page.goto("/login");
-    await page.getByTestId("auth-email").fill(email);
+    await page.getByTestId("auth-identifier").fill(email);
     await page.getByTestId("auth-password").fill(E2E_PASSWORD);
     await page.getByTestId("auth-submit").click();
 
     await expect(page).toHaveURL("/");
     await waitForAuthNav(page);
-    await expect(page.getByTestId("user-email")).toHaveText(email);
+    await expect(page.getByTestId("user-email")).toHaveText(`@${username}`);
+  });
+
+  test("login works with username", async ({ page }) => {
+    const email = `e2e.userlogin.${Date.now()}@tell.test`;
+    const username = e2eUsername(email);
+
+    await registerUser(page, email, E2E_PASSWORD, username);
+    await logoutUser(page);
+
+    await page.goto("/login");
+    await page.getByTestId("auth-identifier").fill(username);
+    await page.getByTestId("auth-password").fill(E2E_PASSWORD);
+    await page.getByTestId("auth-submit").click();
+
+    await expect(page).toHaveURL("/");
+    await waitForAuthNav(page);
+    await expect(page.getByTestId("user-email")).toHaveText(`@${username}`);
   });
 
   test("login fails with wrong password", async ({ page }) => {
@@ -89,12 +102,12 @@ test.describe("auth flow", () => {
     await logoutUser(page);
 
     await page.goto("/login");
-    await page.getByTestId("auth-email").fill(email);
+    await page.getByTestId("auth-identifier").fill(email);
     await page.getByTestId("auth-password").fill("WrongPass999!");
     await page.getByTestId("auth-submit").click();
 
     await expect(page.getByTestId("auth-error")).toContainText(
-      /invalid email or password/i,
+      /invalid email, username, or password/i,
     );
   });
 });

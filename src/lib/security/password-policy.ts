@@ -16,7 +16,7 @@ const BANNED = new Set([
 
 export function validatePasswordStrength(
   password: string,
-  options?: { email?: string },
+  options?: { email?: string; username?: string },
 ): string | null {
   if (password.length < PASSWORD_MIN_LENGTH) {
     return `Password must be at least ${PASSWORD_MIN_LENGTH} characters`;
@@ -44,6 +44,10 @@ export function validatePasswordStrength(
   const emailLocal = options?.email?.toLowerCase().split("@")[0] ?? "";
   if (emailLocal.length >= 3 && lowered.includes(emailLocal)) {
     return "Password must not contain your email";
+  }
+  const username = options?.username?.toLowerCase() ?? "";
+  if (username.length >= 3 && lowered.includes(username)) {
+    return "Password must not contain your username";
   }
 
   if (BANNED.has(lowered) || BANNED.has(lowered.replace(/!+$/, ""))) {

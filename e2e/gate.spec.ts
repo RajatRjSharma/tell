@@ -39,7 +39,7 @@ test.describe("page auth gate (signed in)", () => {
 
     await page.goto("/methodology");
     await expect(page).toHaveURL(/\/login\?next=/);
-    await page.getByTestId("auth-email").fill(email);
+    await page.getByTestId("auth-identifier").fill(email);
     await page.getByTestId("auth-password").fill(E2E_PASSWORD);
     await page.getByTestId("auth-submit").click();
     await expect(page).toHaveURL(/\/methodology/);

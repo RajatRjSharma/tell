@@ -16,7 +16,7 @@ import { NearTermBiasPanel } from "@/components/NearTermBiasPanel";
 import type { MacroStrip } from "@/lib/macro/sparklines";
 import type { NearTermBias } from "@/lib/risk/near-term";
 
-type User = { id: string; email: string };
+type User = { id: string; email: string; username: string };
 
 type Asset = {
   symbol: string;
@@ -348,8 +348,9 @@ export function OutlookDashboard({
                 <span
                   data-testid="user-email"
                   className="hidden max-w-48 truncate text-xs text-[var(--muted)] md:block"
+                  title={sessionUser.email}
                 >
-                  {sessionUser.email}
+                  @{sessionUser.username}
                 </span>
                 <button
                   data-testid="logout-button"

@@ -15,6 +15,17 @@ export function e2eOrigin(baseURL?: string | null): string {
   return raw.replace(/\/$/, "");
 }
 
+export function e2eUsername(email: string): string {
+  const stamp = String(Date.now()).slice(-6);
+  const local = (email.split("@")[0] ?? "user")
+    .toLowerCase()
+    .replace(/[^a-z0-9_]/g, "")
+    .slice(0, 18);
+  const base =
+    /^[a-z]/.test(local) && local.length >= 2 ? local : `u${local || "ser"}`;
+  return `${base}${stamp}`.slice(0, 32);
+}
+
 export async function waitForAuthNav(page: Page) {
   await expect(page.getByTestId("auth-nav")).toBeVisible({ timeout: 15_000 });
 }
@@ -23,9 +34,11 @@ export async function registerUser(
   page: Page,
   email: string,
   password: string = E2E_PASSWORD,
+  username: string = e2eUsername(email),
 ) {
   await page.goto("/register");
   await expect(page.getByTestId("auth-form")).toBeVisible();
+  await page.getByTestId("auth-username").fill(username);
   await page.getByTestId("auth-email").fill(email);
   await page.getByTestId("auth-submit").click();
 
@@ -47,24 +60,24 @@ export async function registerUser(
   }
 
   await page.getByTestId("auth-password").fill(password);
+  await page.getByTestId("auth-confirm-password").fill(password);
   await page.getByTestId("auth-submit").click();
   await expect(page).toHaveURL("/");
   await waitForAuthNav(page);
-  await expect(page.getByTestId("user-email")).toHaveText(email);
+  await expect(page.getByTestId("user-email")).toHaveText(`@${username}`);
 }
 
 export async function loginUser(
   page: Page,
-  email: string,
+  identifier: string,
   password: string = E2E_PASSWORD,
 ) {
   await page.goto("/login");
-  await page.getByTestId("auth-email").fill(email);
+  await page.getByTestId("auth-identifier").fill(identifier);
   await page.getByTestId("auth-password").fill(password);
   await page.getByTestId("auth-submit").click();
   await expect(page).toHaveURL("/");
   await waitForAuthNav(page);
-  await expect(page.getByTestId("user-email")).toHaveText(email);
 }
 
 export async function logoutUser(page: Page) {
@@ -115,10 +128,11 @@ export async function registerAndGetCookie(
 export async function registerViaApi(
   request: APIRequestContext,
   email: string,
-  options?: { password?: string; origin?: string },
+  options?: { password?: string; origin?: string; username?: string },
 ) {
   const origin = options?.origin ?? e2eOrigin();
   const password = options?.password ?? E2E_PASSWORD;
+  const username = options?.username ?? e2eUsername(email);
   const headers = {
     Origin: origin,
     "Content-Type": "application/json",
@@ -126,7 +140,7 @@ export async function registerViaApi(
 
   const otpRes = await request.post("/api/auth/otp/request", {
     headers,
-    data: { email, purpose: "register" },
+    data: { email, username, purpose: "register" },
   });
   expect(otpRes.ok(), await otpRes.text()).toBeTruthy();
   const otpBody = (await otpRes.json()) as { devCode?: string };
@@ -136,7 +150,9 @@ export async function registerViaApi(
     headers,
     data: {
       email,
+      username,
       password,
+      confirmPassword: password,
       otp: otpBody.devCode,
       purpose: "register",
     },
@@ -146,7 +162,6 @@ export async function registerViaApi(
   const setCookie = verifyRes
     .headersArray()
     .filter((h) => h.name.toLowerCase() === "set-cookie");
-  // Next may attach the session via cookies(); assert the jar picked it up when possible.
   const jar = await request.storageState();
   const hasSession = jar.cookies.some(
     (cookie) =>

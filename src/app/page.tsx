@@ -26,7 +26,11 @@ export default async function Home() {
 
   return (
     <OutlookDashboard
-      user={{ id: session.sub, email: session.email }}
+      user={{
+        id: session.sub,
+        email: session.email,
+        username: session.username,
+      }}
       assets={assets.map((asset) => ({
         symbol: asset.symbol,
         name: asset.name,

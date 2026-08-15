@@ -15,10 +15,10 @@ afterEach(() => {
   delete process.env.JWT_ISSUER;
 });
 
-async function mintBearer(email = "a@b.com", sub = "user-1") {
+async function mintBearer(email = "a@b.com", sub = "user-1", username = "alice") {
   process.env.JWT_SECRET = "test-secret-for-auth-guard-32chars!!";
   process.env.JWT_ISSUER = "tell";
-  return new SignJWT({ email, type: "session" })
+  return new SignJWT({ email, username, type: "session" })
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(sub)
     .setIssuer("tell")
@@ -79,7 +79,11 @@ describe("authenticateApiRequest", () => {
 
     expect(readBearerToken(request)).toBe(token);
     const session = await authenticateApiRequest(request);
-    expect(session).toEqual({ sub: "user-1", email: "a@b.com" });
+    expect(session).toEqual({
+      sub: "user-1",
+      email: "a@b.com",
+      username: "alice",
+    });
   });
 
   it("rejects missing or invalid tokens", async () => {
@@ -107,7 +111,7 @@ describe("authenticateApiRequest", () => {
   });
 
   it("requireApiSession returns the session for a valid bearer", async () => {
-    const token = await mintBearer("ok@tell.test", "user-42");
+    const token = await mintBearer("ok@tell.test", "user-42", "okuser");
     const result = await requireApiSession(
       new Request("http://localhost/api/assets", {
         headers: { Authorization: `Bearer ${token}` },
@@ -115,7 +119,11 @@ describe("authenticateApiRequest", () => {
     );
     expect(isSession(result)).toBe(true);
     if (isSession(result)) {
-      expect(result).toEqual({ sub: "user-42", email: "ok@tell.test" });
+      expect(result).toEqual({
+        sub: "user-42",
+        email: "ok@tell.test",
+        username: "okuser",
+      });
     }
   });
 });

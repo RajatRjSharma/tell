@@ -34,7 +34,7 @@ export function AlertsPanel({
   defaultHorizon,
   watchlist,
 }: {
-  user: { id: string; email: string } | null;
+  user: { id: string; email: string; username?: string } | null;
   defaultSymbol: string;
   defaultHorizon: string;
   watchlist: string[];
