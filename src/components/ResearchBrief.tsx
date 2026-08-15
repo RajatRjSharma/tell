@@ -10,7 +10,20 @@ type BriefPayload = {
   model: string;
   asOf: string | null;
   cached: boolean;
+  source?: "memory" | "database" | "live";
   disclaimer: string;
+  previous: {
+    title: string;
+    summary: string;
+    asOf: string | null;
+  } | null;
+  delta: {
+    previousAsOf: string | null;
+    titleChanged: boolean;
+    summaryChanged: boolean;
+    addedBullets: string[];
+    removedBullets: string[];
+  } | null;
 };
 
 type BriefResultState = {
@@ -76,6 +89,8 @@ export function ResearchBrief({
     return () => controller.abort();
   }, [symbol, horizon, refreshToken, requestKey]);
 
+  const delta = active?.brief?.delta ?? null;
+
   return (
     <section className="mt-6 border-t border-[var(--line)] pt-5">
       <div className="flex items-center justify-between gap-3">
@@ -117,6 +132,51 @@ export function ResearchBrief({
               </p>
             </div>
 
+            {delta ? (
+              <div className="rounded-[10px] border border-[var(--line)] bg-[var(--surface)] px-3 py-2.5">
+                <p className="font-mono text-[10px] text-[var(--muted)]">
+                  vs prior brief
+                  {delta.previousAsOf ? ` · ${delta.previousAsOf}` : ""}
+                </p>
+                {!delta.titleChanged &&
+                !delta.summaryChanged &&
+                delta.addedBullets.length === 0 &&
+                delta.removedBullets.length === 0 ? (
+                  <p className="mt-1.5 text-xs text-[var(--muted)]">
+                    No material change from the previous brief.
+                  </p>
+                ) : (
+                  <ul className="mt-1.5 space-y-1">
+                    {delta.summaryChanged ? (
+                      <li className="text-xs text-[var(--muted-strong)]">
+                        Summary updated
+                      </li>
+                    ) : null}
+                    {delta.addedBullets.map((bullet) => (
+                      <li
+                        key={`add-${bullet}`}
+                        className="text-xs text-[var(--positive)]"
+                      >
+                        + {bullet}
+                      </li>
+                    ))}
+                    {delta.removedBullets.map((bullet) => (
+                      <li
+                        key={`rem-${bullet}`}
+                        className="text-xs text-[var(--negative)]"
+                      >
+                        - {bullet}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            ) : (
+              <p className="text-xs text-[var(--muted)]">
+                No prior brief yet for this view.
+              </p>
+            )}
+
             {active.brief.bullets.length > 0 ? (
               <ul className="space-y-2">
                 {active.brief.bullets.map((bullet) => (
@@ -151,6 +211,7 @@ export function ResearchBrief({
 
             <p className="font-mono text-[10px] text-[var(--muted)]">
               {active.brief.model}
+              {active.brief.source ? ` · ${active.brief.source}` : ""}
               {active.brief.cached ? " · cached" : ""}
               {active.brief.asOf ? ` · as of ${active.brief.asOf}` : ""}
             </p>

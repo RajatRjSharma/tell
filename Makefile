@@ -1,4 +1,4 @@
-.PHONY: help install install-browsers dev build start lint lint-fix format format-check typecheck test test-watch test-coverage test-eval test-e2e test-e2e-ui ci db-migrate db-seed ingest-fred ingest-imf ingest-markets ingest-manual ingest-all compute-features compute-signals setup
+.PHONY: help install install-browsers dev build start lint lint-fix format format-check typecheck test test-watch test-coverage test-eval test-e2e test-e2e-ui ci db-migrate db-seed ingest-fred ingest-imf ingest-markets ingest-manual ingest-all compute-features compute-signals compute-briefs setup
 
 help: ## Show available commands
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-16s\033[0m %s\n", $$1, $$2}'
@@ -82,5 +82,8 @@ compute-features: ## Compute macro/market features + US regime snapshot
 
 compute-signals: ## Score 1d/1w/1m (or custom) outlooks into Turso signals
 	npm run compute:signals
+
+compute-briefs: ## Generate Gemini briefs into Turso research_briefs
+	npm run compute:briefs
 
 setup: install install-browsers db-migrate db-seed ## Install deps + browsers + migrate + seed

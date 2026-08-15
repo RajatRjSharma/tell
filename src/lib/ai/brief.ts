@@ -3,7 +3,14 @@ import { cacheGet, cacheSet } from "@/lib/ai/cache";
 import { buildResearchContext, formatResearchContext } from "@/lib/ai/context";
 import { generateGeminiText } from "@/lib/ai/gemini";
 import {
+  diffBriefs,
+  getLatestResearchBrief,
+  listResearchBriefs,
+  upsertResearchBrief,
+} from "@/lib/ai/store";
+import {
   AI_DISCLAIMER,
+  type BriefResponse,
   type BriefResult,
   type ResearchContext,
 } from "@/lib/ai/types";
@@ -39,6 +46,7 @@ export function parseBriefJson(
     symbol: string | null;
     horizon: string;
     cached: boolean;
+    source?: BriefResult["source"];
   },
 ): BriefResult {
   const cleaned = raw
@@ -64,6 +72,7 @@ export function parseBriefJson(
       symbol: meta.symbol,
       horizon: meta.horizon,
       cached: meta.cached,
+      source: meta.source ?? "live",
       disclaimer: AI_DISCLAIMER,
     };
   }
@@ -94,7 +103,52 @@ export function parseBriefJson(
     symbol: meta.symbol,
     horizon: meta.horizon,
     cached: meta.cached,
+    source: meta.source ?? "live",
     disclaimer: AI_DISCLAIMER,
+  };
+}
+
+function stripHistory(brief: BriefResult): BriefResult {
+  return {
+    title: brief.title,
+    summary: brief.summary,
+    bullets: brief.bullets,
+    risks: brief.risks,
+    model: brief.model,
+    provider: brief.provider,
+    asOf: brief.asOf,
+    symbol: brief.symbol,
+    horizon: brief.horizon,
+    cached: brief.cached,
+    source: brief.source,
+    disclaimer: brief.disclaimer,
+  };
+}
+
+async function withPrevious(
+  db: Client,
+  brief: BriefResult,
+): Promise<BriefResponse> {
+  const history = await listResearchBriefs(db, {
+    symbol: brief.symbol,
+    horizon: brief.horizon,
+    limit: 5,
+  });
+
+  const previous =
+    history.find(
+      (row) =>
+        row.asOf !== brief.asOf ||
+        row.summary !== brief.summary ||
+        row.title !== brief.title,
+    ) ?? null;
+
+  const previousClean = previous ? stripHistory(previous) : null;
+
+  return {
+    ...stripHistory(brief),
+    previous: previousClean,
+    delta: diffBriefs(brief, previousClean),
   };
 }
 
@@ -104,16 +158,30 @@ export async function generateBrief(
     symbol?: string | null;
     horizon?: string;
     refresh?: boolean;
+    persist?: boolean;
     generate?: typeof generateGeminiText;
   },
-): Promise<BriefResult> {
+): Promise<BriefResponse> {
   const symbol = options?.symbol?.trim().toUpperCase() || null;
   const horizon = options?.horizon ?? "1d";
+  const persist = options?.persist ?? true;
   const cacheKey = `brief:${symbol ?? "market"}:${horizon}`;
 
   if (!options?.refresh) {
-    const cached = cacheGet<BriefResult>(cacheKey);
-    if (cached) return { ...cached, cached: true };
+    const memory = cacheGet<BriefResult>(cacheKey);
+    if (memory) {
+      return withPrevious(db, {
+        ...memory,
+        cached: true,
+        source: "memory",
+      });
+    }
+
+    const stored = await getLatestResearchBrief(db, { symbol, horizon });
+    if (stored) {
+      cacheSet(cacheKey, stripHistory(stored), BRIEF_TTL_MS);
+      return withPrevious(db, stored);
+    }
   }
 
   const context = await buildResearchContext(db, { symbol, horizon });
@@ -125,8 +193,13 @@ export async function generateBrief(
     symbol,
     horizon,
     cached: false,
+    source: "live",
   });
 
-  cacheSet(cacheKey, { ...brief, cached: false }, BRIEF_TTL_MS);
-  return brief;
+  if (persist && brief.asOf) {
+    await upsertResearchBrief(db, brief);
+  }
+
+  cacheSet(cacheKey, stripHistory(brief), BRIEF_TTL_MS);
+  return withPrevious(db, brief);
 }

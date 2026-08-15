@@ -142,18 +142,33 @@ Optional research layer on top of Turso signals and macro readings.
 
 | Route | Purpose |
 |-------|---------|
-| `GET /api/brief?symbol=SPY&horizon=1d` | Gemini structured brief (`&refresh=1` bypasses 15m cache) |
+| `GET /api/brief?symbol=SPY&horizon=1d` | Gemini brief with prior delta (`&refresh=1` regenerates + upserts) |
+| `GET /api/brief/history?symbol=SPY&horizon=1d&limit=7` | Stored brief history from Turso |
 | `POST /api/chat` | Groq Q&A grounded in latest evidence (`{ message, history?, symbol?, horizon? }`) |
+
+```bash
+make compute-briefs   # Persist Gemini briefs for the asset universe
+```
+
+Optional: `BRIEF_SYMBOLS=SPY,TLT`, `BRIEF_HORIZONS=1d,1w`, `BRIEF_DELAY_MS=500`.
 
 Set `GEMINI_API_KEY` and `GROQ_API_KEY` in `.env`. Optional: `GEMINI_MODEL` (default `gemini-3.1-flash-lite`, with fallbacks), `GROQ_MODEL`.
 Without keys, endpoints return `503` and the UI shows a soft unavailable state.
 
-Dashboard: evidence panel includes a **Gemini brief**; header **Ask Tell** opens Groq chat.
+Dashboard: evidence panel includes a **Gemini brief** with vs-prior delta; header **Ask Tell** opens Groq chat.
+
+Daily Actions ingest also runs `compute:signals`, then `compute:briefs` when `GEMINI_API_KEY` is set as a repo secret.
 
 Offline AI evals run with unit tests (`src/lib/ai/eval*`). Optional live eval:
 
 ```bash
 TELL_AI_EVAL=1 make test-eval
+```
+
+After pulling schema changes:
+
+```bash
+make db-migrate
 ```
 
 ## Disclaimer

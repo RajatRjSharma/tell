@@ -25,6 +25,17 @@ vi.mock("@/lib/ai/context", async () => {
   };
 });
 
+vi.mock("@/lib/ai/store", async () => {
+  const actual =
+    await vi.importActual<typeof import("@/lib/ai/store")>("@/lib/ai/store");
+  return {
+    ...actual,
+    getLatestResearchBrief: vi.fn(async () => null),
+    listResearchBriefs: vi.fn(async () => []),
+    upsertResearchBrief: vi.fn(async () => undefined),
+  };
+});
+
 describe("AI offline eval suite", () => {
   it("passes all brief eval cases", () => {
     const reports = BRIEF_EVAL_CASES.flatMap((evalCase) =>

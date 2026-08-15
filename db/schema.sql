@@ -115,6 +115,24 @@ CREATE TABLE IF NOT EXISTS ai_briefs (
   UNIQUE (as_of_date, horizon, model)
 );
 
+CREATE TABLE IF NOT EXISTS research_briefs (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  symbol TEXT NOT NULL,
+  horizon TEXT NOT NULL,
+  as_of_date TEXT NOT NULL,
+  title TEXT NOT NULL,
+  summary TEXT NOT NULL,
+  bullets_json TEXT NOT NULL,
+  risks_json TEXT NOT NULL,
+  model TEXT NOT NULL,
+  provider TEXT NOT NULL DEFAULT 'gemini',
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE (symbol, horizon, as_of_date, model)
+);
+
+CREATE INDEX IF NOT EXISTS idx_research_briefs_lookup
+  ON research_briefs (symbol, horizon, as_of_date DESC);
+
 CREATE TABLE IF NOT EXISTS forecast_log (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   symbol TEXT NOT NULL,

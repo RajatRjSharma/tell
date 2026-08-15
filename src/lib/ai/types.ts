@@ -30,7 +30,21 @@ export type BriefResult = {
   symbol: string | null;
   horizon: string;
   cached: boolean;
+  source?: "memory" | "database" | "live";
   disclaimer: string;
+};
+
+export type BriefDelta = {
+  previousAsOf: string | null;
+  titleChanged: boolean;
+  summaryChanged: boolean;
+  addedBullets: string[];
+  removedBullets: string[];
+};
+
+export type BriefResponse = BriefResult & {
+  previous: BriefResult | null;
+  delta: BriefDelta | null;
 };
 
 export type ChatMessage = {

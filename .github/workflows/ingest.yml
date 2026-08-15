@@ -44,3 +44,13 @@ jobs:
 
       - name: Ingest markets (Yahoo)
         run: npm run ingest:markets
+
+      - name: Compute signals
+        run: npm run compute:signals
+
+      - name: Compute Gemini briefs
+        run: npm run compute:briefs
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          BRIEF_HORIZONS: 1d,1w,1m
+          BRIEF_DELAY_MS: "500"
