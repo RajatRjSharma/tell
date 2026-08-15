@@ -50,6 +50,9 @@ describe("config", () => {
     expect(sessionExpireDays()).toBe(90);
     expect(authRateLimitPerMinute()).toBe(1);
 
+    process.env.AUTH_RATE_LIMIT_PER_MINUTE = "300";
+    expect(authRateLimitPerMinute()).toBe(300);
+
     process.env.BRIEF_RATE_LIMIT_PER_MINUTE = "50";
     process.env.CHAT_RATE_LIMIT_PER_MINUTE = "12";
     process.env.API_RATE_LIMIT_PER_MINUTE = "80";

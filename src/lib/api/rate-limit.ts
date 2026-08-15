@@ -85,6 +85,8 @@ export function enforceRateLimit(
   request: Request,
   options?: { pathname?: string; category?: RateLimitCategory },
 ): NextResponse | null {
+  if (process.env.TEST_MODE === "1") return null;
+
   const url = new URL(request.url);
   const pathname = options?.pathname ?? url.pathname;
   const category =
@@ -118,6 +120,8 @@ export function enforceAuthIdentityRateLimit(
   request: Request,
   identity: string,
 ): NextResponse | null {
+  if (process.env.TEST_MODE === "1") return null;
+
   const normalized = identity.trim().toLowerCase().slice(0, 254);
   if (!normalized) return null;
 

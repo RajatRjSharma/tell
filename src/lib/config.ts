@@ -84,7 +84,7 @@ export function sessionCookieSecure(): boolean {
 }
 
 export function authRateLimitPerMinute(): number {
-  return envInt("AUTH_RATE_LIMIT_PER_MINUTE", 20, { min: 1, max: 120 });
+  return envInt("AUTH_RATE_LIMIT_PER_MINUTE", 20, { min: 1, max: 600 });
 }
 
 export function briefRateLimitPerMinute(): number {
