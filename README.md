@@ -28,6 +28,14 @@ npm run dev
 
 Never commit `.env`.
 
+## Ingest
+
+```bash
+make ingest-fred       # US macro from FRED → Turso readings
+```
+
+Optional: set `FRED_OBSERVATION_START=2018-01-01` in `.env`.
+
 ## Quality
 
 ```bash

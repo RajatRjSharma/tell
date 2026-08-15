@@ -19,7 +19,8 @@
     "playwright:install": "playwright install chromium",
     "ci": "npm run lint && npm run format:check && npm run typecheck && npm run test && npm run build && npm run test:e2e",
     "db:migrate": "tsx scripts/migrate.ts",
-    "db:seed": "tsx scripts/seed.ts"
+    "db:seed": "tsx scripts/seed.ts",
+    "ingest:fred": "tsx scripts/ingest-fred.ts"
   },
   "dependencies": {
     "@libsql/client": "^0.17.4",
