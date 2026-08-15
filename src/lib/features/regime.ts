@@ -32,6 +32,10 @@ const CURVE_INVERTED = -0.1;
 const VIX_STRESS = 25;
 const VIX_PANIC = 30;
 
+function pctLabel(rate: number, digits = 1): string {
+  return `${(rate * 100).toFixed(digits)}%`;
+}
+
 /**
  * Priority (first match wins after scoring):
  * 1. risk_off — elevated VIX
@@ -69,7 +73,7 @@ export function classifyUsRegime(
     cpiYoy >= CPI_HOT &&
     (indproYoy === null || indproYoy > INDPRO_WEAK)
   ) {
-    reasons.push(`CPI YoY ${(cpiYoy * 100).toFixed(1)}% ≥ ${CPI_HOT * 100}%`);
+    reasons.push(`CPI YoY ${pctLabel(cpiYoy)} ≥ ${pctLabel(CPI_HOT)}`);
     if (fedFunds !== null) {
       reasons.push(`Fed funds ${fedFunds.toFixed(2)}%`);
     }
@@ -81,7 +85,7 @@ export function classifyUsRegime(
   if (weakGrowth || inverted) {
     if (weakGrowth) {
       reasons.push(
-        `INDPRO YoY ${(indproYoy! * 100).toFixed(1)}% ≤ ${INDPRO_WEAK * 100}%`,
+        `INDPRO YoY ${pctLabel(indproYoy!)} ≤ ${pctLabel(INDPRO_WEAK)}`,
       );
     }
     if (inverted) {
@@ -94,9 +98,7 @@ export function classifyUsRegime(
   const solidGrowth = indproYoy !== null && indproYoy > 0;
   const curveOk = curveSpread === null || curveSpread > CURVE_INVERTED;
   if (calm && solidGrowth && curveOk) {
-    reasons.push(
-      `Growth positive (${(indproYoy! * 100).toFixed(1)}% YoY), VIX calm`,
-    );
+    reasons.push(`Growth positive (${pctLabel(indproYoy!)} YoY), VIX calm`);
     return { regime: "expansion", asOf, reasons, inputs };
   }
 
