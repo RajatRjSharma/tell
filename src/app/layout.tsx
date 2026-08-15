@@ -17,7 +17,11 @@ export const metadata: Metadata = {
   description: "Global activity and market outlook research platform",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
   return (
     <html
       lang="en"
