@@ -106,10 +106,20 @@ watchlist and emails it when SMTP is configured.
 
 Workflow: `.github/workflows/ingest.yml`
 
-- Runs daily at **06:00 UTC** and on **Actions → Daily ingest → Run workflow**
-- Upserts **FRED → cross-country (IMF, else World Bank) → Yahoo markets → policy RSS**
+- Runs **twice daily** at **06:00 UTC** and **21:30 UTC**, plus **Actions → Daily ingest → Run workflow**
+- Pipeline: **migrate → FRED → cross-country (World Bank on Actions) → Yahoo markets → policy RSS → signals → forecasts → alerts**
+- Kept to two runs/day so free Yahoo/FRED/World Bank usage stays polite (hourly would risk Yahoo throttling with little new daily-bar data)
 - If you miss `make ingest-manual`, Actions still fills cross-country via World Bank
 - If you *did* run manual IMF, later World Bank runs **do not overwrite** those WEO rows
+
+**Still local-only** (not on the cron):
+
+| Command | Why |
+| ------- | --- |
+| `make ingest-manual` | IMF DataMapper is often blocked from GitHub IPs |
+| `make compute-features` | Diagnostic printout only |
+| `make backfill-signals` | Heavy historical rebuild; would hammer Yahoo |
+| `make compute-briefs` / `make compute-watchlist-briefs` | Paid Gemini usage |
 
 Repo secrets (Settings → Secrets and variables → Actions):
 

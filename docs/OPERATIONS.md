@@ -164,17 +164,20 @@ parallel browser workers; set `PLAYWRIGHT_WORKERS=1` if you need serial runs.
 
 ## Scheduled pipeline
 
-`.github/workflows/ingest.yml` runs daily at 06:00 UTC and on manual dispatch, with `concurrency: daily-ingest` so runs never overlap, a 30 minute timeout, Node 22, and `npm ci`:
+`.github/workflows/ingest.yml` runs **twice daily** at **06:00 UTC** and **21:30 UTC**, and on manual dispatch, with `concurrency: daily-ingest` so runs never overlap, a 30 minute timeout, Node 22, and `npm ci`:
 
-1. `ingest:fred` with `FRED_API_KEY`
-2. `ingest:imf`
-3. `ingest:markets`
-4. `ingest:events`
-5. `compute:signals`
-6. `compute:forecasts`
-7. `compute:alerts`
+1. `db:migrate`
+2. `ingest:fred` with `FRED_API_KEY`
+3. `ingest:imf` (World Bank fallback on Actions; local `make ingest-manual` for true IMF)
+4. `ingest:markets`
+5. `ingest:events`
+6. `compute:signals`
+7. `compute:forecasts`
+8. `compute:alerts`
 
-Brief and chat generation stay out of the schedule because they need paid keys; run them locally when you want stored briefs. IMF DataMapper commonly blocks cloud IPs, so the scheduled cross-country step relies on the World Bank fallback while `make ingest-manual` fills IMF rows from your machine.
+Frequency is capped at two runs/day: daily bars and FRED prints barely change more often, and Yahoo/World Bank are the fragile free endpoints.
+
+Still local-only: `make ingest-manual`, `make compute-features`, `make backfill-signals`, `make compute-briefs`, and `make compute-watchlist-briefs`. Brief/chat stay out of the schedule because they need paid keys.
 
 `.github/workflows/ci.yml` covers lint, format check, typecheck, unit tests, build, and Playwright on pull requests and pushes.
 

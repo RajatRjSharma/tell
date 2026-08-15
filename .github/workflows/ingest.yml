@@ -2,8 +2,11 @@ name: Daily ingest
 
 on:
   schedule:
-    # 06:00 UTC daily
+    # Twice daily, kept sparse for free Yahoo/FRED/World Bank limits.
+    # 06:00 UTC: morning refresh (macro + prior session)
+    # 21:30 UTC: after US cash equity close (~16:00 ET)
     - cron: "0 6 * * *"
+    - cron: "30 21 * * *"
   workflow_dispatch:
 
 concurrency:
@@ -32,12 +35,15 @@ jobs:
       - name: Install
         run: npm ci
 
+      - name: Apply schema migrations
+        run: npm run db:migrate
+
       - name: Ingest FRED
         run: npm run ingest:fred
         env:
           FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
 
-      - name: Ingest cross-country (IMF / World Bank)
+      - name: Ingest cross-country (World Bank fallback on Actions)
         run: npm run ingest:imf
 
       - name: Ingest markets (Yahoo)
