@@ -165,6 +165,7 @@ Public JSON endpoints (Turso-backed):
 | `GET /api/quality` | Signal hit-rate report (`?symbol=SPY`) |
 | `GET /api/events` | Policy events (`?source=Fed&country=US&symbol=SPY&since=YYYY-MM-DD&limit=30`) |
 | `GET /api/events/impact` | Historical forward returns after similar events (`?symbol=SPY&source=Fed&sentiment=any`) |
+| `GET /api/macro/strip` | US CPI / curve / VIX sparkline strip (`?limit=24`) |
 | `GET /api/readings?country=US&indicator=CPI` | Macro series (`from`/`to`/`limit`) |
 
 ## AI (Gemini + Groq)

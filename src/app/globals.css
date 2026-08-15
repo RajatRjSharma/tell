@@ -189,6 +189,25 @@ button:disabled {
   color: var(--muted-strong);
 }
 
+.macro-strip {
+  display: grid;
+  gap: 1px;
+  overflow: hidden;
+  border-radius: 16px;
+  background: var(--line);
+}
+
+@media (min-width: 640px) {
+  .macro-strip {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.macro-strip-item {
+  background: var(--surface);
+  padding: 1rem 1.15rem;
+}
+
 .metric-cell {
   display: grid;
   grid-template-columns: 1fr auto;

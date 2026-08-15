@@ -11,6 +11,8 @@ import { SignalQuality } from "@/components/SignalQuality";
 import { AlertsPanel } from "@/components/AlertsPanel";
 import { EventsPanel } from "@/components/EventsPanel";
 import { EventImpactPanel } from "@/components/EventImpactPanel";
+import { MacroSparklineStrip } from "@/components/MacroSparklineStrip";
+import type { MacroStrip } from "@/lib/macro/sparklines";
 
 type User = { id: string; email: string };
 
@@ -100,11 +102,13 @@ export function OutlookDashboard({
   assets,
   initialSignals,
   initialWatchlist = [],
+  initialMacroStrip = null,
 }: {
   user: User | null;
   assets: Asset[];
   initialSignals: OutlookSignalDto[];
   initialWatchlist?: string[];
+  initialMacroStrip?: MacroStrip | null;
 }) {
   const router = useRouter();
   const [horizon, setHorizon] = useState<string>("1d");
@@ -398,6 +402,8 @@ export function OutlookDashboard({
             </p>
           </div>
         </section>
+
+        <MacroSparklineStrip initialStrip={initialMacroStrip} />
 
         <section className="mt-10 grid gap-px overflow-hidden rounded-[16px] bg-[var(--line)] sm:grid-cols-3">
           <div className="metric-cell">
