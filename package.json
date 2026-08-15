@@ -28,6 +28,7 @@
     "compute:features": "tsx scripts/compute-features.ts",
     "compute:signals": "tsx scripts/compute-signals.ts",
     "compute:forecasts": "tsx scripts/compute-forecasts.ts",
+    "backfill:signals": "tsx scripts/backfill-signals.ts",
     "compute:alerts": "tsx scripts/compute-alerts.ts",
     "compute:briefs": "tsx scripts/compute-briefs.ts"
   },

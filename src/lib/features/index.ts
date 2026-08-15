@@ -6,8 +6,13 @@ import {
   type UsRegimeInputs,
   type UsRegimeResult,
 } from "./regime";
-import { loadAssetCloses, loadMacroSeries, latestAssetDate } from "./load";
-import { changeOverLags, valueAtOrBefore } from "./series";
+import {
+  loadAssetCloses,
+  loadMacroSeries,
+  latestAssetDate,
+  listTradingDates,
+} from "./load";
+import { changeOverLags, valueAtOrBefore, type SeriesPoint } from "./series";
 
 export {
   computeMarketFeatures,
@@ -17,6 +22,7 @@ export {
   loadAssetCloses,
   loadMacroSeries,
   latestAssetDate,
+  listTradingDates,
 };
 
 export type { MarketFeatures } from "./market";
@@ -42,6 +48,12 @@ export type FeatureSnapshot = {
   markets: ReturnType<typeof computeMarketFeatures>[];
 };
 
+export type FeatureSeriesCache = {
+  macroSeries: Map<string, SeriesPoint[]>;
+  vixId: string;
+  marketCloses: Map<string, SeriesPoint[]>;
+};
+
 async function loadUsVix(db: Client) {
   for (const id of VIX_CANDIDATES) {
     const series = await loadMacroSeries(db, "US", id);
@@ -49,36 +61,24 @@ async function loadUsVix(db: Client) {
   }
   return {
     id: "VIX",
-    series: [] as Awaited<ReturnType<typeof loadMacroSeries>>,
+    series: [] as SeriesPoint[],
   };
 }
 
 function yoyFromSeries(
-  points: Awaited<ReturnType<typeof loadMacroSeries>>,
+  points: SeriesPoint[],
   asOf: string,
   lags: number,
 ): number | null {
   return changeOverLags(points, asOf, lags);
 }
 
-export async function buildFeatureSnapshot(
+/** Load macro + market series once for multi-day backfills. */
+export async function preloadFeatureSeries(
   db: Client,
-  options?: {
-    asOf?: string;
-    symbols?: string[];
-  },
-): Promise<FeatureSnapshot> {
-  const symbols = options?.symbols ?? ["SPY", "TLT", "GLD"];
-  const asOf =
-    options?.asOf ??
-    (await latestAssetDate(db, symbols[0] ?? "SPY")) ??
-    new Date().toISOString().slice(0, 10);
-
-  const macroSeries = new Map<
-    string,
-    Awaited<ReturnType<typeof loadMacroSeries>>
-  >();
-
+  symbols: string[],
+): Promise<FeatureSeriesCache> {
+  const macroSeries = new Map<string, SeriesPoint[]>();
   for (const id of US_MACRO_IDS) {
     macroSeries.set(id, await loadMacroSeries(db, "US", id));
   }
@@ -86,15 +86,33 @@ export async function buildFeatureSnapshot(
   const vixLoaded = await loadUsVix(db);
   macroSeries.set(vixLoaded.id, vixLoaded.series);
 
-  const macro = [...macroSeries.entries()].map(([id, points]) =>
+  const marketCloses = new Map<string, SeriesPoint[]>();
+  for (const symbol of symbols) {
+    marketCloses.set(symbol, await loadAssetCloses(db, symbol));
+  }
+
+  return {
+    macroSeries,
+    vixId: vixLoaded.id,
+    marketCloses,
+  };
+}
+
+/** Point-in-time snapshot from an already-loaded series cache. */
+export function buildFeatureSnapshotFromCache(
+  cache: FeatureSeriesCache,
+  asOf: string,
+  symbols: string[],
+): FeatureSnapshot {
+  const macro = [...cache.macroSeries.entries()].map(([id, points]) =>
     computeMacroSeriesFeatures(id, points, asOf, defaultMacroOptions(id)),
   );
 
-  const cpi = macroSeries.get("CPI") ?? [];
-  const indpro = macroSeries.get("INDPRO") ?? [];
-  const fed = macroSeries.get("FEDFUNDS") ?? [];
-  const curve = macroSeries.get("T10Y2Y") ?? [];
-  const vixPoints = vixLoaded.series;
+  const cpi = cache.macroSeries.get("CPI") ?? [];
+  const indpro = cache.macroSeries.get("INDPRO") ?? [];
+  const fed = cache.macroSeries.get("FEDFUNDS") ?? [];
+  const curve = cache.macroSeries.get("T10Y2Y") ?? [];
+  const vixPoints = cache.macroSeries.get(cache.vixId) ?? [];
 
   const inputs: UsRegimeInputs = {
     cpiYoy: yoyFromSeries(cpi, asOf, 12),
@@ -106,11 +124,28 @@ export async function buildFeatureSnapshot(
 
   const regime = classifyUsRegime(asOf, inputs);
 
-  const markets = [];
-  for (const symbol of symbols) {
-    const closes = await loadAssetCloses(db, symbol);
-    markets.push(computeMarketFeatures(symbol, closes, asOf));
-  }
+  const markets = symbols.map((symbol) =>
+    computeMarketFeatures(symbol, cache.marketCloses.get(symbol) ?? [], asOf),
+  );
 
   return { asOf, regime, macro, markets };
+}
+
+export async function buildFeatureSnapshot(
+  db: Client,
+  options?: {
+    asOf?: string;
+    symbols?: string[];
+    cache?: FeatureSeriesCache;
+  },
+): Promise<FeatureSnapshot> {
+  const symbols = options?.symbols ?? ["SPY", "TLT", "GLD"];
+  const asOf =
+    options?.asOf ??
+    (await latestAssetDate(db, symbols[0] ?? "SPY")) ??
+    new Date().toISOString().slice(0, 10);
+
+  const cache = options?.cache ?? (await preloadFeatureSeries(db, symbols));
+
+  return buildFeatureSnapshotFromCache(cache, asOf, symbols);
 }

@@ -61,6 +61,7 @@ Pure TypeScript transforms (no ML). Used as inputs for the signal engine.
 ```bash
 make compute-signals   # Write bullish/neutral/bearish outlooks to Turso
 make compute-forecasts # Score resolved signals into forecast_log (hit rate)
+make backfill-signals  # Recompute last N trading days of signals + forecasts
 make compute-alerts    # Evaluate watchlist alert rules → in-app inbox
 ```
 
@@ -77,6 +78,12 @@ overlay uses Finnhub quote when `FINNHUB_API_KEY` is set, else Yahoo — printed
 `compute-forecasts` compares each stored signal to the realized forward return once
 enough bars exist. Neutral is graded with a small band that widens with horizon length.
 Daily Actions runs this after `compute:signals` (no AI keys).
+
+`make backfill-signals` walks recent SPY trading days (default `BACKFILL_DAYS=90`),
+upserts historical `signals`, then evaluates `forecast_log` so quality hit rates have
+real sample size. Optional: `BACKFILL_FROM` / `BACKFILL_TO`, `FORECAST_SYMBOLS`,
+`BACKFILL_SKIP_FORECASTS=1`. Do **not** run this every day in CI — use locally or
+occasionally after rule changes. Macro still uses current vintages (not ALFRED).
 
 `compute-alerts` checks enabled rules (direction flip, became direction, confidence
 below) against the latest signals and writes unread `alert_events`. First observation

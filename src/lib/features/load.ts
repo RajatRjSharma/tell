@@ -52,3 +52,50 @@ export async function latestAssetDate(
   const date = result.rows[0]?.date;
   return date == null ? null : String(date);
 }
+
+/** Trading days from asset_readings (newest last), optionally bounded. */
+export async function listTradingDates(
+  db: Client,
+  symbol: string,
+  options?: {
+    from?: string | null;
+    to?: string | null;
+    limit?: number | null;
+  },
+): Promise<string[]> {
+  const filters = ["symbol = ?"];
+  const args: Array<string | number> = [symbol];
+
+  if (options?.from) {
+    filters.push("date >= ?");
+    args.push(options.from);
+  }
+  if (options?.to) {
+    filters.push("date <= ?");
+    args.push(options.to);
+  }
+
+  const limit =
+    options?.limit == null
+      ? null
+      : Math.min(Math.max(Math.floor(options.limit), 1), 5000);
+
+  // When limited, take the most recent N days then return ascending.
+  const sql =
+    limit == null
+      ? `SELECT date FROM asset_readings
+         WHERE ${filters.join(" AND ")}
+         ORDER BY date ASC`
+      : `SELECT date FROM (
+           SELECT date FROM asset_readings
+           WHERE ${filters.join(" AND ")}
+           ORDER BY date DESC
+           LIMIT ?
+         ) recent
+         ORDER BY date ASC`;
+
+  if (limit != null) args.push(limit);
+
+  const result = await db.execute({ sql, args });
+  return result.rows.map((row) => String(row.date));
+}
