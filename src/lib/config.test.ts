@@ -6,6 +6,7 @@ import {
   briefRateLimitPerMinute,
   chatRateLimitPerMinute,
   emailOtpEnabled,
+  jwtIssuer,
   registrationEnabled,
   sessionCookieSameSite,
   sessionExpireDays,
@@ -16,6 +17,7 @@ const KEYS = [
   "REGISTRATION_ENABLED",
   "EMAIL_OTP_ENABLED",
   "JWT_EXPIRE_DAYS",
+  "JWT_ISSUER",
   "AUTH_COOKIE_SAMESITE",
   "AUTH_RATE_LIMIT_PER_MINUTE",
   "BRIEF_RATE_LIMIT_PER_MINUTE",
@@ -61,5 +63,11 @@ describe("config", () => {
     expect(sessionCookieSameSite()).toBe("none");
     process.env.APP_URL = "https://example.com/";
     expect(appUrl()).toBe("https://example.com");
+  });
+
+  it("defaults JWT issuer to tell and respects overrides", () => {
+    expect(jwtIssuer()).toBe("tell");
+    process.env.JWT_ISSUER = " tell-prod ";
+    expect(jwtIssuer()).toBe("tell-prod");
   });
 });

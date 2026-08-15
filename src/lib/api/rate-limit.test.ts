@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { resetRateLimits } from "@/lib/ai/rate-limit";
 import {
+  clientKey,
+  enforceAuthIdentityRateLimit,
   enforceRateLimit,
   resolveRateLimitCategory,
 } from "@/lib/api/rate-limit";
@@ -8,6 +10,26 @@ import {
 afterEach(() => {
   resetRateLimits();
   delete process.env.API_RATE_LIMIT_PER_MINUTE;
+  delete process.env.AUTH_RATE_LIMIT_PER_MINUTE;
+});
+
+describe("clientKey", () => {
+  it("prefers the first x-forwarded-for hop", () => {
+    const req = new Request("http://localhost/api/outlook", {
+      headers: { "x-forwarded-for": "203.0.113.10, 10.0.0.1" },
+    });
+    expect(clientKey(req)).toBe("203.0.113.10");
+  });
+
+  it("falls back to x-real-ip then anonymous", () => {
+    const real = new Request("http://localhost/api/outlook", {
+      headers: { "x-real-ip": "198.51.100.7" },
+    });
+    expect(clientKey(real)).toBe("198.51.100.7");
+    expect(clientKey(new Request("http://localhost/api/outlook"))).toBe(
+      "anonymous",
+    );
+  });
 });
 
 describe("resolveRateLimitCategory", () => {
@@ -35,6 +57,29 @@ describe("enforceRateLimit", () => {
     expect(enforceRateLimit(req)).toBeNull();
     expect(enforceRateLimit(req)).toBeNull();
     const blocked = enforceRateLimit(req);
+    expect(blocked?.status).toBe(429);
+  });
+});
+
+describe("enforceAuthIdentityRateLimit", () => {
+  it("ignores empty identity", () => {
+    expect(
+      enforceAuthIdentityRateLimit(
+        new Request("http://localhost/api/auth/login"),
+        "   ",
+      ),
+    ).toBeNull();
+  });
+
+  it("rate limits by normalized email independently of IP", () => {
+    process.env.AUTH_RATE_LIMIT_PER_MINUTE = "2";
+    const req = new Request("http://localhost/api/auth/login", {
+      headers: { "x-forwarded-for": "203.0.113.99" },
+    });
+
+    expect(enforceAuthIdentityRateLimit(req, "User@Example.com")).toBeNull();
+    expect(enforceAuthIdentityRateLimit(req, "user@example.com")).toBeNull();
+    const blocked = enforceAuthIdentityRateLimit(req, "USER@example.com");
     expect(blocked?.status).toBe(429);
   });
 });

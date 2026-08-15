@@ -28,8 +28,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
   const isRegister = mode === "register";
   const registrationClosed =
     isRegister && config != null && !config.registrationEnabled;
-  const otpDisabled =
-    isRegister && config != null && !config.emailOtpEnabled;
+  const otpDisabled = isRegister && config != null && !config.emailOtpEnabled;
   const registerBlocked = registrationClosed || otpDisabled;
 
   const title = registrationClosed
@@ -219,128 +218,128 @@ export function AuthForm({ mode }: { mode: Mode }) {
               </Link>
             </div>
           ) : (
-          <form
-            data-testid="auth-form"
-            method="post"
-            action="#"
-            onSubmit={onSubmit}
-            className="mt-9 flex flex-col gap-5"
-          >
-            <label className="flex flex-col gap-2 text-xs font-medium text-[var(--muted-strong)]">
-              Email address
-              <input
-                data-testid="auth-email"
-                type="email"
-                autoComplete="email"
-                required
-                value={email}
-                disabled={isRegister && registerStep === "verify"}
-                onChange={(e) => setEmail(e.target.value)}
-                className="min-h-12 rounded-[12px] border border-[var(--line-strong)] bg-[var(--surface)] px-3.5 text-sm text-[var(--text)] transition-colors placeholder:text-[var(--muted)] hover:border-[var(--muted)] focus:border-[var(--accent)] focus:outline-none disabled:opacity-70"
-              />
-            </label>
-
-            {isRegister && registerStep === "verify" ? (
-              <label className="flex flex-col gap-2 text-xs font-medium text-[var(--muted-strong)]">
-                Verification code
-                <input
-                  data-testid="auth-otp"
-                  type="text"
-                  inputMode="numeric"
-                  autoComplete="one-time-code"
-                  required
-                  pattern="\d{4,8}"
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value)}
-                  className="min-h-12 rounded-[12px] border border-[var(--line-strong)] bg-[var(--surface)] px-3.5 font-mono text-sm tracking-[0.2em] text-[var(--text)] transition-colors focus:border-[var(--accent)] focus:outline-none"
-                />
-              </label>
-            ) : null}
-
-            {!isRegister || registerStep === "verify" ? (
-              <label className="flex flex-col gap-2 text-xs font-medium text-[var(--muted-strong)]">
-                Password
-                <input
-                  data-testid="auth-password"
-                  type="password"
-                  autoComplete={
-                    isRegister ? "new-password" : "current-password"
-                  }
-                  required
-                  minLength={isRegister ? REGISTER_PASSWORD_MIN : 8}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="min-h-12 rounded-[12px] border border-[var(--line-strong)] bg-[var(--surface)] px-3.5 text-sm text-[var(--text)] transition-colors placeholder:text-[var(--muted)] hover:border-[var(--muted)] focus:border-[var(--accent)] focus:outline-none"
-                />
-                {isRegister ? (
-                  <span className="font-normal text-[var(--muted)]">
-                    At least {REGISTER_PASSWORD_MIN} characters with upper,
-                    lower, number, and special character.
-                  </span>
-                ) : null}
-              </label>
-            ) : null}
-
-            {info ? (
-              <p
-                data-testid="auth-info"
-                className="rounded-[10px] bg-[var(--accent-soft)] px-3 py-2.5 text-sm text-[var(--accent)]"
-              >
-                {info}
-              </p>
-            ) : null}
-
-            {error ? (
-              <p
-                data-testid="auth-error"
-                className="rounded-[10px] bg-[var(--negative-soft)] px-3 py-2.5 text-sm text-[var(--negative)]"
-                role="alert"
-              >
-                {error}
-              </p>
-            ) : null}
-
-            <button
-              data-testid="auth-submit"
-              type="submit"
-              disabled={loading}
-              className="button-primary mt-1 min-h-12 w-full disabled:opacity-60"
+            <form
+              data-testid="auth-form"
+              method="post"
+              action="#"
+              onSubmit={onSubmit}
+              className="mt-9 flex flex-col gap-5"
             >
-              {loading
-                ? "Please wait..."
-                : isRegister
-                  ? registerStep === "email"
-                    ? "Send verification code"
-                    : "Verify & create account"
-                  : "Sign in"}
-            </button>
+              <label className="flex flex-col gap-2 text-xs font-medium text-[var(--muted-strong)]">
+                Email address
+                <input
+                  data-testid="auth-email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  value={email}
+                  disabled={isRegister && registerStep === "verify"}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="min-h-12 rounded-[12px] border border-[var(--line-strong)] bg-[var(--surface)] px-3.5 text-sm text-[var(--text)] transition-colors placeholder:text-[var(--muted)] hover:border-[var(--muted)] focus:border-[var(--accent)] focus:outline-none disabled:opacity-70"
+                />
+              </label>
 
-            {isRegister && registerStep === "verify" ? (
+              {isRegister && registerStep === "verify" ? (
+                <label className="flex flex-col gap-2 text-xs font-medium text-[var(--muted-strong)]">
+                  Verification code
+                  <input
+                    data-testid="auth-otp"
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    required
+                    pattern="\d{4,8}"
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value)}
+                    className="min-h-12 rounded-[12px] border border-[var(--line-strong)] bg-[var(--surface)] px-3.5 font-mono text-sm tracking-[0.2em] text-[var(--text)] transition-colors focus:border-[var(--accent)] focus:outline-none"
+                  />
+                </label>
+              ) : null}
+
+              {!isRegister || registerStep === "verify" ? (
+                <label className="flex flex-col gap-2 text-xs font-medium text-[var(--muted-strong)]">
+                  Password
+                  <input
+                    data-testid="auth-password"
+                    type="password"
+                    autoComplete={
+                      isRegister ? "new-password" : "current-password"
+                    }
+                    required
+                    minLength={isRegister ? REGISTER_PASSWORD_MIN : 8}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="min-h-12 rounded-[12px] border border-[var(--line-strong)] bg-[var(--surface)] px-3.5 text-sm text-[var(--text)] transition-colors placeholder:text-[var(--muted)] hover:border-[var(--muted)] focus:border-[var(--accent)] focus:outline-none"
+                  />
+                  {isRegister ? (
+                    <span className="font-normal text-[var(--muted)]">
+                      At least {REGISTER_PASSWORD_MIN} characters with upper,
+                      lower, number, and special character.
+                    </span>
+                  ) : null}
+                </label>
+              ) : null}
+
+              {info ? (
+                <p
+                  data-testid="auth-info"
+                  className="rounded-[10px] bg-[var(--accent-soft)] px-3 py-2.5 text-sm text-[var(--accent)]"
+                >
+                  {info}
+                </p>
+              ) : null}
+
+              {error ? (
+                <p
+                  data-testid="auth-error"
+                  className="rounded-[10px] bg-[var(--negative-soft)] px-3 py-2.5 text-sm text-[var(--negative)]"
+                  role="alert"
+                >
+                  {error}
+                </p>
+              ) : null}
+
               <button
-                type="button"
-                className="text-sm text-[var(--muted)] underline underline-offset-2"
-                onClick={() => {
-                  setRegisterStep("email");
-                  setOtp("");
-                  setInfo(null);
-                  setError(null);
-                }}
+                data-testid="auth-submit"
+                type="submit"
+                disabled={loading}
+                className="button-primary mt-1 min-h-12 w-full disabled:opacity-60"
               >
-                Use a different email
+                {loading
+                  ? "Please wait..."
+                  : isRegister
+                    ? registerStep === "email"
+                      ? "Send verification code"
+                      : "Verify & create account"
+                    : "Sign in"}
               </button>
-            ) : null}
-          </form>
+
+              {isRegister && registerStep === "verify" ? (
+                <button
+                  type="button"
+                  className="text-sm text-[var(--muted)] underline underline-offset-2"
+                  onClick={() => {
+                    setRegisterStep("email");
+                    setOtp("");
+                    setInfo(null);
+                    setError(null);
+                  }}
+                >
+                  Use a different email
+                </button>
+              ) : null}
+            </form>
           )}
 
           <div className="mt-7 flex flex-col gap-3 text-sm">
             {!registerBlocked || !isRegister ? (
-            <Link
-              data-testid="auth-alt-link"
-              href={altHref}
-              className="w-fit font-medium text-[var(--text)] underline decoration-[var(--line-strong)] underline-offset-4 transition-colors hover:decoration-[var(--text)]"
-            >
-              {altLabel}
-            </Link>
+              <Link
+                data-testid="auth-alt-link"
+                href={altHref}
+                className="w-fit font-medium text-[var(--text)] underline decoration-[var(--line-strong)] underline-offset-4 transition-colors hover:decoration-[var(--text)]"
+              >
+                {altLabel}
+              </Link>
             ) : null}
             <Link
               href="/"

@@ -1,5 +1,15 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import { enforceCsrf } from "@/lib/security/csrf";
+import {
+  apiCacheHeaders,
+  applySecurityHeaders,
+  securityHeaders,
+} from "@/lib/security/headers";
+import {
+  GENERIC_AI,
+  GENERIC_SERVER,
+  safePublicDetail,
+} from "@/lib/security/http-errors";
 import {
   enforceAllowedMethod,
   enforceBodySize,
@@ -8,6 +18,11 @@ import {
 import { jwtSecretStatus } from "@/lib/security/secrets";
 import { hashOtp } from "@/lib/auth/otp";
 
+afterEach(() => {
+  delete process.env.APP_ENV;
+  delete process.env.OTP_PEPPER;
+});
+
 describe("csrf", () => {
   it("allows same-origin mutating requests", () => {
     const req = new Request("http://localhost:3000/api/watchlist", {
@@ -15,6 +30,17 @@ describe("csrf", () => {
       headers: {
         origin: "http://localhost:3000",
         "content-type": "application/json",
+      },
+    });
+    expect(enforceCsrf(req)).toBeNull();
+  });
+
+  it("allows matching Referer when Origin is absent", () => {
+    const req = new Request("http://localhost:3000/api/watchlist", {
+      method: "POST",
+      headers: {
+        host: "localhost:3000",
+        referer: "http://localhost:3000/login",
       },
     });
     expect(enforceCsrf(req)).toBeNull();
@@ -41,6 +67,15 @@ describe("csrf", () => {
     });
     expect(enforceCsrf(req)).toBeNull();
   });
+
+  it("requires Origin or Referer in production-like envs", () => {
+    process.env.APP_ENV = "production";
+    const req = new Request("https://tell.example/api/watchlist", {
+      method: "POST",
+      headers: { host: "tell.example" },
+    });
+    expect(enforceCsrf(req)?.status).toBe(403);
+  });
 });
 
 describe("request guards", () => {
@@ -60,9 +95,46 @@ describe("request guards", () => {
   it("requires JSON content type on POST", () => {
     const req = new Request("http://localhost/api/chat", {
       method: "POST",
-      headers: { "content-type": "text/plain" },
+      headers: { "content-type": "text/plain", "content-length": "12" },
     });
     expect(requireJsonContentType(req)?.status).toBe(415);
+  });
+
+  it("allows empty-body POST without Content-Type", () => {
+    const req = new Request("http://localhost/api/auth/logout", {
+      method: "POST",
+      headers: { "content-length": "0" },
+    });
+    expect(requireJsonContentType(req)).toBeNull();
+  });
+});
+
+describe("security headers", () => {
+  it("includes CSP and frame denial by default", () => {
+    const keys = securityHeaders().map((h) => h.key);
+    expect(keys).toContain("Content-Security-Policy");
+    expect(keys).toContain("X-Frame-Options");
+    expect(keys).not.toContain("Strict-Transport-Security");
+  });
+
+  it("adds HSTS when production-like", () => {
+    process.env.APP_ENV = "production";
+    expect(
+      securityHeaders().some((h) => h.key === "Strict-Transport-Security"),
+    ).toBe(true);
+  });
+
+  it("applies cache headers by route class", () => {
+    expect(apiCacheHeaders("/api/auth/login")[0]?.value).toMatch(/no-store/i);
+    expect(apiCacheHeaders("/api/health")[0]?.value).toBe("no-store");
+    expect(apiCacheHeaders("/api/outlook")[0]?.value).toBe("private, no-store");
+  });
+
+  it("does not overwrite existing header values", () => {
+    const headers = new Headers({ "X-Frame-Options": "SAMEORIGIN" });
+    applySecurityHeaders(headers);
+    expect(headers.get("X-Frame-Options")).toBe("SAMEORIGIN");
+    expect(headers.get("X-Content-Type-Options")).toBe("nosniff");
   });
 });
 
@@ -71,7 +143,6 @@ describe("otp hashing", () => {
     process.env.OTP_PEPPER = "unit-test-pepper";
     expect(hashOtp("123456")).toBe(hashOtp("123456"));
     expect(hashOtp("123456")).not.toBe(hashOtp("654321"));
-    delete process.env.OTP_PEPPER;
   });
 });
 
@@ -83,25 +154,38 @@ describe("jwtSecretStatus", () => {
     if (prev === undefined) delete process.env.JWT_SECRET;
     else process.env.JWT_SECRET = prev;
   });
+
+  it("accepts long random secrets", () => {
+    const prev = process.env.JWT_SECRET;
+    process.env.JWT_SECRET = "unit-test-jwt-secret-at-least-32-chars!!";
+    expect(jwtSecretStatus().strong).toBe(true);
+    if (prev === undefined) delete process.env.JWT_SECRET;
+    else process.env.JWT_SECRET = prev;
+  });
 });
 
 describe("safePublicDetail", () => {
-  it("keeps short validation messages", async () => {
-    const { safePublicDetail } = await import("@/lib/security/http-errors");
+  it("keeps short validation messages", () => {
     expect(safePublicDetail(new Error("Invalid symbol"), "fallback")).toBe(
       "Invalid symbol",
     );
   });
 
-  it("hides leaky infra messages", async () => {
-    const { GENERIC_AI, safePublicDetail } = await import(
-      "@/lib/security/http-errors"
-    );
+  it("hides leaky infra messages", () => {
     expect(
       safePublicDetail(
         new Error("SQLITE_ERROR: no such table users"),
         GENERIC_AI,
       ),
     ).toBe(GENERIC_AI);
+    expect(
+      safePublicDetail(new Error("Missing GEMINI_API_KEY secret"), GENERIC_AI),
+    ).toBe(GENERIC_AI);
+  });
+
+  it("falls back for empty, huge, or non-error values", () => {
+    expect(safePublicDetail(null)).toBe(GENERIC_SERVER);
+    expect(safePublicDetail(new Error("x".repeat(200)))).toBe(GENERIC_SERVER);
+    expect(safePublicDetail({ oops: true })).toBe(GENERIC_SERVER);
   });
 });

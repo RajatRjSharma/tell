@@ -12,7 +12,7 @@ const LEAK_MARKERS = [
   "stack trace",
   "exception:",
   " at line ",
-  "file \"",
+  'file "',
   "file '/",
   "sqlalchemy",
   "sqlite",
@@ -84,7 +84,10 @@ export function safePublicDetail(
   const trimmed = message.trim();
   if (!trimmed || trimmed.length > 180) return fallback;
   if (looksLikeLeak(trimmed)) return fallback;
-  if (!looksUserSafe(trimmed) && !(err instanceof Error && err.name === "ZodError")) {
+  if (
+    !looksUserSafe(trimmed) &&
+    !(err instanceof Error && err.name === "ZodError")
+  ) {
     // Allow short validation-style messages that don't look like infra leaks.
     if (!/^[A-Za-z0-9][\w\s.,'"!?:;-]{2,179}$/.test(trimmed)) return fallback;
   }

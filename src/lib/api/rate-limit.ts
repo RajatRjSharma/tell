@@ -109,10 +109,7 @@ export function enforceRateLimit(
 }
 
 /** @deprecated Prefer enforceRateLimit — kept for existing auth call sites. */
-export function enforceAuthRateLimit(
-  request: Request,
-  _bucket?: string,
-): NextResponse | null {
+export function enforceAuthRateLimit(request: Request): NextResponse | null {
   return enforceRateLimit(request, { category: "auth" });
 }
 

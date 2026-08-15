@@ -16,6 +16,17 @@ async function registerUser(page: Page, email: string, password: string) {
   await page.getByTestId("auth-email").fill(email);
   await page.getByTestId("auth-submit").click();
   await expect(page.getByTestId("auth-otp")).toBeVisible();
+
+  const otpValue = await page.getByTestId("auth-otp").inputValue();
+  if (!otpValue) {
+    const info = page.getByTestId("auth-info");
+    await expect(info).toBeVisible();
+    const text = await info.innerText();
+    const match = text.match(/\b(\d{4,8})\b/);
+    expect(match?.[1]).toBeTruthy();
+    await page.getByTestId("auth-otp").fill(match![1]!);
+  }
+
   await page.getByTestId("auth-password").fill(password);
   await page.getByTestId("auth-submit").click();
   await expect(page).toHaveURL("/");
@@ -43,6 +54,22 @@ test.describe("auth validation", () => {
     }
 
     await expect(page.getByTestId("auth-error")).toBeVisible();
+  });
+
+  test("exposes public auth config and protects product APIs", async ({
+    request,
+  }) => {
+    const config = await request.get("/api/auth/config");
+    expect(config.ok()).toBeTruthy();
+    const body = (await config.json()) as {
+      registrationEnabled: boolean;
+      emailOtpEnabled: boolean;
+    };
+    expect(typeof body.registrationEnabled).toBe("boolean");
+    expect(typeof body.emailOtpEnabled).toBe("boolean");
+
+    const outlook = await request.get("/api/outlook");
+    expect(outlook.status()).toBe(401);
   });
 });
 

@@ -69,8 +69,12 @@ jobs:
         env:
           CI: true
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          JWT_ISSUER: tell
           TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
           TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
+          TELL_OTP_DEV_ECHO: "1"
+          REGISTRATION_ENABLED: "true"
+          EMAIL_OTP_ENABLED: "true"
 
       - name: Upload Playwright report
         if: failure()
