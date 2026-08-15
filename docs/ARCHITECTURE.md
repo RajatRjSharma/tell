@@ -26,7 +26,7 @@ Tell separates three concerns: data collection, offline scoring, and request-tim
 | Product domains | Events, alerts, watchlist, macro, risk, AI | `src/lib/{events,alerts,watchlist,macro,risk,ai}/*` |
 | HTTP surface | Route handlers and query services | `src/app/api/**`, `src/lib/api/*` |
 | Interface | Server-rendered dashboard and panels | `src/app/*`, `src/components/*` |
-| Identity and delivery | Sessions, OTP, SMTP | `src/lib/auth.ts`, `src/lib/auth/otp.ts`, `src/lib/email/*` |
+| Identity and delivery | Sessions (email/username JWT), OTP, SMTP | `src/lib/auth.ts`, `src/lib/auth/otp.ts`, `src/lib/email/*` |
 
 ## Data flow
 
@@ -59,11 +59,14 @@ flowchart TB
     AL[alert_events]
     RB[research_briefs]
     FTS[research_fts]
+    USR[users]
+    OTP[auth_otps]
   end
 
   subgraph APP[Next.js on Vercel]
     RSC[Dashboard render]
     API[Route handlers]
+    AUTH[Login register OTP]
     AI[Briefs and chat]
     MAIL[SMTP delivery]
   end
@@ -90,6 +93,10 @@ flowchart TB
   FC --> API
   AL --> API
   FH --> API
+  USR --> AUTH
+  OTP --> AUTH
+  AUTH --> MAIL
+  AUTH --> API
 
   SIG --> AI
   EV --> AI
@@ -217,8 +224,8 @@ Seeded countries: `US`, `IN`, `DE`, `JP`, `GB`, `CN`.
 | Condition | Result |
 | --------- | ------ |
 | Missing AI keys | Brief and chat endpoints return `503`; UI shows an unavailable state |
-| Missing SMTP | OTP requests return `503` unless `TELL_OTP_DEV_ECHO=1`; alert email is skipped, inbox still written |
-| Live quote failure | Outlook still returns with `quote: null` |
+| Missing SMTP | OTP requests return `503` unless local `TELL_OTP_DEV_ECHO=1` (blocked when `APP_ENV` is production-like); alert email is skipped, inbox still written |
+| Live quote failure / `LIVE_MARKET_QUOTES=false` | Outlook still returns with `quote: null` |
 | IMF blocked from cloud IPs | Cross-country ingest falls back to World Bank and preserves existing IMF rows |
 | `research_fts` not migrated | Retrieval indexing is skipped silently |
 | Missing required env | `/api/health` and `/api/ready` return `503` with the missing names |

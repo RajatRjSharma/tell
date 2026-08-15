@@ -12,7 +12,7 @@ Tell turns global macro, market, and central-bank data into explainable multi-as
 | [Data model](DATA-MODEL.md) | Every Turso table, column, index, and write path |
 | [Signal methodology](SIGNALS.md) | Features, regime rules, scoring, forecasts, risk bias, event studies |
 | [API reference](API.md) | Every endpoint with parameters, responses, and error codes |
-| [Auth and email](AUTH-AND-EMAIL.md) | OTP registration, sessions, SMTP delivery, templates |
+| [Auth and email](AUTH-AND-EMAIL.md) | Username/email OTP registration, sessions, SMTP delivery, templates |
 | [Security](SECURITY.md) | Headers, CSRF, auth, secrets, disclosure |
 | [Operations](OPERATIONS.md) | Environment, commands, workflows, runbooks, troubleshooting |
 

@@ -85,8 +85,8 @@
     <text x="1114" y="412" class="bodyDark">Market outlook dashboard</text>
     <text x="1114" y="452" class="bodyDark">Today and tomorrow risk bias</text>
     <text x="1114" y="492" class="bodyDark">Charts, events and quality</text>
-    <text x="1114" y="532" class="bodyDark">OTP auth and watchlists</text>
-    <text x="1114" y="572" class="bodyDark">In-app and email alerts</text>
+    <text x="1114" y="532" class="bodyDark">Email/username OTP auth</text>
+    <text x="1114" y="572" class="bodyDark">Watchlists and email alerts</text>
     <text x="1114" y="612" class="bodyDark">Research briefs and chat</text>
     <line x1="1114" y1="648" x2="1494" y2="648" class="ruleLight" />
     <text x="1114" y="688" class="smallDark">VERCEL, REACT 19, SMTP</text>

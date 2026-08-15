@@ -31,13 +31,15 @@ Assume the browser is hostile, the network may be observed, and application logs
 
 ### Authentication
 
-- Passwords: bcrypt cost 12; login 8–72 chars; registration needs 12+ with mixed case, digit, special
-- Sessions: HS256 JWT cookie with `iss` (`JWT_ISSUER`, default `tell`), `jti`, `iat`/`exp`, `type=session`
-- Registration: email OTP required; direct `/api/auth/register` disabled
+- Passwords: bcrypt cost 12; login 8–72 chars; registration needs 12+ with mixed case, digit, special, plus confirm match
+- Login identifier: email **or** username (normalized); errors do not distinguish unknown account vs wrong password
+- Sessions: HS256 JWT cookie with `iss` (`JWT_ISSUER`, default `tell`), `jti`, `iat`/`exp`, `type=session`, plus `email` and `username` claims (all required)
+- Registration: username + email OTP required; direct `/api/auth/register` disabled; OTP consume + user insert are one write transaction
+- OTP request does not reveal whether email/username already exist (uniform success); existing emails may get an informational notice when SMTP is on
 - OTP codes: HMAC-SHA256 with `OTP_PEPPER` (falls back to `JWT_SECRET`), timing-safe compare, attempt limit 5, single use, short TTL
-- Login errors do not distinguish unknown email vs wrong password
 - `REGISTRATION_ENABLED` / `EMAIL_OTP_ENABLED` gates; public `GET /api/auth/config` for UI
-- `GET /api/auth/me` for session probe; all other product APIs require a verified cookie or `Authorization: Bearer`
+- `GET /api/auth/me` for session probe (cookie or Bearer); all other product APIs require a verified cookie or `Authorization: Bearer`
+- `TELL_OTP_DEV_ECHO` is ignored (and blocked at boot) when `APP_ENV` is production-like
 
 ### API gateway (`src/proxy.ts`)
 
@@ -91,8 +93,10 @@ See `public/.well-known/security.txt`. Prefer responsible disclosure with reprod
 ## Checklist before production
 
 1. Unique `JWT_SECRET` (≥ 32 random bytes / chars) and optional `OTP_PEPPER`
-2. SMTP + `APP_URL` set; `TELL_OTP_DEV_ECHO` unset
+2. `APP_ENV=production`, `APP_URL` set; SMTP on; `TELL_OTP_DEV_ECHO` unset
 3. `REGISTRATION_ENABLED` intentional
 4. Turso, FRED, and optional AI keys only in the host secret store
-5. Confirm `/api/health` shows strong JWT and core data populated
-6. Confirm security headers with a browser or `curl -I`
+5. Run `npm run db:migrate` against production Turso (username + OTP unique index)
+6. Confirm `/api/health` shows strong JWT and core data populated
+7. Confirm security headers with a browser or `curl -I`
+8. Smoke-test register (OTP email), login with email and username

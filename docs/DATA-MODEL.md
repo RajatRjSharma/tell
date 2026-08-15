@@ -166,8 +166,11 @@ Symbol filtering uses a JSON `LIKE` match on `assets_impact_json`, so symbol val
 | ------ | ---- | ----- |
 | `id` | TEXT | Primary key, UUID |
 | `email` | TEXT | Unique, stored normalized |
+| `username` | TEXT | Unique, 3–32 chars (`[a-z][a-z0-9_]*`), stored lowercase |
 | `password_hash` | TEXT | bcrypt hash |
 | `created_at` | TEXT | Default timestamp |
+
+Unique index: `idx_users_username`. Login looks up by email or username.
 
 ### `auth_otps`
 
@@ -176,7 +179,7 @@ Symbol filtering uses a JSON `LIKE` match on `assets_impact_json`, so symbol val
 | `id` | INTEGER | Autoincrement |
 | `email` | TEXT | Target address |
 | `purpose` | TEXT | Currently `register` |
-| `code_hash` | TEXT | SHA-256 of the code |
+| `code_hash` | TEXT | HMAC-SHA256 of the code |
 | `expires_at` | TEXT | ISO expiry |
 | `attempts` | INTEGER | Failed verification count |
 | `created_at` | TEXT | Default timestamp |

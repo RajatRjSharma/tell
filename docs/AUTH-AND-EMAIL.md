@@ -15,11 +15,14 @@ Gates (from env):
 | `AUTH_RATE_LIMIT_PER_MINUTE` | `20` | Per-IP limit across login / OTP request / OTP verify |
 
 ```text
-POST /api/auth/otp/request   email
-   -> reject if registration closed, OTP disabled, or account exists
-   -> generate code, store SHA-256 hash, email the code
-POST /api/auth/otp/verify    email + code + password
-   -> validate code, create user, set session cookie
+POST /api/auth/otp/request   email + username
+   -> reject if registration closed or OTP disabled
+   -> if email/username free: generate code, store HMAC hash, email the code
+   -> if taken: same success shape (no code); optional “already registered” email
+POST /api/auth/otp/verify    email + username + otp + password + confirmPassword
+   -> validate code, create user in one DB transaction, set session cookie
+POST /api/auth/login         identifier (email or username) + password
+   -> set session cookie
 ```
 
 Code lifecycle in `src/lib/auth/otp.ts`:
@@ -51,13 +54,13 @@ Guardrails worth noting:
 | Property | Value |
 | -------- | ----- |
 | Cookie name | `AUTH_COOKIE_NAME` (default `tell_session`) |
-| Contents | HS256 JWT signed with `JWT_SECRET`, subject is the user ID, plus `email` |
+| Contents | HS256 JWT with `sub` (user id), `email`, `username`, and `type=session` |
 | Lifetime | `JWT_EXPIRE_DAYS` (default 14) for both token expiry and cookie `maxAge` |
 | Flags | `httpOnly`, `sameSite` from `AUTH_COOKIE_SAMESITE` (default `lax`), `path=/`, `secure` from `AUTH_COOKIE_SECURE` or production / `SameSite=none` |
-| Verification | `jwtVerify`; any failure returns null instead of throwing |
+| Verification | `jwtVerify`; requires `type=session` plus email and username claims; any failure returns null |
 | API access | Every `/api/*` route (except login/OTP/health) requires this cookie or `Authorization: Bearer <jwt>` |
 
-Every authenticated route resolves the user from the verified token subject, so a request cannot act on another account by passing a different ID. Passwords are hashed with bcrypt and require at least 8 characters; login returns one message for both unknown email and wrong password.
+Every authenticated route resolves the user from the verified token subject, so a request cannot act on another account by passing a different ID. Login accepts email or username. Login passwords may be 8–72 characters (legacy); new registrations require 12+ with mixed case, digit, and special character, plus a matching confirm password. Login returns one message for unknown account and wrong password.
 
 `JWT_SECRET` should be a long random string, ideally 32 characters or more. Rotating it invalidates all existing sessions.
 
@@ -135,9 +138,11 @@ If step 2 returns 503, SMTP is incomplete. If it returns 500, the credentials or
 
 ## Checklist for production
 
-1. Set `JWT_SECRET` to a fresh random value of at least 32 characters.
-2. Set all five SMTP variables plus `APP_URL` in the hosting provider.
-3. Leave `TELL_OTP_DEV_ECHO` unset.
-4. Set `EMAIL_DELIVERY_ENABLED=true` and leave `LIVE_MARKET_QUOTES` on (default).
-5. Confirm SPF, DKIM, and DMARC for the sender domain (or a valid Gmail app password).
-6. If credentials ever leak, revoke first and redeploy with replacements.
+1. Set `APP_ENV=production` and `APP_URL` to the public HTTPS origin.
+2. Set `JWT_SECRET` to a fresh random value of at least 32 characters (optional dedicated `OTP_PEPPER`).
+3. Set all five SMTP variables; `EMAIL_DELIVERY_ENABLED=true`.
+4. Leave `TELL_OTP_DEV_ECHO` unset.
+5. Run `npm run db:migrate` against production Turso.
+6. Confirm SPF, DKIM, and DMARC for the sender domain (or a valid Gmail app password).
+7. Smoke-test register (OTP), login with email and username.
+8. If credentials ever leak, revoke first and redeploy with replacements.
