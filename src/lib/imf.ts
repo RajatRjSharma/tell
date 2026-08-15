@@ -70,7 +70,14 @@ export async function fetchImfIndicator(
   const fetchImpl = options?.fetchImpl ?? fetch;
   const url = `${IMF_BASE}/${encodeURIComponent(indicatorCode)}`;
 
-  const res = await fetchImpl(url);
+  const res = await fetchImpl(url, {
+    headers: {
+      Accept: "application/json",
+      "User-Agent":
+        "Mozilla/5.0 (compatible; TellMacroBot/0.1; +https://github.com/RajatRjSharma/tell)",
+      "Accept-Language": "en-US,en;q=0.9",
+    },
+  });
   if (!res.ok) {
     throw new Error(`IMF HTTP ${res.status} for indicator ${indicatorCode}`);
   }
