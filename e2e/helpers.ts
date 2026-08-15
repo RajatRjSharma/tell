@@ -30,10 +30,10 @@ export async function waitForAuthNav(page: Page) {
   await expect(page.getByTestId("auth-nav")).toBeVisible({ timeout: 15_000 });
 }
 
-export async function registerUser(
+/** Start registration through OTP request; leaves the form on the verify step. */
+export async function requestRegisterOtp(
   page: Page,
   email: string,
-  password: string = E2E_PASSWORD,
   username: string = e2eUsername(email),
 ) {
   await page.goto("/register");
@@ -59,6 +59,19 @@ export async function registerUser(
     await otp.fill(match![1]!);
   }
 
+  await expect(page.getByTestId("auth-title")).toHaveText("Verify email");
+  await expect(page.getByTestId("auth-password")).toBeVisible();
+  await expect(page.getByTestId("auth-confirm-password")).toBeVisible();
+  return username;
+}
+
+export async function registerUser(
+  page: Page,
+  email: string,
+  password: string = E2E_PASSWORD,
+  username: string = e2eUsername(email),
+) {
+  await requestRegisterOtp(page, email, username);
   await page.getByTestId("auth-password").fill(password);
   await page.getByTestId("auth-confirm-password").fill(password);
   await page.getByTestId("auth-submit").click();

@@ -77,7 +77,7 @@ test.describe("api auth (signed in)", () => {
     expect(assets.status).toBe(200);
   });
 
-  test("registerViaApi creates an account usable by login", async ({
+  test("registerViaApi creates an account usable by email or username login", async ({
     page,
     request,
     baseURL,
@@ -95,5 +95,56 @@ test.describe("api auth (signed in)", () => {
     await page.getByTestId("auth-submit").click();
     await expect(page).toHaveURL("/");
     await expect(page.getByTestId("user-email")).toHaveText(`@${username}`);
+
+    const me = await pageApiGet(page, "/api/auth/me");
+    expect(me.status).toBe(200);
+    expect(me.json).toMatchObject({
+      user: { email, username },
+    });
+
+    await page.getByTestId("logout-button").click();
+    await expect(page).toHaveURL(/\/login/);
+
+    await page.getByTestId("auth-identifier").fill(username);
+    await page.getByTestId("auth-password").fill(E2E_PASSWORD);
+    await page.getByTestId("auth-submit").click();
+    await expect(page).toHaveURL("/");
+    await expect(page.getByTestId("user-email")).toHaveText(`@${username}`);
+  });
+
+  test("otp verify rejects mismatched confirmPassword", async ({
+    request,
+    baseURL,
+  }) => {
+    const origin = e2eOrigin(baseURL);
+    const email = `e2e.confirmapi.${Date.now()}@tell.test`;
+    const username = e2eUsername(email);
+    const headers = {
+      Origin: origin,
+      "Content-Type": "application/json",
+    };
+
+    const otpRes = await request.post("/api/auth/otp/request", {
+      headers,
+      data: { email, username, purpose: "register" },
+    });
+    expect(otpRes.ok(), await otpRes.text()).toBeTruthy();
+    const otpBody = (await otpRes.json()) as { devCode?: string };
+    expect(otpBody.devCode).toBeTruthy();
+
+    const verifyRes = await request.post("/api/auth/otp/verify", {
+      headers,
+      data: {
+        email,
+        username,
+        password: E2E_PASSWORD,
+        confirmPassword: "TellSecure98!",
+        otp: otpBody.devCode,
+        purpose: "register",
+      },
+    });
+    expect(verifyRes.status()).toBe(400);
+    const body = (await verifyRes.json()) as { error?: string };
+    expect(body.error).toMatch(/passwords do not match/i);
   });
 });
