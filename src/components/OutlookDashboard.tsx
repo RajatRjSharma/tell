@@ -349,7 +349,11 @@ export function OutlookDashboard({
             >
               Method
             </Link>
-            <Link className="nav-link nav-system-link" href="/api/health">
+            <Link
+              className="nav-link nav-system-link"
+              href="/system"
+              data-testid="nav-system"
+            >
               System
             </Link>
             {sessionUser ? (

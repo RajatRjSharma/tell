@@ -57,7 +57,7 @@ export default async function MethodologyPage() {
             <Link className="nav-link" href="/">
               Outlook
             </Link>
-            <Link className="nav-link nav-system-link" href="/api/health">
+            <Link className="nav-link nav-system-link" href="/system">
               System
             </Link>
           </div>

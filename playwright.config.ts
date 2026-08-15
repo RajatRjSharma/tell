@@ -49,6 +49,7 @@ const signedInSpecs = [
   /impact\.spec\.ts/,
   /macro-strip\.spec\.ts/,
   /methodology\.spec\.ts/,
+  /system\.spec\.ts/,
 ];
 
 const anonymousSpecs = [

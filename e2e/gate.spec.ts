@@ -11,7 +11,9 @@ import {
 } from "./helpers";
 
 test.describe("page auth gate", () => {
-  test("protects home and methodology when signed out", async ({ page }) => {
+  test("protects home, methodology, and system when signed out", async ({
+    page,
+  }) => {
     await page.goto("/");
     await expect(page).toHaveURL(/\/login$/);
     await expect(page.getByTestId("auth-title")).toHaveText("Sign in");
@@ -19,6 +21,10 @@ test.describe("page auth gate", () => {
     await page.goto("/methodology");
     await expect(page).toHaveURL(/\/login\?next=/);
     expect(page.url()).toContain("next=%2Fmethodology");
+
+    await page.goto("/system");
+    await expect(page).toHaveURL(/\/login\?next=/);
+    expect(page.url()).toContain("next=%2Fsystem");
   });
 
   test("keeps login and register public", async ({ page }) => {
