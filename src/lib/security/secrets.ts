@@ -1,4 +1,4 @@
-/** JWT / secret strength helpers used by health and startup checks. */
+/** JWT secret strength for health checks. */
 
 import { isProductionLike } from "@/lib/config";
 

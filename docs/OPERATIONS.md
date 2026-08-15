@@ -82,7 +82,7 @@ Email:
 | Variable | Purpose |
 | -------- | ------- |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM`, `SMTP_USE_TLS` | Delivery transport |
-| `EMAIL_DELIVERY_ENABLED` | Global outbound email kill switch; defaults to enabled |
+| `EMAIL_DELIVERY_ENABLED` | Set false to stop all outbound email (default: on) |
 | `OTP_EXPIRE_MINUTES`, `OTP_LENGTH` | Verification code policy |
 | `APP_URL` | Link target inside emails |
 

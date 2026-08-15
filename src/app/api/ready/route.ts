@@ -5,7 +5,7 @@ import { buildHealthReport, healthHttpStatus } from "@/lib/api/health";
 
 export const dynamic = "force-dynamic";
 
-/** Readiness: same checks as /api/health (use for uptime / deploy probes). */
+/** Same checks as /api/health (deploy/uptime probes). */
 export async function GET(request: NextRequest) {
   const deep =
     request.nextUrl.searchParams.get("deep") === "1" ||

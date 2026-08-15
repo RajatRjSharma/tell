@@ -1,7 +1,4 @@
-/**
- * Sanitize exception text before returning it to clients.
- * Inspired by OUTSKILL VDDA `safe_public_detail` — never leak stacks, SQL, or keys.
- */
+/** Client-facing error text — strip stacks, SQL, secrets. */
 
 export const GENERIC_SERVER = "Something went wrong. Please try again.";
 export const GENERIC_AI = "AI request failed. Please try again.";
@@ -69,7 +66,7 @@ function looksUserSafe(text: string): boolean {
   return SAFE_PREFIXES.some((p) => lower.startsWith(p) || lower.includes(p));
 }
 
-/** Return a client-safe error string; never pass raw Exception messages blindly. */
+/** Map an exception to something safe to show the client. */
 export function safePublicDetail(
   err: unknown,
   fallback: string = GENERIC_SERVER,
@@ -88,7 +85,7 @@ export function safePublicDetail(
     !looksUserSafe(trimmed) &&
     !(err instanceof Error && err.name === "ZodError")
   ) {
-    // Allow short validation-style messages that don't look like infra leaks.
+    // Keep short validation messages.
     if (!/^[A-Za-z0-9][\w\s.,'"!?:;-]{2,179}$/.test(trimmed)) return fallback;
   }
   return trimmed;

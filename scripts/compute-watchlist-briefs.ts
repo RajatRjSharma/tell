@@ -30,8 +30,7 @@ async function main() {
   const db = createClient({ url, authToken });
   cacheClear();
 
-  // Brief generation is safe by default; bulk delivery requires an explicit
-  // operator opt-in until per-user notification preferences are available.
+  // Email only when explicitly enabled.
   const sendEmail = process.env.WATCHLIST_BRIEF_EMAIL === "1";
   console.log("Computing watchlist-scoped Gemini briefs...");
   const result = await computeWatchlistBriefs(db, {

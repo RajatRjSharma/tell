@@ -16,8 +16,7 @@ export function simpleReturn(
 }
 
 /**
- * Annualized realized volatility from trailing daily simple returns.
- * Assumes ~252 trading days.
+ * Annualized vol from trailing daily returns (~252 days).
  */
 export function realizedVol(
   closes: SeriesPoint[],
@@ -26,7 +25,7 @@ export function realizedVol(
 ): number | null {
   if (window < 2) return null;
   const end = indexAtOrBefore(closes, asOf);
-  // Need window+1 closes to form `window` returns
+  // window+1 closes → `window` returns
   if (end < 0 || end - window < 0) return null;
 
   const rets: number[] = [];

@@ -36,7 +36,7 @@ export function getSmtpConfig(): SmtpConfig | null {
       : 587;
   const tlsDisabled =
     (process.env.SMTP_USE_TLS ?? "true").trim().toLowerCase() === "false";
-  // Never allow plaintext SMTP in production-like environments.
+  // Always TLS in production.
   const useTls = isProductionLike() || !tlsDisabled;
 
   return {

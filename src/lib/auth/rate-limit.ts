@@ -1,4 +1,4 @@
-/** Re-export shared API rate limiting helpers. */
+/** Shared rate-limit helpers. */
 export {
   clientKey,
   enforceAuthIdentityRateLimit,

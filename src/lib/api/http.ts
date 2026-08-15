@@ -18,7 +18,7 @@ export function jsonError(
   return NextResponse.json({ error, ...extras }, { status });
 }
 
-/** Clamp pagination / limit query params. */
+/** Clamp limit query params. */
 export function parseLimit(
   raw: string | null,
   fallback: number,

@@ -42,7 +42,7 @@ function hashesEqual(a: string, b: string): boolean {
   const left = Buffer.from(a);
   const right = Buffer.from(b);
   if (left.length !== right.length) {
-    // Still run a compare to reduce trivial timing leaks on length.
+    // Timing pad on length mismatch.
     timingSafeEqual(left, left);
     return false;
   }
@@ -94,7 +94,7 @@ export async function consumeAuthOtp(
 
   const row = result.rows[0];
   if (!row) {
-    // Burn a hash to keep timing closer to the hit path.
+    // Timing pad for miss path.
     hashOtp(options.code);
     return {
       ok: false,
@@ -130,7 +130,7 @@ export async function consumeAuthOtp(
   return { ok: true };
 }
 
-/** @deprecated kept for tests that assert hash shape */
+/** @deprecated test helper */
 export function sha256Hex(value: string): string {
   return createHash("sha256").update(value).digest("hex");
 }

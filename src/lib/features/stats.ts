@@ -1,8 +1,8 @@
 import { mean, stdev, trailingWindow, type SeriesPoint } from "./series";
 
 /**
- * Z-score of the latest value vs trailing window of `lookback` points ending at asOf.
- * Uses sample stdev; returns null if insufficient variance or history.
+ * Z-score of latest vs trailing `lookback` points through asOf.
+ * Sample stdev; null if not enough history.
  */
 export function zScoreTrailing(
   points: SeriesPoint[],

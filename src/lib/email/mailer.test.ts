@@ -59,7 +59,7 @@ describe("sendMail", () => {
     expect(sendMailMock).not.toHaveBeenCalled();
   });
 
-  it("supports an operational delivery kill switch", async () => {
+  it("skips send when EMAIL_DELIVERY_ENABLED is off", async () => {
     process.env.EMAIL_DELIVERY_ENABLED = "false";
     configureSmtp();
 

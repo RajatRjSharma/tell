@@ -22,7 +22,7 @@ export function normalizeApiPath(pathname: string): string {
   return pathname || "/";
 }
 
-/** Routes that may be called without a session (login, OTP, health). */
+/** Public auth bootstrap routes (login, OTP, health). */
 export function isPublicApiRoute(pathname: string, method: string): boolean {
   const path = normalizeApiPath(pathname);
   const verb = method.toUpperCase();

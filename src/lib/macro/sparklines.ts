@@ -19,7 +19,7 @@ export type MacroStrip = {
   series: MacroSparkSeries[];
 };
 
-/** Tiny SVG line path for sparkline values (chronological ascending). */
+/** Sparkline SVG path (values ascending in time). */
 export function buildSparklinePath(
   values: number[],
   width: number,

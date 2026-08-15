@@ -1,6 +1,4 @@
-/**
- * Live AI eval: TELL_AI_EVAL=1 npm run test:eval
- */
+/** Live AI eval — TELL_AI_EVAL=1 npm run test:eval */
 import { resolve } from "node:path";
 import { config } from "dotenv";
 import { createClient } from "@libsql/client";

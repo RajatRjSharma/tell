@@ -43,10 +43,7 @@ function noteFor(
   return "Near-term path is ambiguous; wait for the next session confirmation.";
 }
 
-/**
- * Near-term risk bias from the latest 1d signal ensemble.
- * Tomorrow is a dampened carry-forward of today.
- */
+/** 1d ensemble bias; tomorrow = dampened today. */
 export async function getNearTermRiskBias(
   db: Client,
   options?: { modelVersion?: string; symbols?: string[] | null },

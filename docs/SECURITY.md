@@ -31,8 +31,8 @@ Assume the browser is hostile, the network may be observed, and application logs
 
 ### Authentication
 
-- Passwords: bcrypt cost 12; login length 8–72; **registration** requires 12+ with upper/lower/digit/special (OUTSKILL-style policy)
-- Sessions: HS256 JWT in httpOnly cookie with `iss` (`JWT_ISSUER`, default `tell`), `jti`, `iat`/`exp`, claim `type=session`
+- Passwords: bcrypt cost 12; login 8–72 chars; registration needs 12+ with mixed case, digit, special
+- Sessions: HS256 JWT cookie with `iss` (`JWT_ISSUER`, default `tell`), `jti`, `iat`/`exp`, `type=session`
 - Registration: email OTP required; direct `/api/auth/register` disabled
 - OTP codes: HMAC-SHA256 with `OTP_PEPPER` (falls back to `JWT_SECRET`), timing-safe compare, attempt limit 5, single use, short TTL
 - Login errors do not distinguish unknown email vs wrong password
@@ -78,9 +78,9 @@ Only these skip authentication:
 - `GET /api/auth/me`, `GET /api/auth/config`
 - `POST /api/auth/login`, `logout`, `register` (disabled), `otp/request`, `otp/verify`
 
-## Optional (not yet in Tell)
+## Optional next step
 
-OUTSKILL VDDA also uses short-lived access JWTs + rotatable/revocable refresh tokens in a DB table. Tell keeps a single longer-lived session cookie for simplicity; refresh-token revoke is a reasonable next hardening step for multi-device logout.
+Access + refresh JWT rotation with server-side revoke is a reasonable upgrade if you need multi-device logout.
 
 ## Reporting
 

@@ -177,7 +177,7 @@ export async function buildEventImpactReport(
 
   const events = filterEventsForStudy(rawEvents, {
     sentimentFilter,
-    // Prefer policy + data over pure speeches for cleaner analogues.
+    // Prefer policy/data events over speeches.
     types: null,
   });
 

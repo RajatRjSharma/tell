@@ -18,21 +18,21 @@ function allowedHosts(requestHost: string | null): Set<string> {
   if (requestHost) hosts.add(requestHost.toLowerCase());
   const configured = parseOriginHost(appUrl());
   if (configured) hosts.add(configured);
-  // Local development hosts
+  // Dev localhost origins.
   hosts.add("localhost:3000");
   hosts.add("127.0.0.1:3000");
   return hosts;
 }
 
 /**
- * CSRF defense for cookie-authenticated browser requests.
- * Bearer tokens are not subject to classic CSRF and are skipped.
+ * CSRF check for cookie-auth mutating requests.
+ * Bearer requests skip this.
  */
 export function enforceCsrf(request: Request): NextResponse | null {
   const method = request.method.toUpperCase();
   if (SAFE_METHODS.has(method)) return null;
 
-  // Authorization Bearer is not auto-attached by browsers cross-site.
+  // Bearer auth isn't CSRF-prone the way cookies are.
   if (readBearerToken(request)) return null;
 
   const requestHost = request.headers.get("host");
@@ -60,8 +60,7 @@ export function enforceCsrf(request: Request): NextResponse | null {
     return null;
   }
 
-  // Same-site navigations / some clients omit Origin. In production require
-  // at least one of Origin or Referer for cookie-authenticated mutations.
+  // Prod: require Origin or Referer on cookie mutations.
   if (isProductionLike()) {
     return NextResponse.json(
       { error: "Missing Origin for state-changing request" },

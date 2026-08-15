@@ -12,7 +12,7 @@ function pruneExpired(now: number): void {
     if (now >= bucket.resetAt) buckets.delete(key);
   }
   if (buckets.size < MAX_KEYS) return;
-  // Drop oldest windows if still over cap (memory safety under abuse).
+  // Still too big — drop oldest keys.
   const overflow = buckets.size - Math.floor(MAX_KEYS * 0.8);
   let removed = 0;
   for (const key of buckets.keys()) {

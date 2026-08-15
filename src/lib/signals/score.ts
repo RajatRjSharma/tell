@@ -118,7 +118,7 @@ function momentumContribution(
 
 function volPenalty(market: MarketFeatures): { value: number; detail: string } {
   if (market.vol21d === null) return { value: 0, detail: "vol n/a" };
-  // Above ~25% ann. vol → mild bearish / caution for risk assets
+  // ~25% ann. vol → caution for risk assets
   if (market.vol21d >= 0.35) {
     return {
       value: -0.25,
@@ -154,7 +154,7 @@ function drawdownContribution(market: MarketFeatures): {
   return { value: 0, detail: `dd ${(market.drawdown63d * 100).toFixed(1)}%` };
 }
 
-/** Rule-based score in [-1, 1]. */
+/** Score in [-1, 1]. */
 export function scoreSignal(input: ScoreSignalInput): ScoredSignal {
   const bars = horizonToBars(input.horizon);
   const drivers: SignalDriver[] = [];
@@ -185,7 +185,7 @@ export function scoreSignal(input: ScoreSignalInput): ScoredSignal {
     drivers.push({ code: "drawdown", detail: dd.detail, weight: 0.1 });
   }
 
-  // Symbol-specific tweaks for gold under inflation / risk_off
+  // Gold tweak for inflation / risk_off
   let symbolBias = 0;
   if (input.symbol === "GLD") {
     if (input.regime === "inflationary" || input.regime === "risk_off") {

@@ -4,7 +4,7 @@ import {
   validatePasswordStrength,
 } from "@/lib/security/password-policy";
 
-/** Login accepts existing accounts; registration uses full strength policy. */
+/** Login vs register password rules differ (legacy accounts). */
 const LOGIN_MIN_PASSWORD_LENGTH = 8;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const BCRYPT_ROUNDS = 12;
@@ -20,7 +20,7 @@ export function validateEmail(email: string): string | null {
   return null;
 }
 
-/** Basic checks for login (do not break accounts created under older rules). */
+/** Light checks for login. */
 export function validateCredentials(
   email: string,
   password: string,
@@ -36,7 +36,7 @@ export function validateCredentials(
   return null;
 }
 
-/** Registration / OTP verify — enterprise-style strength (OUTSKILL-aligned). */
+/** Stronger checks for new accounts. */
 export function validateRegisterCredentials(
   email: string,
   password: string,

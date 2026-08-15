@@ -3,7 +3,7 @@ import type { ParsedReading } from "@/lib/fred";
 
 export const CURRENT_VINTAGE = "current";
 
-/** Prefer true IMF WEO over World Bank substitutes when both exist. */
+/** Prefer IMF WEO over World Bank when both exist. */
 export function shouldReplaceReadingSource(
   existingSource: string | null | undefined,
   incomingSource: string,
@@ -40,7 +40,7 @@ export function toReadingUpserts(
   }));
 }
 
-/** Upsert readings in batches. Returns number of rows written. */
+/** Batch upsert readings; returns rows written. */
 export async function upsertReadings(
   db: Client,
   rows: ReadingUpsert[],
@@ -64,7 +64,7 @@ export async function upsertReadings(
       row.source,
     ]);
 
-    // Preserve IMF rows against World Bank overwrites.
+    // Don't let World Bank overwrite IMF.
     await db.execute({
       sql: `INSERT INTO readings (
               country_code, indicator_id, observed_for, value,

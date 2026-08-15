@@ -40,15 +40,12 @@ export function appUrl(): string {
     : "https://tell-gamma.vercel.app";
 }
 
-/** New sign-ups. Login always works for existing users. */
+/** Sign-up gate. Login still works when false. */
 export function registrationEnabled(): boolean {
   return envFlag("REGISTRATION_ENABLED", true);
 }
 
-/**
- * Email OTP for registration.
- * When false, OTP request is refused (hosts that block outbound SMTP).
- */
+/** When false, OTP endpoints return 503. */
 export function emailOtpEnabled(): boolean {
   return envFlag("EMAIL_OTP_ENABLED", true);
 }
@@ -61,7 +58,7 @@ export function sessionExpireDays(): number {
   return envInt("JWT_EXPIRE_DAYS", 14, { min: 1, max: 90 });
 }
 
-/** JWT `iss` claim — must match on verify (OUTSKILL-style issuer binding). */
+/** JWT issuer claim. */
 export function jwtIssuer(): string {
   const raw = process.env.JWT_ISSUER?.trim();
   return raw && raw.length > 0 ? raw : "tell";
@@ -98,17 +95,17 @@ export function chatRateLimitPerMinute(): number {
   return envInt("CHAT_RATE_LIMIT_PER_MINUTE", 20, { min: 1, max: 120 });
 }
 
-/** Default limit for read APIs (outlook, charts, events, …). */
+/** Read API rate limit. */
 export function apiRateLimitPerMinute(): number {
   return envInt("API_RATE_LIMIT_PER_MINUTE", 60, { min: 1, max: 300 });
 }
 
-/** Mutations on watchlist / alerts. */
+/** Watchlist / alerts write rate limit. */
 export function writeRateLimitPerMinute(): number {
   return envInt("WRITE_RATE_LIMIT_PER_MINUTE", 30, { min: 1, max: 120 });
 }
 
-/** Health and readiness probes. */
+/** Health probe rate limit. */
 export function healthRateLimitPerMinute(): number {
   return envInt("HEALTH_RATE_LIMIT_PER_MINUTE", 120, { min: 1, max: 600 });
 }

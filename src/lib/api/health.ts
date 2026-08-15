@@ -294,7 +294,7 @@ export async function buildHealthReport(
   };
 }
 
-/** HTTP status: 503 only when critical (app config/db error). */
+/** 503 only for critical config/db failures. */
 export function healthHttpStatus(report: HealthReport): number {
   return report.status === "error" ? 503 : 200;
 }

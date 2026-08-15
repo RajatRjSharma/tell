@@ -76,7 +76,7 @@ Configuration is read at send time in `src/lib/email/mailer.ts`:
 | `SMTP_PASSWORD` | none | Required, app password for Gmail |
 | `SMTP_FROM` | `SMTP_USER` | Accepts `Name <address>` |
 | `SMTP_USE_TLS` | true | Only the literal `false` disables STARTTLS |
-| `EMAIL_DELIVERY_ENABLED` | true | Global kill switch for every outbound email path |
+| `EMAIL_DELIVERY_ENABLED` | true | Set false to stop all outbound email |
 | `APP_URL` | `https://tell-gamma.vercel.app` | Link target inside templates |
 
 Transport rules: `secure` is enabled on port 465; other ports require STARTTLS. Production-like environments cannot disable TLS. Connections use bounded connect, greeting, and socket timeouts, require TLS 1.2 or newer, and verify certificates. Recipient/subject validation blocks header injection and oversized message bodies. If configuration is missing or delivery is switched off, `sendMail` returns a skipped result instead of throwing, so alert evaluation still records inbox entries.

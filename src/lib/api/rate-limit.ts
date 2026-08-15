@@ -108,15 +108,12 @@ export function enforceRateLimit(
   );
 }
 
-/** @deprecated Prefer enforceRateLimit — kept for existing auth call sites. */
+/** @deprecated use enforceRateLimit */
 export function enforceAuthRateLimit(request: Request): NextResponse | null {
   return enforceRateLimit(request, { category: "auth" });
 }
 
-/**
- * Extra auth budget keyed by email/user id (in addition to per-IP in proxy).
- * Mirrors OUTSKILL dual IP + identity limiting.
- */
+/** Per-email/user auth rate limit (on top of per-IP). */
 export function enforceAuthIdentityRateLimit(
   request: Request,
   identity: string,

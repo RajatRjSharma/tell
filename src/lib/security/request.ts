@@ -10,7 +10,7 @@ const ALLOWED_METHODS = new Set([
   "OPTIONS",
 ]);
 
-/** Reject obscure / dangerous HTTP methods early. */
+/** Block weird HTTP methods. */
 export function enforceAllowedMethod(request: Request): NextResponse | null {
   const method = request.method.toUpperCase();
   if (ALLOWED_METHODS.has(method)) return null;
@@ -20,10 +20,7 @@ export function enforceAllowedMethod(request: Request): NextResponse | null {
   );
 }
 
-/**
- * Soft body-size guard using Content-Length when present.
- * Default 256 KiB is enough for auth / chat payloads.
- */
+/** Cap body size via Content-Length (default 256 KiB). */
 export function enforceBodySize(
   request: Request,
   maxBytes = 256 * 1024,
@@ -61,7 +58,7 @@ export function requireJsonContentType(request: Request): NextResponse | null {
   const length = lengthHeader == null ? null : Number(lengthHeader);
   const contentType = request.headers.get("content-type");
 
-  // Empty-body POSTs (e.g. logout) are allowed without a Content-Type.
+  // Logout etc. can POST with an empty body.
   if ((length === 0 || lengthHeader == null) && !contentType) {
     return null;
   }

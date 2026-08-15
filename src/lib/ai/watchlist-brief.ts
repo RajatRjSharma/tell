@@ -30,9 +30,7 @@ async function listUsersWithWatchlists(
   }));
 }
 
-/**
- * Gemini brief for a user's watchlist symbols.
- */
+/** Watchlist-scoped Gemini brief. */
 export async function generateWatchlistBriefForUser(
   db: Client,
   options: {

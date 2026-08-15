@@ -49,7 +49,7 @@ export async function getSession(): Promise<SessionPayload | null> {
   return verifySession(token);
 }
 
-/** Cookie session, or `Authorization: Bearer <jwt>` for API clients. */
+/** Session from cookie or Bearer token. */
 export async function getRequestSession(
   request: Request,
 ): Promise<SessionPayload | null> {

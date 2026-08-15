@@ -18,7 +18,7 @@ async function loadSparkPoints(
     indicatorId,
     limit,
   });
-  // listReadings returns newest first — reverse for chart order.
+  // Newest-first from DB → chronological for the chart.
   return readings
     .slice()
     .reverse()

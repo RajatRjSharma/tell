@@ -44,9 +44,7 @@ function rowToDto(row: Record<string, unknown>): OutlookSignalDto {
   };
 }
 
-/**
- * Latest signal row per (symbol, horizon) for the given model version.
- */
+/** Latest signal per (symbol, horizon). */
 export async function listLatestOutlook(
   db: Client,
   options?: {

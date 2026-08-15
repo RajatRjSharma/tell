@@ -1,7 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 import { resolve } from "node:path";
 
-// Default away from 3000 so local `make dev` does not block e2e webServer.
+// Prefer 3100 locally so `next dev` on 3000 doesn't collide.
 const PORT = Number(
   process.env.PLAYWRIGHT_PORT ?? (process.env.CI ? 3000 : 3100),
 );
@@ -35,7 +35,6 @@ const testEnv = {
   CHAT_RATE_LIMIT_PER_MINUTE: "120",
 };
 
-// Specs use these values only to enable isolated auth scenarios.
 Object.assign(process.env, testEnv);
 
 export default defineConfig({
@@ -43,7 +42,6 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  // Auth-heavy specs share one IP; parallel workers trip rate limits.
   workers: 1,
   reporter: process.env.CI ? [["github"], ["list"]] : "list",
   timeout: 60_000,

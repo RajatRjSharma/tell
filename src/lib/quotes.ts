@@ -8,7 +8,7 @@ export type Quote = {
   source: "finnhub" | "yahoo";
 };
 
-/** Map Tell symbols to Finnhub quote symbols (equities/ETFs only on free). */
+/** Finnhub symbol mapping (equities/ETFs on free tier). */
 export function toFinnhubQuoteSymbol(symbol: string): string | null {
   const fx = new Set(["EURUSD", "GBPUSD", "USDJPY"]);
   if (fx.has(symbol)) return null; // free candle/FX quote often blocked
@@ -54,7 +54,7 @@ export async function fetchFinnhubQuote(
   };
 }
 
-/** Yahoo regularMarketPrice fallback (no API key). */
+/** Yahoo quote fallback when Finnhub isn't available. */
 export async function fetchYahooQuote(
   yahooSymbol: string,
   tellSymbol: string,

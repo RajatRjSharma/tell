@@ -5,7 +5,7 @@ import {
   type BriefResult,
 } from "@/lib/ai/types";
 
-/** Sentinel symbol for cross-asset market briefs. */
+/** Cross-asset brief sentinel symbol. */
 export const MARKET_BRIEF_SYMBOL = "_MARKET";
 
 export type StoredBrief = BriefResult & {

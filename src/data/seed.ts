@@ -12,7 +12,7 @@ export const countries = [
   { code: "CN", name: "China", region: "Asia", currency: "CNY" },
 ] as const;
 
-/** Canonical indicators. source_series_id is primary fetch id (often US FRED). */
+/** Seed indicators (`source_series_id` is the fetch id). */
 export const indicators = [
   {
     id: "CPI",
@@ -151,7 +151,7 @@ export const indicators = [
   },
 ] as const;
 
-/** Assets: Yahoo daily OHLC. `source_symbol` is the Yahoo ticker. */
+/** Seed assets; `source_symbol` is the Yahoo ticker. */
 export const assets = [
   {
     symbol: "SPY",

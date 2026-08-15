@@ -1,7 +1,4 @@
-/**
- * Server-side password strength (never trust the client alone).
- * Aligned with OUTSKILL VDDA enterprise-style rules; bcrypt max 72 bytes.
- */
+/** Password rules for registration (bcrypt truncates at 72 bytes). */
 
 export const PASSWORD_MIN_LENGTH = 12;
 export const PASSWORD_MAX_LENGTH = 72;

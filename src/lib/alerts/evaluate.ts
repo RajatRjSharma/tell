@@ -18,7 +18,7 @@ export function shouldFireAlert(
     return false;
   }
 
-  // First observation after rule creation: set baseline only.
+  // New rule: set baseline, don't fire yet.
   if (rule.lastSeenAsOf == null) {
     return false;
   }

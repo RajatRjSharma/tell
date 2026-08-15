@@ -15,10 +15,7 @@ export type BackfillSignalsResult = {
   signalsPerDay: number;
 };
 
-/**
- * Walk recent trading days and upsert historical signals.
- * Preloads series once so each asOf is in-memory point-in-time scoring.
- */
+/** Backfill signals day-by-day (series preloaded once). */
 export async function backfillHistoricalSignals(
   db: Client,
   options?: {

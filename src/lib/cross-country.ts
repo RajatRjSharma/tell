@@ -13,8 +13,8 @@ export type CrossCountryResult = {
 };
 
 /**
- * Prefer IMF DataMapper; fall back to World Bank on 403.
- * `CROSS_COUNTRY_PROVIDER`: auto | imf | worldbank
+ * IMF first; World Bank on 403.
+ * CROSS_COUNTRY_PROVIDER=auto|imf|worldbank
  */
 export async function fetchCrossCountryReadings(
   imfIndicatorCode: string,

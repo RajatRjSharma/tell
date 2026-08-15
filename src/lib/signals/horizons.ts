@@ -1,6 +1,6 @@
 /**
- * Horizon tokens map to trading-session lookbacks (daily bars).
- * Presets: 1d→1, 1w→5, 1m→21. Custom: 10d, 60d, 2w (10 sessions).
+ * Horizon → trading-day lookback.
+ * 1d=1, 1w=5, 1m=21; also 10d / 60d / 2w.
  */
 
 export const DEFAULT_HORIZONS = ["1d", "1w", "1m"] as const;
@@ -15,7 +15,7 @@ const PRESET_BARS: Record<string, number> = {
   "1y": 252,
 };
 
-/** Parse a horizon token into trading-day bar count. */
+/** Horizon token → bar count. */
 export function horizonToBars(token: string): number {
   const key = token.trim().toLowerCase();
   if (!key) {
@@ -59,7 +59,7 @@ export function parseHorizons(raw: string | undefined): string[] {
   return [...new Set(parts)];
 }
 
-/** Momentum feature field closest to the horizon bar count. */
+/** Momentum field closest to this horizon. */
 export function momentumFieldForBars(
   bars: number,
 ): "return1d" | "return5d" | "return21d" {

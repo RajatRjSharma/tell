@@ -26,9 +26,7 @@ export function yearToObservedFor(year: string | number): string {
   return `${y}-01-01`;
 }
 
-/**
- * Extract annual readings for selected ISO-2 countries from an IMF DataMapper payload.
- */
+/** Annual readings for ISO-2 countries from an IMF DataMapper payload. */
 export function parseImfIndicatorValues(
   indicatorCode: string,
   payload: ImfDatamapperResponse,

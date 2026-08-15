@@ -11,7 +11,7 @@ function productionLike(): boolean {
   );
 }
 
-/** Baseline browser security headers for all responses. */
+/** Default security headers. */
 export function securityHeaders(options?: { csp?: boolean }): SecurityHeader[] {
   const headers: SecurityHeader[] = [
     { key: "X-Content-Type-Options", value: "nosniff" },

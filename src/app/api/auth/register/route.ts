@@ -1,10 +1,8 @@
 import { NextResponse } from "next/server";
 
 /**
- * Direct password registration is disabled.
- * New accounts must verify email via OTP:
- *   POST /api/auth/otp/request
- *   POST /api/auth/otp/verify
+ * Direct register is off — use OTP:
+ * POST /api/auth/otp/request then /api/auth/otp/verify
  */
 export async function POST() {
   return NextResponse.json(

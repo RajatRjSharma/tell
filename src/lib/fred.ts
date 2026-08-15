@@ -28,7 +28,7 @@ export function getFredApiKey(): string {
   return key;
 }
 
-/** Parse FRED observation rows; skip missing "." values and non-numeric. */
+/** Parse FRED observations; drop "." / non-numeric. */
 export function parseFredObservations(
   observations: FredObservation[],
   options?: { alfred?: boolean },
@@ -96,7 +96,7 @@ export async function fetchFredSeriesObservations(
   });
 }
 
-/** Key US series where revision history matters for point-in-time research. */
+/** US series with useful ALFRED revision history. */
 export const ALFRED_PRIORITY_SERIES = [
   "CPIAUCSL",
   "UNRATE",

@@ -7,9 +7,8 @@ import packageJson from "../../../../package.json";
 export const dynamic = "force-dynamic";
 
 /**
- * Liveness / readiness style health.
- * - Default: app + config + database + data counts
- * - `?deep=1`: also probe Yahoo (+ Finnhub if key set)
+ * Health check.
+ * Default: config + db + counts. `?deep=1` also probes Yahoo/Finnhub.
  */
 export async function GET(request: NextRequest) {
   const deep =

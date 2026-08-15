@@ -66,8 +66,7 @@ export function otpEmailTemplate(options: {
   code: string;
   expireMinutes: number;
 }): { subject: string; html: string; text: string } {
-  // Keep OTPs out of subjects and preheaders: both are commonly exposed on
-  // lock screens, mail logs, forwarding rules, and analytics.
+  // Don't put the code in subject/preheader.
   const subject = "Your Tell verification code";
   const html = layout({
     preheader: `Complete your Tell registration within ${options.expireMinutes} minutes.`,
