@@ -11,7 +11,10 @@ import {
   registrationEnabled,
 } from "@/lib/config";
 import { isEmailDeliveryAvailable, sendMail } from "@/lib/email/mailer";
-import { otpEmailTemplate } from "@/lib/email/templates";
+import {
+  alreadyRegisteredEmailTemplate,
+  otpEmailTemplate,
+} from "@/lib/email/templates";
 import { enforceAuthIdentityRateLimit } from "@/lib/api/rate-limit";
 import {
   normalizeEmail,
@@ -86,25 +89,39 @@ export async function POST(request: Request) {
       sql: "SELECT id FROM users WHERE email = ?",
       args: [email],
     });
-    if (existingEmail.rows.length > 0) {
-      return NextResponse.json(
-        { error: "An account with this email already exists" },
-        { status: 409 },
-      );
-    }
     const existingUsername = await db.execute({
       sql: "SELECT id FROM users WHERE username = ?",
       args: [username],
     });
-    if (existingUsername.rows.length > 0) {
-      return NextResponse.json(
-        { error: "That username is already taken" },
-        { status: 409 },
-      );
+    const emailTaken = existingEmail.rows.length > 0;
+    const usernameTaken = existingUsername.rows.length > 0;
+
+    const expireMinutes = otpExpireMinutes();
+    const expiresAt = new Date(
+      Date.now() + expireMinutes * 60_000,
+    ).toISOString();
+
+    // Soft enumeration: same success shape whether the account exists or not.
+    if (emailTaken || usernameTaken) {
+      if (emailTaken && isEmailDeliveryAvailable()) {
+        const notice = alreadyRegisteredEmailTemplate();
+        await sendMail({
+          to: email,
+          subject: notice.subject,
+          html: notice.html,
+          text: notice.text,
+        });
+      }
+
+      return NextResponse.json({
+        ok: true,
+        expiresAt,
+        expireMinutes,
+      });
     }
 
     const code = generateOtpCode();
-    const { expiresAt } = await createAuthOtp(db, {
+    const created = await createAuthOtp(db, {
       email,
       purpose: "register",
       code,
@@ -112,7 +129,7 @@ export async function POST(request: Request) {
 
     const template = otpEmailTemplate({
       code,
-      expireMinutes: otpExpireMinutes(),
+      expireMinutes,
     });
 
     if (isEmailDeliveryAvailable()) {
@@ -126,8 +143,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       ok: true,
-      expiresAt,
-      expireMinutes: otpExpireMinutes(),
+      expiresAt: created.expiresAt,
+      expireMinutes,
       ...(echo ? { devCode: code } : {}),
     });
   } catch (err) {

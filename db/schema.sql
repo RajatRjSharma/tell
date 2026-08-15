@@ -215,6 +215,9 @@ CREATE TABLE IF NOT EXISTS auth_otps (
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+CREATE UNIQUE INDEX IF NOT EXISTS idx_auth_otps_email_purpose
+  ON auth_otps (email, purpose);
+
 CREATE INDEX IF NOT EXISTS idx_auth_otps_lookup
   ON auth_otps (email, purpose, created_at DESC);
 

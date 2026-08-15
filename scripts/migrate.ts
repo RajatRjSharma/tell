@@ -38,6 +38,7 @@ async function migrate() {
 
   await softUpgradeForecastLog(db);
   await softUpgradeUsers(db);
+  await softUpgradeAuthOtps(db);
 
   const tables = await db.execute(
     "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name",
@@ -113,6 +114,20 @@ async function softUpgradeUsers(db: ReturnType<typeof createClient>) {
 
   await db.execute(
     `CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username ON users (username)`,
+  );
+}
+
+async function softUpgradeAuthOtps(db: ReturnType<typeof createClient>) {
+  // Keep one row per email+purpose before adding the unique index.
+  await db.execute(`
+    DELETE FROM auth_otps
+    WHERE id NOT IN (
+      SELECT MAX(id) FROM auth_otps GROUP BY email, purpose
+    )
+  `);
+  await db.execute(
+    `CREATE UNIQUE INDEX IF NOT EXISTS idx_auth_otps_email_purpose
+     ON auth_otps (email, purpose)`,
   );
 }
 

@@ -137,7 +137,9 @@ test.describe("auth registration", () => {
     await expect(page).toHaveURL(/\/register/);
   });
 
-  test("rejects duplicate email registration", async ({ page }) => {
+  test("duplicate email registration does not reveal the account", async ({
+    page,
+  }) => {
     const stamp = Date.now();
     const email = `e2e.dupemail.${stamp}@tell.test`;
     const username = e2eUsername(email);
@@ -150,12 +152,15 @@ test.describe("auth registration", () => {
     await page.getByTestId("auth-email").fill(email);
     await page.getByTestId("auth-submit").click();
 
-    await expect(page.getByTestId("auth-error")).toContainText(
-      /already exists/i,
-    );
+    // Soft enumeration: success-shaped response, no conflict error, no OTP echo.
+    await expect(page.getByTestId("auth-error")).toHaveCount(0);
+    await expect(page.getByTestId("auth-otp")).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByTestId("auth-otp")).toHaveValue("");
   });
 
-  test("rejects duplicate username registration", async ({ page }) => {
+  test("duplicate username registration does not reveal the account", async ({
+    page,
+  }) => {
     const stamp = Date.now();
     const email = `e2e.dupuser.${stamp}@tell.test`;
     const username = e2eUsername(email);
@@ -170,9 +175,9 @@ test.describe("auth registration", () => {
       .fill(`e2e.dupuser2.${stamp}@tell.test`);
     await page.getByTestId("auth-submit").click();
 
-    await expect(page.getByTestId("auth-error")).toContainText(
-      /username is already taken/i,
-    );
+    await expect(page.getByTestId("auth-error")).toHaveCount(0);
+    await expect(page.getByTestId("auth-otp")).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByTestId("auth-otp")).toHaveValue("");
   });
 
   test("rejects invalid OTP codes", async ({ page }) => {

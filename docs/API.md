@@ -130,9 +130,9 @@ Body: `email`, `username`, optional `purpose` (default and only accepted value `
 
 Code length comes from `OTP_LENGTH` (default 6, clamped 4 to 8) and lifetime from `OTP_EXPIRE_MINUTES` (default 10, clamped 5 to 60).
 
-Success: `{ ok: true, expiresAt, expireMinutes }`, plus `devCode` only when `TELL_OTP_DEV_ECHO=1` **and** the environment is not production-like.
+Success: `{ ok: true, expiresAt, expireMinutes }`, plus `devCode` only when `TELL_OTP_DEV_ECHO=1` **and** the environment is not production-like **and** the email/username are available. Existing email or username still returns this success shape (no `409`) so callers cannot probe accounts; no OTP is issued in that case.
 
-Errors: 400 `Enter a valid email address`, 400 username validation, 400 `Unsupported purpose`, 403 `Registration is currently closed`, 409 email or username already taken, 429 auth rate limit, 503 `Email verification is disabled on this server`, 503 `Email delivery is not configured on this server`, 500 `Failed to send verification code`.
+Errors: 400 `Enter a valid email address`, 400 username validation, 400 `Unsupported purpose`, 403 `Registration is currently closed`, 429 auth rate limit, 503 `Email verification is disabled on this server`, 503 `Email delivery is not configured on this server`, 500 `Failed to send verification code`.
 
 ### `POST /api/auth/otp/verify`
 
@@ -140,9 +140,9 @@ Body: `email`, `username`, `password`, `confirmPassword`, `otp` matching `/^\d{4
 
 New passwords must be at least 12 characters with upper, lower, number, and special character. `confirmPassword` must match.
 
-Success 201: `{ user: { id, email, username } }`, code consumed, session cookie set.
+Success 201: `{ user: { id, email, username } }`, code consumed, session cookie set. OTP verification and user insert run in one database transaction.
 
-Errors: 400 `Unsupported purpose`, 400 validation (email, username, password policy, confirm mismatch, OTP format), 400 `No verification code found. Request a new one.`, 400 `Too many attempts. Request a new code.` after 5 failures, 400 `Code expired. Request a new one.`, 400 `Invalid verification code.`, 403 `Registration is currently closed`, 409 email or username already taken, 429 auth rate limit, 503 `Email verification is disabled on this server`, 500 `Verification failed`.
+Errors: 400 `Unsupported purpose`, 400 validation (email, username, password policy, confirm mismatch, OTP format), 400 `No verification code found. Request a new one.`, 400 `Too many attempts. Request a new code.` after 5 failures, 400 `Code expired. Request a new one.`, 400 `Invalid verification code.`, 403 `Registration is currently closed`, 409 generic unable-to-complete (does not say whether email or username collided), 429 auth rate limit, 503 `Email verification is disabled on this server`, 500 `Verification failed`.
 
 ## Market data and outlook
 

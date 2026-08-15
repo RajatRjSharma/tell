@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
 import { getDb } from "@/lib/db";
 import { setSessionCookie, signSession } from "@/lib/auth";
-import { consumeAuthOtp } from "@/lib/auth/otp";
+import { registerAccountWithOtp } from "@/lib/auth/otp";
 import { emailOtpEnabled, registrationEnabled } from "@/lib/config";
 import { enforceAuthIdentityRateLimit } from "@/lib/api/rate-limit";
 import {
@@ -76,43 +76,23 @@ export async function POST(request: Request) {
       );
     }
 
-    const db = getDb();
-    const existingEmail = await db.execute({
-      sql: "SELECT id FROM users WHERE email = ?",
-      args: [email],
-    });
-    if (existingEmail.rows.length > 0) {
-      return NextResponse.json(
-        { error: "An account with this email already exists" },
-        { status: 409 },
-      );
-    }
-    const existingUsername = await db.execute({
-      sql: "SELECT id FROM users WHERE username = ?",
-      args: [username],
-    });
-    if (existingUsername.rows.length > 0) {
-      return NextResponse.json(
-        { error: "That username is already taken" },
-        { status: 409 },
-      );
-    }
-
-    const consumed = await consumeAuthOtp(db, {
-      email,
-      purpose: "register",
-      code: otp,
-    });
-    if (!consumed.ok) {
-      return NextResponse.json({ error: consumed.error }, { status: 400 });
-    }
-
     const id = randomUUID();
     const passwordHash = await hashPassword(password);
-    await db.execute({
-      sql: "INSERT INTO users (id, email, username, password_hash) VALUES (?, ?, ?, ?)",
-      args: [id, email, username, passwordHash],
+    const db = getDb();
+    const registered = await registerAccountWithOtp(db, {
+      email,
+      username,
+      purpose: "register",
+      code: otp,
+      passwordHash,
+      userId: id,
     });
+    if (!registered.ok) {
+      return NextResponse.json(
+        { error: registered.error },
+        { status: registered.status },
+      );
+    }
 
     const token = await signSession({ sub: id, email, username });
     await setSessionCookie(token);

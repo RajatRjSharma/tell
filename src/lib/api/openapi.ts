@@ -257,7 +257,8 @@ export function buildOpenApiDocument(serverUrl?: string): OpenAPIV3.Document {
           },
           responses: {
             "200": {
-              description: "Code sent (may include `devCode` when echo is on)",
+              description:
+                "Accepted. Issues an OTP when email/username are free; otherwise same shape with no code (anti-enumeration).",
               content: {
                 "application/json": {
                   schema: {
@@ -273,7 +274,6 @@ export function buildOpenApiDocument(serverUrl?: string): OpenAPIV3.Document {
               },
             },
             "400": { $ref: "#/components/responses/BadRequest" },
-            "409": { $ref: "#/components/responses/BadRequest" },
             "503": { $ref: "#/components/responses/BadRequest" },
           },
         },

@@ -90,6 +90,38 @@ export function otpEmailTemplate(options: {
   return { subject, html, text };
 }
 
+export function alreadyRegisteredEmailTemplate(options?: { appUrl?: string }): {
+  subject: string;
+  html: string;
+  text: string;
+} {
+  const appUrl = safeAppUrl(options?.appUrl ?? process.env.APP_URL);
+  const loginUrl = `${appUrl}/login`;
+  const subject = "Your Tell account";
+  const html = layout({
+    preheader: "Someone tried to register with this email.",
+    title: "You already have an account",
+    bodyHtml: `
+      <p style="margin:0 0 16px;">A registration was requested for this email, but an account already exists.</p>
+      <p style="margin:0 0 20px;">If that was you, sign in instead. If it was not you, you can ignore this message.</p>
+      <p style="margin:0;">
+        <a href="${escapeHtml(loginUrl)}" style="display:inline-block;padding:12px 16px;border-radius:10px;background:#18201c;color:#f3f4f2;text-decoration:none;font-family:ui-sans-serif,system-ui,sans-serif;font-size:13px;font-weight:600;">Sign in to Tell</a>
+      </p>
+    `,
+  });
+  const text = [
+    "You already have a Tell account",
+    "",
+    "A registration was requested for this email, but an account already exists.",
+    `Sign in: ${loginUrl}`,
+    "",
+    "If this was not you, you can ignore this message.",
+    "",
+    "Research aid only. Not financial advice.",
+  ].join("\n");
+  return { subject, html, text };
+}
+
 export function alertEmailTemplate(options: {
   title: string;
   body: string;

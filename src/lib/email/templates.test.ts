@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   alertEmailTemplate,
+  alreadyRegisteredEmailTemplate,
   otpEmailTemplate,
   watchlistBriefEmailTemplate,
 } from "@/lib/email/templates";
@@ -16,6 +17,16 @@ describe("email templates", () => {
     )?.[1];
     expect(preheader).not.toContain("123456");
     expect(template.text).toContain("Expires in 10 minutes");
+  });
+
+  it("builds an already-registered notice without a code", () => {
+    const template = alreadyRegisteredEmailTemplate({
+      appUrl: "https://example.com",
+    });
+    expect(template.subject).toMatch(/account/i);
+    expect(template.html).toContain("already have an account");
+    expect(template.html).toContain("https://example.com/login");
+    expect(template.text).not.toMatch(/\d{4,8}/);
   });
 
   it("builds an alert message with symbol metadata", () => {

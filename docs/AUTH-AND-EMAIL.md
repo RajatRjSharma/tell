@@ -39,7 +39,8 @@ Failure messages are deliberately specific about the code state (`expired`, `inv
 
 Guardrails worth noting:
 
-- OTP requests reject addresses that already have accounts, so the flow cannot be used to probe existing users through the verify step.
+- OTP request responses do not reveal whether an email or username is already registered (same success shape; no OTP / no `devCode` on conflict). Existing emails may receive a “you already have an account” notice when SMTP is configured.
+- Account creation consumes the OTP and inserts the user in a single write transaction.
 - Without SMTP configured, requests return 503 unless `TELL_OTP_DEV_ECHO=1`.
 - `POST /api/auth/register` is disabled (`403`); every new account must complete email OTP verification.
 - Set `REGISTRATION_ENABLED=false` to freeze sign-ups without breaking existing logins.

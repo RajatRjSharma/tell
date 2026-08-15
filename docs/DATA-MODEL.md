@@ -181,7 +181,7 @@ Symbol filtering uses a JSON `LIKE` match on `assets_impact_json`, so symbol val
 | `attempts` | INTEGER | Failed verification count |
 | `created_at` | TEXT | Default timestamp |
 
-Index: `idx_auth_otps_lookup (email, purpose, created_at DESC)`. Requesting a new code deletes prior rows for that email and purpose, so only the newest code is valid.
+Index: unique `idx_auth_otps_email_purpose (email, purpose)` plus `idx_auth_otps_lookup (email, purpose, created_at DESC)`. Requesting a new code replaces the prior row for that email and purpose. Signup verify consumes the OTP and inserts the user in one write transaction.
 
 ### `watchlist_items`
 
