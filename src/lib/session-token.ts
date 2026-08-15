@@ -48,7 +48,7 @@ export async function verifySession(
     const username =
       typeof payload.username === "string" && payload.username.length > 0
         ? payload.username
-        : email.split("@")[0] ?? "user";
+        : (email.split("@")[0] ?? "user");
     return { sub, email, username };
   } catch {
     return null;

@@ -15,7 +15,11 @@ afterEach(() => {
   delete process.env.JWT_ISSUER;
 });
 
-async function mintBearer(email = "a@b.com", sub = "user-1", username = "alice") {
+async function mintBearer(
+  email = "a@b.com",
+  sub = "user-1",
+  username = "alice",
+) {
   process.env.JWT_SECRET = "test-secret-for-auth-guard-32chars!!";
   process.env.JWT_ISSUER = "tell";
   return new SignJWT({ email, username, type: "session" })
