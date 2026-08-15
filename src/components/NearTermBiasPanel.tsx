@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { EconomicTerm, type EconomicTermKey } from "@/components/EconomicTerm";
 import type { NearTermBias } from "@/lib/risk/near-term";
 
 type State = {
@@ -21,7 +22,19 @@ function BiasPill({ label }: { label: "risk-on" | "mixed" | "risk-off" }) {
     <span
       className={`inline-flex rounded-[8px] px-2 py-1 font-mono text-[11px] uppercase tracking-[0.08em] ${color}`}
     >
-      {label}
+      <EconomicTerm
+        term={
+          (
+            {
+              "risk-on": "riskOn",
+              mixed: "mixed",
+              "risk-off": "riskOff",
+            } as const
+          )[label] satisfies EconomicTermKey
+        }
+      >
+        {label}
+      </EconomicTerm>
     </span>
   );
 }
@@ -77,14 +90,14 @@ export function NearTermBiasPanel({
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-[var(--accent)]">
-            Near-term bias
+            <EconomicTerm term="horizon">Near-term bias</EconomicTerm>
           </p>
           <h2 className="mt-2 text-xl font-semibold tracking-[-0.035em]">
             Today / tomorrow
           </h2>
           <p className="mt-1 text-sm text-[var(--muted)]">
-            Ensemble of 1d outlooks across the asset universe. Tomorrow is a
-            dampened carry-forward of today.
+            Today&apos;s score is the average of all 1-day asset scores.
+            Tomorrow carries 65% of today&apos;s score, so it is less certain.
           </p>
         </div>
         {bias?.asOf ? (
@@ -109,6 +122,11 @@ export function NearTermBiasPanel({
               {bias.today.score >= 0 ? "+" : ""}
               {bias.today.score.toFixed(2)}
             </p>
+            <p className="mt-1 text-[11px] text-[var(--muted)]">
+              <EconomicTerm term="signalScore">
+                Average signal score
+              </EconomicTerm>
+            </p>
             <p className="mt-2 text-sm leading-6 text-[var(--muted-strong)]">
               {bias.today.note}
             </p>
@@ -125,6 +143,11 @@ export function NearTermBiasPanel({
             <p className="mt-3 font-mono text-2xl tracking-[-0.04em]">
               {bias.tomorrow.score >= 0 ? "+" : ""}
               {bias.tomorrow.score.toFixed(2)}
+            </p>
+            <p className="mt-1 text-[11px] text-[var(--muted)]">
+              <EconomicTerm term="signalScore">
+                65% of today&apos;s score
+              </EconomicTerm>
             </p>
             <p className="mt-2 text-sm leading-6 text-[var(--muted-strong)]">
               {bias.tomorrow.note}

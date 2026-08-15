@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { EconomicTerm } from "@/components/EconomicTerm";
 import type { AlertEvent, AlertRule, AlertRuleType } from "@/lib/alerts/types";
 
 type AlertsPayload = {
@@ -317,7 +318,7 @@ export function AlertsPanel({
                   </select>
                 </label>
                 <label className="text-xs text-[var(--muted)]">
-                  Horizon
+                  Forecast period
                   <select
                     className="select-control mt-1 w-full"
                     value={horizon}
@@ -367,7 +368,7 @@ export function AlertsPanel({
 
               {ruleType === "confidence_below" ? (
                 <label className="block text-xs text-[var(--muted)]">
-                  Threshold (0–1)
+                  Confidence threshold (0-1)
                   <input
                     className="select-control mt-1 w-full"
                     value={confidence}
@@ -377,6 +378,15 @@ export function AlertsPanel({
                   />
                 </label>
               ) : null}
+
+              <p className="text-[11px] leading-5 text-[var(--muted)]">
+                Help:{" "}
+                <EconomicTerm term="horizon">forecast period</EconomicTerm>,{" "}
+                <EconomicTerm term="confidence">confidence</EconomicTerm>,{" "}
+                <EconomicTerm term="bullish">bullish</EconomicTerm>,{" "}
+                <EconomicTerm term="neutral">neutral</EconomicTerm>,{" "}
+                <EconomicTerm term="bearish">bearish</EconomicTerm>
+              </p>
 
               <button
                 type="button"

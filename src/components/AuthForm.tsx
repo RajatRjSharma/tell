@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { BrandMark } from "@/components/BrandMark";
 
 type Mode = "login" | "register";
 type RegisterStep = "email" | "verify";
@@ -171,9 +172,8 @@ export function AuthForm({ mode }: { mode: Mode }) {
           href="/login"
           className="flex w-fit items-center gap-3 focus-visible:outline-none"
         >
-          <span className="grid h-9 w-9 place-items-center rounded-[10px] bg-[var(--text)] font-mono text-xs font-semibold text-[var(--page)]">
-            T
-          </span>
+          <BrandMark size="md" />
+
           <span className="font-semibold tracking-[-0.025em]">Tell</span>
         </Link>
 
@@ -201,9 +201,8 @@ export function AuthForm({ mode }: { mode: Mode }) {
             href="/"
             className="mb-12 flex w-fit items-center gap-3 lg:hidden"
           >
-            <span className="grid h-8 w-8 place-items-center rounded-[10px] bg-[var(--text)] font-mono text-[11px] font-semibold text-[var(--page)]">
-              T
-            </span>
+            <BrandMark />
+
             <span className="text-sm font-semibold">Tell</span>
           </Link>
 

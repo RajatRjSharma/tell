@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { BrandMark } from "@/components/BrandMark";
+import { EconomicTerm } from "@/components/EconomicTerm";
 import { getSession } from "@/lib/auth";
 import { SIGNAL_MODEL_VERSION } from "@/lib/signals/score";
 
 export const metadata: Metadata = {
   title: "Methodology",
   description:
-    "How Tell builds regimes, multi-horizon outlooks, event impact studies, and quality metrics — research aid only.",
+    "How Tell builds regimes, multi-horizon outlooks, event impact studies, and quality metrics - research aid only.",
 };
 
 const SECTIONS = [
@@ -40,9 +42,8 @@ export default async function MethodologyPage() {
             className="site-header-brand group flex items-center gap-3 focus-visible:outline-none"
             aria-label="Tell home"
           >
-            <span className="grid h-8 w-8 place-items-center rounded-[10px] bg-[var(--text)] font-mono text-[11px] font-semibold text-[var(--page)] transition-transform group-hover:-translate-y-0.5">
-              T
-            </span>
+            <BrandMark className="group-hover:-translate-y-0.5" />
+
             <span className="text-[15px] font-semibold tracking-[-0.02em]">
               Tell
             </span>
@@ -113,16 +114,16 @@ export default async function MethodologyPage() {
             <h2 className="text-xl font-semibold tracking-[-0.035em]">Data</h2>
             <ul className="mt-4 space-y-3 text-sm leading-7 text-[var(--muted-strong)]">
               <li>
-                <strong className="text-[var(--text)]">Macro</strong> — FRED for
+                <strong className="text-[var(--text)]">Macro</strong> - FRED for
                 US series; IMF / World Bank for cross-country readings.
               </li>
               <li>
-                <strong className="text-[var(--text)]">Markets</strong> — daily
+                <strong className="text-[var(--text)]">Markets</strong> - daily
                 OHLC for equities, FX, commodities, and rates ETFs (Yahoo;
                 Finnhub optional for live overlays).
               </li>
               <li>
-                <strong className="text-[var(--text)]">Policy events</strong> —
+                <strong className="text-[var(--text)]">Policy events</strong> -
                 Fed, ECB, and BoE RSS releases, tagged with light hawkish /
                 dovish keywords.
               </li>
@@ -138,29 +139,36 @@ export default async function MethodologyPage() {
               Regimes
             </h2>
             <p className="mt-3 text-sm leading-7 text-[var(--muted-strong)]">
-              A US regime label is derived from a small FRED-derived set: CPI
-              YoY, industrial production YoY, Fed funds, the 10Y–2Y curve, and
-              VIX when available. Priority is explicit:
+              A US <EconomicTerm term="regime">regime label</EconomicTerm> is
+              derived from a small FRED-derived set:{" "}
+              <EconomicTerm term="cpi">CPI YoY</EconomicTerm>, industrial
+              production YoY, Fed funds, the{" "}
+              <EconomicTerm term="yieldCurve">10Y-2Y curve</EconomicTerm>, and{" "}
+              <EconomicTerm term="vix">VIX</EconomicTerm> when available.
+              Priority is explicit:
             </p>
             <ol className="mt-4 list-decimal space-y-2 pl-5 text-sm leading-7 text-[var(--muted-strong)]">
               <li>
-                <strong className="text-[var(--text)]">risk_off</strong> —
-                elevated VIX stress
+                <strong className="text-[var(--text)]">
+                  <EconomicTerm term="riskOff">risk_off</EconomicTerm>
+                </strong>{" "}
+                - elevated VIX stress
               </li>
               <li>
-                <strong className="text-[var(--text)]">inflationary</strong> —
+                <strong className="text-[var(--text)]">inflationary</strong> -
                 hot CPI with non-collapsing growth
               </li>
               <li>
-                <strong className="text-[var(--text)]">slowdown</strong> — weak
-                growth and/or inverted curve
+                <strong className="text-[var(--text)]">slowdown</strong> - weak
+                growth and/or inverted{" "}
+                <EconomicTerm term="yieldCurve">curve</EconomicTerm>
               </li>
               <li>
-                <strong className="text-[var(--text)]">expansion</strong> —
+                <strong className="text-[var(--text)]">expansion</strong> -
                 solid growth, calm vol, non-inverted curve
               </li>
               <li>
-                <strong className="text-[var(--text)]">neutral</strong> —
+                <strong className="text-[var(--text)]">neutral</strong> -
                 otherwise
               </li>
             </ol>
@@ -176,24 +184,47 @@ export default async function MethodologyPage() {
               Signals ({SIGNAL_MODEL_VERSION})
             </h2>
             <p className="mt-3 text-sm leading-7 text-[var(--muted-strong)]">
-              For each asset × horizon (1d / 1w / 1m ≈ 1 / 5 / 21 trading
-              sessions), Tell blends:
+              For each asset and{" "}
+              <EconomicTerm term="horizon">forecast period</EconomicTerm> (1d /
+              1w / 1m means about 1 / 5 / 21{" "}
+              <EconomicTerm term="sessions">trading sessions</EconomicTerm>),
+              Tell blends:
             </p>
             <ul className="mt-4 space-y-2 text-sm leading-7 text-[var(--muted-strong)]">
-              <li>Regime bias by asset class</li>
-              <li>Horizon-matched momentum</li>
-              <li>Volatility caution and drawdown context</li>
+              <li>
+                <EconomicTerm term="regime">Regime bias</EconomicTerm> by asset
+                class
+              </li>
+              <li>
+                Period-matched{" "}
+                <EconomicTerm term="momentum">momentum</EconomicTerm>
+              </li>
+              <li>
+                <EconomicTerm term="volatility">Volatility</EconomicTerm>{" "}
+                caution and{" "}
+                <EconomicTerm term="drawdown">drawdown</EconomicTerm> context
+              </li>
             </ul>
             <p className="mt-4 text-sm leading-7 text-[var(--muted-strong)]">
-              The weighted score maps to{" "}
-              <strong className="text-[var(--text)]">bullish</strong> (≥ +0.15),{" "}
-              <strong className="text-[var(--text)]">bearish</strong> (≤ −0.15),
-              or <strong className="text-[var(--text)]">neutral</strong>.
-              Confidence rises when drivers agree and data is fresh; Tell can
-              stay neutral when evidence is thin.
+              The <EconomicTerm term="signalScore">weighted score</EconomicTerm>{" "}
+              maps to{" "}
+              <strong className="text-[var(--text)]">
+                <EconomicTerm term="bullish">bullish</EconomicTerm>
+              </strong>{" "}
+              (at least +0.15),{" "}
+              <strong className="text-[var(--text)]">
+                <EconomicTerm term="bearish">bearish</EconomicTerm>
+              </strong>{" "}
+              (at most -0.15), or{" "}
+              <strong className="text-[var(--text)]">
+                <EconomicTerm term="neutral">neutral</EconomicTerm>
+              </strong>
+              . <EconomicTerm term="confidence">Confidence</EconomicTerm> rises
+              when more model inputs are active and the score is farther from
+              neutral. It is capped at 90%.
             </p>
             <p className="mt-4 text-sm leading-7 text-[var(--muted-strong)]">
-              Drivers are stored as human-readable evidence on each signal — the
+              Drivers are stored as human-readable evidence on each signal - the
               UI shows why, not just a color.
             </p>
           </section>
@@ -206,8 +237,8 @@ export default async function MethodologyPage() {
               Every scored signal can be logged and later graded against
               realized forward returns once enough bars exist. Neutral calls use
               a band that widens with horizon length. The dashboard hit-rate
-              panel reports directional accuracy by horizon — including after
-              historical backfill — so thin samples are visible, not hidden.
+              panel reports directional accuracy by horizon, including after
+              historical backfill, so thin samples are visible, not hidden.
             </p>
             <p className="mt-4 text-sm leading-7 text-[var(--muted-strong)]">
               Hit rates are descriptive, not a promise of future edge. Markets
@@ -246,7 +277,7 @@ export default async function MethodologyPage() {
               Limits
             </h2>
             <ul className="mt-4 space-y-2 text-sm leading-7 text-[var(--muted-strong)]">
-              <li>Daily bars only — not intraday trading signals.</li>
+              <li>Daily bars only, not intraday trading signals.</li>
               <li>
                 Priority US macro series store ALFRED vintages (realtime_start)
                 alongside current FRED prints; live features still read the

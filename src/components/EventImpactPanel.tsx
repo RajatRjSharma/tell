@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { EconomicTerm } from "@/components/EconomicTerm";
 
 type ImpactStats = {
   n: number;
@@ -127,7 +128,10 @@ export function EventImpactPanel({
             Event impact study
           </h2>
           <p className="mt-1 text-xs text-[var(--muted)]">
-            Forward returns after similar central-bank releases (median, % up).
+            <EconomicTerm term="forwardReturn">Returns after</EconomicTerm>{" "}
+            similar central-bank releases, shown as the{" "}
+            <EconomicTerm term="median">median</EconomicTerm> and the share that
+            went up.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -181,7 +185,8 @@ export function EventImpactPanel({
                     <th className="py-2 pr-3 font-medium">Asset</th>
                     {report.horizons.map((horizon) => (
                       <th key={horizon} className="px-2 py-2 font-medium">
-                        {horizon} med
+                        <EconomicTerm term="horizon">{horizon}</EconomicTerm>{" "}
+                        <EconomicTerm term="median">med</EconomicTerm>
                       </th>
                     ))}
                   </tr>
@@ -223,6 +228,12 @@ export function EventImpactPanel({
 
             <p className="mt-4 text-[11px] leading-relaxed text-[var(--muted)]">
               {report.disclaimer}
+            </p>
+            <p className="mt-2 text-[11px] leading-relaxed text-[var(--muted)]">
+              Tone filter: <EconomicTerm term="hawkish">hawkish</EconomicTerm>{" "}
+              usually points toward higher rates;{" "}
+              <EconomicTerm term="dovish">dovish</EconomicTerm> usually points
+              toward lower rates.
             </p>
           </>
         )}

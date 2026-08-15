@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { EconomicTerm } from "@/components/EconomicTerm";
 import {
   buildChartGeometry,
   type ChartBar,
@@ -115,8 +116,8 @@ export function PriceChart({
           </h4>
           <p className="mt-1 font-mono text-[10px] text-[var(--muted)]">
             {payload?.from && payload?.to
-              ? `${payload.from} → ${payload.to}`
-              : "Daily closes"}
+              ? `Daily closes: ${payload.from} → ${payload.to}`
+              : "Daily closing prices"}
           </p>
         </div>
         {change != null ? (
@@ -227,8 +228,17 @@ export function PriceChart({
               <span>
                 <i className="chart-legend chart-legend-bearish" /> bearish
               </span>
-              <span>{payload.bars.length} sessions</span>
+              <span>
+                <EconomicTerm term="sessions">
+                  {payload.bars.length} sessions
+                </EconomicTerm>
+              </span>
             </div>
+            <p className="mt-2 text-[11px] leading-4 text-[var(--muted)]">
+              The line shows daily closing prices across the dates above. The
+              percentage is the total price change over this displayed period.
+              Dots mark earlier bullish, neutral, or bearish model signals.
+            </p>
           </div>
         ) : null}
       </div>

@@ -88,6 +88,59 @@ button:disabled {
   cursor: not-allowed;
 }
 
+.info-tip-trigger {
+  display: inline-grid;
+  width: 1rem;
+  height: 1rem;
+  place-items: center;
+  flex: 0 0 auto;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: var(--surface-raised);
+  color: var(--muted-strong);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.62rem;
+  font-weight: 700;
+  line-height: 1;
+  text-transform: none;
+  letter-spacing: 0;
+  transition:
+    border-color 150ms ease,
+    background-color 150ms ease,
+    color 150ms ease;
+}
+
+.info-tip-trigger:hover,
+.info-tip-trigger[aria-expanded="true"] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.info-tip-content {
+  position: fixed;
+  z-index: 60;
+  width: min(16rem, calc(100vw - 1.5rem));
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  background: var(--surface-raised);
+  box-shadow: var(--shadow);
+  padding: 0.7rem 0.8rem;
+  color: var(--text);
+  font-family: var(--font-geist-sans), sans-serif;
+  font-size: 0.75rem;
+  font-weight: 400;
+  line-height: 1.5;
+  text-align: left;
+  text-transform: none;
+  letter-spacing: normal;
+  transform: translate(-50%, 0);
+}
+
+.info-tip-content[data-placement="above"] {
+  transform: translate(-50%, -100%);
+}
+
 ::selection {
   background: var(--accent);
   color: var(--page);

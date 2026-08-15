@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import type { OutlookSignalDto } from "@/lib/api/outlook";
+import { BrandMark } from "@/components/BrandMark";
+import { EconomicTerm, type EconomicTermKey } from "@/components/EconomicTerm";
 import { ResearchBrief } from "@/components/ResearchBrief";
 import { ResearchChat } from "@/components/ResearchChat";
 import { PriceChart } from "@/components/PriceChart";
@@ -72,6 +74,14 @@ function formatDate(date: string | null): string {
 
 function formatScore(score: number): string {
   return `${score >= 0 ? "+" : ""}${score.toFixed(2)}`;
+}
+
+function driverTerm(code: string): EconomicTermKey | null {
+  if (code === "regime") return "regime";
+  if (code === "momentum") return "momentum";
+  if (code === "volatility") return "volatility";
+  if (code === "drawdown") return "drawdown";
+  return null;
 }
 
 function formatConfidence(value: number | null): string {
@@ -310,9 +320,8 @@ export function OutlookDashboard({
             className="site-header-brand group flex items-center gap-3 focus-visible:outline-none"
             aria-label="Tell home"
           >
-            <span className="grid h-8 w-8 place-items-center rounded-[10px] bg-[var(--text)] font-mono text-[11px] font-semibold text-[var(--page)] transition-transform group-hover:-translate-y-0.5">
-              T
-            </span>
+            <BrandMark className="group-hover:-translate-y-0.5" />
+
             <span className="text-[15px] font-semibold tracking-[-0.02em]">
               Tell
             </span>
@@ -391,7 +400,9 @@ export function OutlookDashboard({
           <div>
             <div className="mb-5 flex flex-wrap items-center gap-3">
               <span className={`regime-mark regime-${regime}`}>
-                {regime.replace("_", " ")}
+                <EconomicTerm term="regime">
+                  {regime.replace("_", " ")}
+                </EconomicTerm>
               </span>
               <span className="font-mono text-[11px] text-[var(--muted)]">
                 Data through {formatDate(latestSignal?.asOfDate ?? null)}
@@ -409,8 +420,12 @@ export function OutlookDashboard({
 
           <div className="max-w-md border-l border-[var(--line-strong)] pl-5 lg:mb-1">
             <p className="text-sm leading-6 text-[var(--muted-strong)]">
-              Transparent signals across equities, FX, commodities, and rates.
-              Every view includes its evidence and confidence.
+              Transparent signals across{" "}
+              <EconomicTerm term="equities">equities</EconomicTerm>,{" "}
+              <EconomicTerm term="fx">FX</EconomicTerm>,{" "}
+              <EconomicTerm term="commodities">commodities</EconomicTerm>, and{" "}
+              <EconomicTerm term="rates">rates</EconomicTerm>. Every view
+              includes its evidence and confidence.
             </p>
             <p className="mt-3 text-xs leading-5 text-[var(--muted)]">
               Research aid only. Not financial advice or a guaranteed
@@ -425,7 +440,9 @@ export function OutlookDashboard({
 
         <section className="mt-10 grid gap-px overflow-hidden rounded-[16px] bg-[var(--line)] sm:grid-cols-3">
           <div className="metric-cell">
-            <span className="metric-label">Bullish</span>
+            <span className="metric-label">
+              <EconomicTerm term="bullish" />
+            </span>
             <strong className="metric-value text-[var(--positive)]">
               {counts.bullish}
             </strong>
@@ -434,12 +451,16 @@ export function OutlookDashboard({
             </span>
           </div>
           <div className="metric-cell">
-            <span className="metric-label">Neutral</span>
+            <span className="metric-label">
+              <EconomicTerm term="neutral" />
+            </span>
             <strong className="metric-value">{counts.neutral}</strong>
             <span className="metric-note">{horizon} horizon</span>
           </div>
           <div className="metric-cell">
-            <span className="metric-label">Bearish</span>
+            <span className="metric-label">
+              <EconomicTerm term="bearish" />
+            </span>
             <strong className="metric-value text-[var(--negative)]">
               {counts.bearish}
             </strong>
@@ -480,6 +501,11 @@ export function OutlookDashboard({
               Star symbols to build a watchlist
               {sessionUser ? "" : " (sign in required)"}. Select a row for
               evidence.
+            </p>
+            <p className="mt-2 text-xs text-[var(--muted)]">
+              <EconomicTerm term="horizon">
+                Forecast periods: 1d, 1w, 1m
+              </EconomicTerm>
             </p>
           </div>
 
@@ -527,14 +553,15 @@ export function OutlookDashboard({
 
         <section className="mt-5 grid gap-6 xl:grid-cols-[minmax(0,1fr)_25rem]">
           <div className="overflow-hidden rounded-[16px] border border-[var(--line)] bg-[var(--surface)]">
-            <div
-              className="outlook-grid outlook-grid-header"
-              aria-hidden="true"
-            >
+            <div className="outlook-grid outlook-grid-header">
               <span>Instrument</span>
               <span>View</span>
-              <span className="hidden sm:block">Score</span>
-              <span>Confidence</span>
+              <span className="hidden sm:block">
+                <EconomicTerm term="signalScore">Score</EconomicTerm>
+              </span>
+              <span>
+                <EconomicTerm term="confidence" />
+              </span>
             </div>
 
             {visibleAssets.length > 0 ? (
@@ -723,11 +750,15 @@ export function OutlookDashboard({
 
                 <div className="mt-6 grid grid-cols-2 gap-px overflow-hidden rounded-[12px] bg-[var(--line)]">
                   <div className="detail-stat">
-                    <span>Signal score</span>
+                    <span>
+                      <EconomicTerm term="signalScore" />
+                    </span>
                     <strong>{formatScore(selectedSignal.score)}</strong>
                   </div>
                   <div className="detail-stat">
-                    <span>Confidence</span>
+                    <span>
+                      <EconomicTerm term="confidence" />
+                    </span>
                     <strong>
                       {formatConfidence(selectedSignal.confidence)}
                     </strong>
@@ -785,7 +816,7 @@ export function OutlookDashboard({
 
                 <div className="mt-6 border-t border-[var(--line)] pt-5">
                   <h4 className="text-xs font-semibold text-[var(--muted-strong)]">
-                    Evidence
+                    Evidence used in this score
                   </h4>
                   <div className="mt-3 space-y-3">
                     {selectedSignal.drivers.slice(0, 4).map((driver) => (
@@ -794,7 +825,13 @@ export function OutlookDashboard({
                         className="grid grid-cols-[3.25rem_1fr] gap-3"
                       >
                         <span className="font-mono text-[10px] text-[var(--muted)]">
-                          {driver.code}
+                          {driverTerm(driver.code) ? (
+                            <EconomicTerm term={driverTerm(driver.code)!}>
+                              {driver.code}
+                            </EconomicTerm>
+                          ) : (
+                            driver.code
+                          )}
                         </span>
                         <p className="text-xs leading-5 text-[var(--muted-strong)]">
                           {driver.detail}
@@ -806,7 +843,9 @@ export function OutlookDashboard({
 
                 <div className="mt-6 border-t border-[var(--line)] pt-5">
                   <h4 className="text-xs font-semibold text-[var(--muted-strong)]">
-                    Across horizons
+                    <EconomicTerm term="horizon">
+                      Across forecast periods
+                    </EconomicTerm>
                   </h4>
                   <div className="mt-3 grid grid-cols-3 gap-2">
                     {selectedHorizons.map((item) => (

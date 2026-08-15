@@ -8,6 +8,7 @@ import {
   type MacroSparkSeries,
   type MacroStrip,
 } from "@/lib/macro/sparklines";
+import { EconomicTerm, type EconomicTermKey } from "@/components/EconomicTerm";
 
 type StripState = {
   status: "ready" | "error";
@@ -17,6 +18,21 @@ type StripState = {
 
 const WIDTH = 96;
 const HEIGHT = 28;
+
+function macroTerm(id: string): EconomicTermKey | null {
+  if (id === "CPI") return "cpi";
+  if (id === "T10Y2Y") return "yieldCurve";
+  if (id === "VIXCLS" || id === "VIX") return "vix";
+  return null;
+}
+
+function periodLabel(series: MacroSparkSeries): string {
+  const count = series.points.length;
+  if (series.id === "CPI") {
+    return `${count} monthly reading${count === 1 ? "" : "s"}`;
+  }
+  return `${count} market session${count === 1 ? "" : "s"}`;
+}
 
 function Sparkline({ series }: { series: MacroSparkSeries }) {
   const values = series.points.map((point) => point.value);
@@ -123,7 +139,13 @@ export function MacroSparklineStrip({
           <div className="flex items-baseline justify-between gap-3">
             <div>
               <span className="font-mono text-[10px] uppercase tracking-[0.1em] text-[var(--muted)]">
-                {series.label}
+                {macroTerm(series.id) ? (
+                  <EconomicTerm term={macroTerm(series.id)!}>
+                    {series.label}
+                  </EconomicTerm>
+                ) : (
+                  series.label
+                )}
               </span>
               <div className="mt-1 flex items-baseline gap-2">
                 <strong className="font-mono text-sm tracking-[-0.02em]">
@@ -145,7 +167,11 @@ export function MacroSparklineStrip({
             <Sparkline series={series} />
           </div>
           <p className="mt-2 font-mono text-[10px] text-[var(--muted)]">
-            {series.asOf ?? "no data"} · US
+            {series.asOf ?? "no data"} · US · {periodLabel(series)}
+          </p>
+          <p className="mt-1 text-[10px] leading-4 text-[var(--muted)]">
+            Oldest value on the left, latest on the right. The small change is
+            from the previous reading.
           </p>
         </div>
       ))}

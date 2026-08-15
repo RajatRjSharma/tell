@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { EconomicTerm } from "@/components/EconomicTerm";
 
 type QualityStats = {
   n: number;
@@ -83,10 +84,10 @@ export function SignalQuality({
       <div className="flex flex-wrap items-end justify-between gap-3 border-b border-[var(--line)] px-5 py-4">
         <div>
           <h2 className="text-sm font-semibold tracking-[-0.02em]">
-            Signal quality
+            <EconomicTerm term="hitRate">Signal quality</EconomicTerm>
           </h2>
           <p className="mt-1 text-xs text-[var(--muted)]">
-            Historical hit rate after each horizon resolves.
+            Past forecast accuracy after each selected time period finishes.
             {requestKey !== "all" ? ` Scoped to ${requestKey}.` : ""}
           </p>
         </div>
@@ -104,7 +105,9 @@ export function SignalQuality({
           </div>
         ) : null}
         <div className="metric-cell">
-          <span className="metric-label">Hit rate</span>
+          <span className="metric-label">
+            <EconomicTerm term="hitRate" />
+          </span>
           <strong className="metric-value">
             {state === "loading" || state === "auth"
               ? "…"
@@ -115,14 +118,18 @@ export function SignalQuality({
           </span>
         </div>
         <div className="metric-cell">
-          <span className="metric-label">Evaluated</span>
+          <span className="metric-label">
+            <EconomicTerm term="evaluated" />
+          </span>
           <strong className="metric-value">
             {state === "loading" ? "…" : (scoped?.n ?? 0)}
           </strong>
           <span className="metric-note">resolved forecasts</span>
         </div>
         <div className="metric-cell">
-          <span className="metric-label">All horizons</span>
+          <span className="metric-label">
+            <EconomicTerm term="horizon">All time periods</EconomicTerm>
+          </span>
           <strong className="metric-value">
             {state === "loading" ? "…" : pct(payload?.overall.hitRate ?? null)}
           </strong>

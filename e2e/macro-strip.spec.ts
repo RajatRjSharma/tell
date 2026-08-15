@@ -6,5 +6,11 @@ test.describe("macro strip", () => {
     await expect(page.getByTestId("macro-strip")).toBeVisible({
       timeout: 20_000,
     });
+    await expect(page.getByTestId("macro-strip")).toContainText(
+      /monthly readings/,
+    );
+    await expect(page.getByTestId("macro-strip")).toContainText(
+      /market sessions/,
+    );
   });
 });
