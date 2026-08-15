@@ -83,15 +83,14 @@ export function PriceChart({
     return () => controller.abort();
   }, [symbol, horizon, requestKey]);
 
-  const bars = payload?.bars ?? [];
-  const signals = payload?.signals ?? [];
-
   const geometry = useMemo(
-    () => buildChartGeometry(bars, WIDTH, HEIGHT),
-    [bars],
+    () => buildChartGeometry(payload?.bars ?? [], WIDTH, HEIGHT),
+    [payload],
   );
 
   const markers = useMemo(() => {
+    const bars = payload?.bars ?? [];
+    const signals = payload?.signals ?? [];
     if (bars.length === 0) return [];
     const byDate = new Map(geometry.points.map((point) => [point.date, point]));
     return signals
@@ -101,7 +100,7 @@ export function PriceChart({
         return { ...signal, x: point.x, y: point.y };
       })
       .filter((item): item is NonNullable<typeof item> => Boolean(item));
-  }, [bars.length, geometry.points, signals]);
+  }, [geometry.points, payload]);
 
   const change = payload?.changePct ?? null;
 
