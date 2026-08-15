@@ -43,6 +43,15 @@ Requires `.env` with Turso credentials (no IMF API key).
 
 Optional: set `FRED_OBSERVATION_START`, `IMF_MIN_YEAR`, or `MARKET_OBSERVATION_START=2023-01-01` in `.env`.
 
+## Features / regimes
+
+```bash
+make compute-features   # US macro + market features + regime snapshot from Turso
+```
+
+Optional: `FEATURE_AS_OF=2024-06-01` or `FEATURE_SYMBOLS=SPY,TLT,GLD` in the environment.
+Pure TypeScript transforms (no ML). Used as inputs for the upcoming signal engine.
+
 ## Daily ingest (GitHub Actions)
 
 Workflow: `.github/workflows/ingest.yml`
