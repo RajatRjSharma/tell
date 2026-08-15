@@ -157,6 +157,11 @@ ceilings (limits still enforced), and reuse one signed-in `storageState` for
 read-only product UI specs. Mutating flows (watchlist/alerts) register their
 own users. Do not add production secrets to the CI e2e job.
 
+Local `make ci` builds once, then sets `PLAYWRIGHT_SKIP_BUILD=1` so Playwright
+reuses `.next` instead of rebuilding. Use `PLAYWRIGHT_WORKERS=2` (default) for
+parallel browser workers; set `PLAYWRIGHT_WORKERS=1` if you need serial runs.
+`APP_ENV=test` also uses cheaper bcrypt so auth-heavy specs finish faster.
+
 ## Scheduled pipeline
 
 `.github/workflows/ingest.yml` runs daily at 06:00 UTC and on manual dispatch, with `concurrency: daily-ingest` so runs never overlap, a 30 minute timeout, Node 22, and `npm ci`:

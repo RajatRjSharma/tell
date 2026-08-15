@@ -1,4 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
+import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 
 // Prefer 3100 locally so `next dev` on 3000 doesn't collide.
@@ -8,6 +9,13 @@ const PORT = Number(
 const baseURL = `http://127.0.0.1:${PORT}`;
 const databasePath = resolve(process.cwd(), ".tmp/playwright.db");
 const authStatePath = resolve(process.cwd(), "e2e/.auth/user.json");
+const skipBuild =
+  process.env.PLAYWRIGHT_SKIP_BUILD === "1" &&
+  existsSync(resolve(process.cwd(), ".next"));
+const workerCount = Math.max(
+  1,
+  Number(process.env.PLAYWRIGHT_WORKERS ?? (process.env.CI ? 2 : 2)),
+);
 
 /**
  * Isolated e2e env: no production secrets, OTP echo, delivery off, live quotes
@@ -67,8 +75,8 @@ export default defineConfig({
   testDir: "./e2e",
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
-  workers: 1,
+  retries: process.env.CI ? 1 : 0,
+  workers: workerCount,
   reporter: process.env.CI ? [["github"], ["list"]] : "list",
   timeout: 60_000,
   expect: { timeout: 10_000 },
@@ -99,7 +107,9 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: `npm run test:e2e:setup && npm run build && npx next start --port ${PORT}`,
+    command: skipBuild
+      ? `npm run test:e2e:setup && npx next start --port ${PORT}`
+      : `npm run test:e2e:setup && npm run build && npx next start --port ${PORT}`,
     url: baseURL,
     reuseExistingServer: false,
     timeout: 180_000,

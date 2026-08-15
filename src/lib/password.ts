@@ -8,7 +8,26 @@ import {
 const LOGIN_MIN_PASSWORD_LENGTH = 8;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const USERNAME_RE = /^[a-z][a-z0-9_]{2,31}$/;
-const BCRYPT_ROUNDS = 12;
+const BCRYPT_ROUNDS_PROD = 12;
+const BCRYPT_ROUNDS_TEST = 4;
+
+/** Production cost-12 pad; test uses a matching cost-4 pad below. */
+const LOGIN_TIMING_PAD_HASH_PROD =
+  "$2b$12$zqJkyXbMFT66kxw4OHYSpughm7vZFGHQjqAY4GlPdQFERm9.PS9xu";
+const LOGIN_TIMING_PAD_HASH_TEST =
+  "$2b$04$eLuAzzA7WIppW7Bt1/baPOa4SmzC3yjYYE6KF08j7h.FPTDBrqD2G";
+
+function bcryptRounds(): number {
+  return process.env.APP_ENV === "test"
+    ? BCRYPT_ROUNDS_TEST
+    : BCRYPT_ROUNDS_PROD;
+}
+
+function loginTimingPadHash(): string {
+  return process.env.APP_ENV === "test"
+    ? LOGIN_TIMING_PAD_HASH_TEST
+    : LOGIN_TIMING_PAD_HASH_PROD;
+}
 
 export function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
@@ -90,12 +109,8 @@ export function validateRegisterCredentials(
 }
 
 export async function hashPassword(password: string): Promise<string> {
-  return bcrypt.hash(password, BCRYPT_ROUNDS);
+  return bcrypt.hash(password, bcryptRounds());
 }
-
-/** Fixed bcrypt hash used only to equalize login timing on unknown accounts. */
-const LOGIN_TIMING_PAD_HASH =
-  "$2b$12$zqJkyXbMFT66kxw4OHYSpughm7vZFGHQjqAY4GlPdQFERm9.PS9xu";
 
 export async function verifyPassword(
   password: string,
@@ -113,7 +128,7 @@ export async function verifyPasswordOrPad(
   passwordHash: string | null | undefined,
 ): Promise<boolean> {
   if (!passwordHash) {
-    await verifyPassword(password, LOGIN_TIMING_PAD_HASH);
+    await verifyPassword(password, loginTimingPadHash());
     return false;
   }
   return verifyPassword(password, passwordHash);

@@ -69,6 +69,7 @@ jobs:
         env:
           CI: true
           PLAYWRIGHT_PORT: "3000"
+          PLAYWRIGHT_WORKERS: "2"
 
       - name: Upload Playwright report
         if: failure()
