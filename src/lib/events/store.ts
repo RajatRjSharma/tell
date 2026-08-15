@@ -89,6 +89,18 @@ export async function upsertEvents(
       ],
     });
     written += 1;
+    try {
+      const { indexEventForRag } = await import("@/lib/ai/rag");
+      await indexEventForRag(db, {
+        id: row.id,
+        title: row.title,
+        summary: row.summary,
+        source: row.source,
+        date: row.date,
+      });
+    } catch {
+      // FTS is best-effort — schema may not be migrated yet.
+    }
   }
   return written;
 }

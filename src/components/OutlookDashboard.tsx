@@ -12,7 +12,9 @@ import { AlertsPanel } from "@/components/AlertsPanel";
 import { EventsPanel } from "@/components/EventsPanel";
 import { EventImpactPanel } from "@/components/EventImpactPanel";
 import { MacroSparklineStrip } from "@/components/MacroSparklineStrip";
+import { NearTermBiasPanel } from "@/components/NearTermBiasPanel";
 import type { MacroStrip } from "@/lib/macro/sparklines";
+import type { NearTermBias } from "@/lib/risk/near-term";
 
 type User = { id: string; email: string };
 
@@ -103,12 +105,14 @@ export function OutlookDashboard({
   initialSignals,
   initialWatchlist = [],
   initialMacroStrip = null,
+  initialNearTermBias = null,
 }: {
   user: User | null;
   assets: Asset[];
   initialSignals: OutlookSignalDto[];
   initialWatchlist?: string[];
   initialMacroStrip?: MacroStrip | null;
+  initialNearTermBias?: NearTermBias | null;
 }) {
   const router = useRouter();
   const [horizon, setHorizon] = useState<string>("1d");
@@ -404,6 +408,8 @@ export function OutlookDashboard({
         </section>
 
         <MacroSparklineStrip initialStrip={initialMacroStrip} />
+
+        <NearTermBiasPanel initialBias={initialNearTermBias} />
 
         <section className="mt-10 grid gap-px overflow-hidden rounded-[16px] bg-[var(--line)] sm:grid-cols-3">
           <div className="metric-cell">

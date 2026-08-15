@@ -1,0 +1,105 @@
+import { createHash, randomInt } from "node:crypto";
+import type { Client } from "@libsql/client";
+
+export type OtpPurpose = "register";
+
+function otpLength(): number {
+  const n = Number(process.env.OTP_LENGTH ?? "6");
+  if (!Number.isFinite(n)) return 6;
+  return Math.min(Math.max(Math.floor(n), 4), 8);
+}
+
+export function otpExpireMinutes(): number {
+  const n = Number(process.env.OTP_EXPIRE_MINUTES ?? "10");
+  if (!Number.isFinite(n)) return 10;
+  return Math.min(Math.max(Math.floor(n), 5), 60);
+}
+
+export function generateOtpCode(): string {
+  const len = otpLength();
+  const max = 10 ** len;
+  return String(randomInt(0, max)).padStart(len, "0");
+}
+
+export function hashOtp(code: string): string {
+  return createHash("sha256").update(code).digest("hex");
+}
+
+export async function createAuthOtp(
+  db: Client,
+  options: {
+    email: string;
+    purpose: OtpPurpose;
+    code: string;
+  },
+): Promise<{ expiresAt: string }> {
+  const minutes = otpExpireMinutes();
+  const expiresAt = new Date(Date.now() + minutes * 60_000).toISOString();
+  const codeHash = hashOtp(options.code);
+
+  await db.execute({
+    sql: `DELETE FROM auth_otps WHERE email = ? AND purpose = ?`,
+    args: [options.email, options.purpose],
+  });
+
+  await db.execute({
+    sql: `INSERT INTO auth_otps (email, purpose, code_hash, expires_at, attempts)
+          VALUES (?, ?, ?, ?, 0)`,
+    args: [options.email, options.purpose, codeHash, expiresAt],
+  });
+
+  return { expiresAt };
+}
+
+export async function consumeAuthOtp(
+  db: Client,
+  options: {
+    email: string;
+    purpose: OtpPurpose;
+    code: string;
+  },
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const result = await db.execute({
+    sql: `SELECT id, code_hash, expires_at, attempts
+          FROM auth_otps
+          WHERE email = ? AND purpose = ?
+          ORDER BY created_at DESC
+          LIMIT 1`,
+    args: [options.email, options.purpose],
+  });
+
+  const row = result.rows[0];
+  if (!row) {
+    return {
+      ok: false,
+      error: "No verification code found. Request a new one.",
+    };
+  }
+
+  const attempts = Number(row.attempts ?? 0);
+  if (attempts >= 5) {
+    return { ok: false, error: "Too many attempts. Request a new code." };
+  }
+
+  const expiresAt = String(row.expires_at);
+  if (Date.parse(expiresAt) < Date.now()) {
+    return { ok: false, error: "Code expired. Request a new one." };
+  }
+
+  const expected = String(row.code_hash);
+  const incoming = hashOtp(options.code.trim());
+  if (expected !== incoming) {
+    await db.execute({
+      sql: `UPDATE auth_otps SET attempts = attempts + 1 WHERE id = ?`,
+      args: [Number(row.id)],
+    });
+    return { ok: false, error: "Invalid verification code." };
+  }
+
+  await db.execute({
+    sql: `DELETE FROM auth_otps WHERE email = ? AND purpose = ?`,
+    args: [options.email, options.purpose],
+  });
+
+  return { ok: true };
+}

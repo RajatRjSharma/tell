@@ -4,6 +4,7 @@ import { assets, countries, indicators } from "@/data/seed";
 describe("seed data", () => {
   it("includes the MVP countries", () => {
     expect(countries.map((c) => c.code).sort()).toEqual([
+      "CN",
       "DE",
       "GB",
       "IN",

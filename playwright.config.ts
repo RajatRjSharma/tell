@@ -39,6 +39,7 @@ export default defineConfig({
         process.env.JWT_SECRET ?? "playwright-local-jwt-secret-32chars!!",
       TURSO_DATABASE_URL: process.env.TURSO_DATABASE_URL ?? "",
       TURSO_AUTH_TOKEN: process.env.TURSO_AUTH_TOKEN ?? "",
+      TELL_OTP_DEV_ECHO: "1",
     },
   },
 });

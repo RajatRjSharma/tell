@@ -56,6 +56,7 @@ export async function answerResearchQuestion(
   const context = await buildResearchContext(db, {
     symbol: options.symbol,
     horizon: options.horizon ?? "1d",
+    query: message,
   });
   const evidence = formatResearchContext(context);
   const chat = options.chat ?? generateGroqChat;

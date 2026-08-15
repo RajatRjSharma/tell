@@ -5,6 +5,8 @@ import {
   updateAlertRuleSeen,
 } from "@/lib/alerts/store";
 import type { AlertRule, AlertSignalSnapshot } from "@/lib/alerts/types";
+import { sendMail } from "@/lib/email/mailer";
+import { alertEmailTemplate } from "@/lib/email/templates";
 import { SIGNAL_MODEL_VERSION } from "@/lib/signals/score";
 
 export function shouldFireAlert(
@@ -114,22 +116,37 @@ export async function loadLatestSignalSnapshot(
   };
 }
 
+async function loadUserEmail(
+  db: Client,
+  userId: string,
+): Promise<string | null> {
+  const result = await db.execute({
+    sql: "SELECT email FROM users WHERE id = ? LIMIT 1",
+    args: [userId],
+  });
+  const email = result.rows[0]?.email;
+  return email == null ? null : String(email);
+}
+
 export type EvaluateAlertsResult = {
   considered: number;
   triggered: number;
   baselined: number;
   skipped: number;
+  emailed: number;
 };
 
 export async function evaluateAlertRules(
   db: Client,
-  options?: { modelVersion?: string },
+  options?: { modelVersion?: string; sendEmail?: boolean },
 ): Promise<EvaluateAlertsResult> {
   const modelVersion = options?.modelVersion ?? SIGNAL_MODEL_VERSION;
+  const sendEmail = options?.sendEmail !== false;
   const rules = await listEnabledAlertRules(db);
   let triggered = 0;
   let baselined = 0;
   let skipped = 0;
+  let emailed = 0;
 
   for (const rule of rules) {
     const signal = await loadLatestSignalSnapshot(
@@ -163,7 +180,33 @@ export async function evaluateAlertRules(
         signalConfidence: signal.confidence,
         asOfDate: signal.asOfDate,
       });
-      if (inserted) triggered += 1;
+      if (inserted) {
+        triggered += 1;
+        if (sendEmail) {
+          const email = await loadUserEmail(db, rule.userId);
+          if (email) {
+            try {
+              const template = alertEmailTemplate({
+                title: copy.title,
+                body: copy.body,
+                symbol: signal.symbol,
+                horizon: signal.horizon,
+                asOfDate: signal.asOfDate,
+                appUrl: process.env.APP_URL,
+              });
+              const result = await sendMail({
+                to: email,
+                subject: template.subject,
+                html: template.html,
+                text: template.text,
+              });
+              if (result.sent) emailed += 1;
+            } catch (error) {
+              console.warn("alert email failed", rule.id, error);
+            }
+          }
+        }
+      }
     } else if (rule.lastSeenAsOf == null) {
       baselined += 1;
     }
@@ -181,5 +224,6 @@ export async function evaluateAlertRules(
     triggered,
     baselined,
     skipped,
+    emailed,
   };
 }

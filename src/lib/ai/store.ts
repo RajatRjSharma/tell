@@ -104,6 +104,20 @@ export async function upsertResearchBrief(
       brief.provider,
     ],
   });
+
+  try {
+    const { indexBriefForRag } = await import("@/lib/ai/rag");
+    await indexBriefForRag(db, {
+      symbol: brief.symbol,
+      horizon: brief.horizon,
+      asOf: brief.asOf,
+      title: brief.title,
+      summary: brief.summary,
+      bullets: brief.bullets,
+    });
+  } catch {
+    // FTS is best-effort — schema may not be migrated yet.
+  }
 }
 
 export async function listResearchBriefs(

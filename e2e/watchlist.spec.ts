@@ -14,6 +14,8 @@ async function waitForAuthNav(page: Page) {
 async function registerUser(page: Page, email: string, password: string) {
   await page.goto("/register");
   await page.getByTestId("auth-email").fill(email);
+  await page.getByTestId("auth-submit").click();
+  await expect(page.getByTestId("auth-otp")).toBeVisible();
   await page.getByTestId("auth-password").fill(password);
   await page.getByTestId("auth-submit").click();
   await expect(page).toHaveURL("/");

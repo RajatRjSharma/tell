@@ -5,18 +5,24 @@ import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 
 type Mode = "login" | "register";
+type RegisterStep = "email" | "verify";
 
 export function AuthForm({ mode }: { mode: Mode }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [otp, setOtp] = useState("");
+  const [registerStep, setRegisterStep] = useState<RegisterStep>("email");
   const [error, setError] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const isRegister = mode === "register";
-  const endpoint = isRegister ? "/api/auth/register" : "/api/auth/login";
-  const title = isRegister ? "Create account" : "Sign in";
-  const submitLabel = isRegister ? "Register" : "Sign in";
+  const title = isRegister
+    ? registerStep === "email"
+      ? "Create account"
+      : "Verify email"
+    : "Sign in";
   const altHref = isRegister ? "/login" : "/register";
   const altLabel = isRegister
     ? "Already have an account? Sign in"
@@ -25,21 +31,68 @@ export function AuthForm({ mode }: { mode: Mode }) {
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
+    setInfo(null);
     setLoading(true);
 
     try {
-      const res = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-      const data = (await res.json()) as { error?: string };
-
-      if (!res.ok) {
-        setError(data.error ?? "Something went wrong");
+      if (!isRegister) {
+        const res = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        });
+        const data = (await res.json()) as { error?: string };
+        if (!res.ok) {
+          setError(data.error ?? "Something went wrong");
+          return;
+        }
+        router.push("/");
+        router.refresh();
         return;
       }
 
+      if (registerStep === "email") {
+        const res = await fetch("/api/auth/otp/request", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, purpose: "register" }),
+        });
+        const data = (await res.json()) as {
+          error?: string;
+          expireMinutes?: number;
+          devCode?: string;
+        };
+        if (!res.ok) {
+          setError(data.error ?? "Could not send code");
+          return;
+        }
+        if (data.devCode) {
+          setOtp(data.devCode);
+        }
+        setRegisterStep("verify");
+        setInfo(
+          data.devCode
+            ? `Dev code filled (${data.expireMinutes ?? 10} min). Set a password to finish.`
+            : `We sent a ${data.expireMinutes ?? 10}-minute code to ${email}.`,
+        );
+        return;
+      }
+
+      const res = await fetch("/api/auth/otp/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          otp,
+          password,
+          purpose: "register",
+        }),
+      });
+      const data = (await res.json()) as { error?: string };
+      if (!res.ok) {
+        setError(data.error ?? "Verification failed");
+        return;
+      }
       router.push("/");
       router.refresh();
     } catch {
@@ -103,7 +156,9 @@ export function AuthForm({ mode }: { mode: Mode }) {
           </h1>
           <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
             {isRegister
-              ? "Set up access to your market outlook workspace."
+              ? registerStep === "email"
+                ? "We will email a one-time code to verify ownership."
+                : "Enter the code and choose a password."
               : "Continue to your latest macro and market outlook."}
           </p>
 
@@ -122,29 +177,60 @@ export function AuthForm({ mode }: { mode: Mode }) {
                 autoComplete="email"
                 required
                 value={email}
+                disabled={isRegister && registerStep === "verify"}
                 onChange={(e) => setEmail(e.target.value)}
-                className="min-h-12 rounded-[12px] border border-[var(--line-strong)] bg-[var(--surface)] px-3.5 text-sm text-[var(--text)] transition-colors placeholder:text-[var(--muted)] hover:border-[var(--muted)] focus:border-[var(--accent)] focus:outline-none"
+                className="min-h-12 rounded-[12px] border border-[var(--line-strong)] bg-[var(--surface)] px-3.5 text-sm text-[var(--text)] transition-colors placeholder:text-[var(--muted)] hover:border-[var(--muted)] focus:border-[var(--accent)] focus:outline-none disabled:opacity-70"
               />
             </label>
 
-            <label className="flex flex-col gap-2 text-xs font-medium text-[var(--muted-strong)]">
-              Password
-              <input
-                data-testid="auth-password"
-                type="password"
-                autoComplete={isRegister ? "new-password" : "current-password"}
-                required
-                minLength={8}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="min-h-12 rounded-[12px] border border-[var(--line-strong)] bg-[var(--surface)] px-3.5 text-sm text-[var(--text)] transition-colors placeholder:text-[var(--muted)] hover:border-[var(--muted)] focus:border-[var(--accent)] focus:outline-none"
-              />
-              {isRegister ? (
-                <span className="font-normal text-[var(--muted)]">
-                  Use at least 8 characters.
-                </span>
-              ) : null}
-            </label>
+            {isRegister && registerStep === "verify" ? (
+              <label className="flex flex-col gap-2 text-xs font-medium text-[var(--muted-strong)]">
+                Verification code
+                <input
+                  data-testid="auth-otp"
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  required
+                  pattern="\d{4,8}"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                  className="min-h-12 rounded-[12px] border border-[var(--line-strong)] bg-[var(--surface)] px-3.5 font-mono text-sm tracking-[0.2em] text-[var(--text)] transition-colors focus:border-[var(--accent)] focus:outline-none"
+                />
+              </label>
+            ) : null}
+
+            {!isRegister || registerStep === "verify" ? (
+              <label className="flex flex-col gap-2 text-xs font-medium text-[var(--muted-strong)]">
+                Password
+                <input
+                  data-testid="auth-password"
+                  type="password"
+                  autoComplete={
+                    isRegister ? "new-password" : "current-password"
+                  }
+                  required
+                  minLength={8}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="min-h-12 rounded-[12px] border border-[var(--line-strong)] bg-[var(--surface)] px-3.5 text-sm text-[var(--text)] transition-colors placeholder:text-[var(--muted)] hover:border-[var(--muted)] focus:border-[var(--accent)] focus:outline-none"
+                />
+                {isRegister ? (
+                  <span className="font-normal text-[var(--muted)]">
+                    Use at least 8 characters.
+                  </span>
+                ) : null}
+              </label>
+            ) : null}
+
+            {info ? (
+              <p
+                data-testid="auth-info"
+                className="rounded-[10px] bg-[var(--accent-soft)] px-3 py-2.5 text-sm text-[var(--accent)]"
+              >
+                {info}
+              </p>
+            ) : null}
 
             {error ? (
               <p
@@ -162,8 +248,29 @@ export function AuthForm({ mode }: { mode: Mode }) {
               disabled={loading}
               className="button-primary mt-1 min-h-12 w-full disabled:opacity-60"
             >
-              {loading ? "Please wait..." : submitLabel}
+              {loading
+                ? "Please wait..."
+                : isRegister
+                  ? registerStep === "email"
+                    ? "Send verification code"
+                    : "Verify & create account"
+                  : "Sign in"}
             </button>
+
+            {isRegister && registerStep === "verify" ? (
+              <button
+                type="button"
+                className="text-sm text-[var(--muted)] underline underline-offset-2"
+                onClick={() => {
+                  setRegisterStep("email");
+                  setOtp("");
+                  setInfo(null);
+                  setError(null);
+                }}
+              >
+                Use a different email
+              </button>
+            ) : null}
           </form>
 
           <div className="mt-7 flex flex-col gap-3 text-sm">

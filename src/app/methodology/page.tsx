@@ -243,8 +243,9 @@ export default function MethodologyPage() {
             <ul className="mt-4 space-y-2 text-sm leading-7 text-[var(--muted-strong)]">
               <li>Daily bars only — not intraday trading signals.</li>
               <li>
-                Macro vintages currently use the latest published series (ALFRED
-                point-in-time is a later upgrade).
+                Priority US macro series store ALFRED vintages (realtime_start)
+                alongside current FRED prints; live features still read the
+                current vintage.
               </li>
               <li>
                 RSS coverage and keyword tone tags are incomplete versus a full

@@ -19,6 +19,7 @@ describe("toReadingUpserts", () => {
         value: 308.4,
         source: "FRED",
         vintage: CURRENT_VINTAGE,
+        releasedAt: null,
       },
     ]);
   });

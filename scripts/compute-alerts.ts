@@ -17,7 +17,7 @@ async function main() {
 
   const result = await evaluateAlertRules(db);
   console.log(
-    `considered=${result.considered} triggered=${result.triggered} baselined=${result.baselined} skipped=${result.skipped}`,
+    `considered=${result.considered} triggered=${result.triggered} baselined=${result.baselined} skipped=${result.skipped} emailed=${result.emailed}`,
   );
 }
 

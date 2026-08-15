@@ -35,7 +35,8 @@ export function toReadingUpserts(
     observedFor: row.observedFor,
     value: row.value,
     source,
-    vintage: CURRENT_VINTAGE,
+    vintage: row.vintage ?? CURRENT_VINTAGE,
+    releasedAt: row.releasedAt ?? null,
   }));
 }
 

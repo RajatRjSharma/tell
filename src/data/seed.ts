@@ -9,6 +9,7 @@ export const countries = [
   { code: "DE", name: "Germany", region: "Europe", currency: "EUR" },
   { code: "JP", name: "Japan", region: "Asia", currency: "JPY" },
   { code: "GB", name: "United Kingdom", region: "Europe", currency: "GBP" },
+  { code: "CN", name: "China", region: "Asia", currency: "CNY" },
 ] as const;
 
 /** Canonical indicators. source_series_id is primary fetch id (often US FRED). */
@@ -196,6 +197,14 @@ export const assets = [
     source_symbol: "EWU",
   },
   {
+    symbol: "MCHI",
+    name: "MSCI China (MCHI)",
+    asset_class: "equity",
+    country_code: "CN",
+    currency: "USD",
+    source_symbol: "MCHI",
+  },
+  {
     symbol: "EURUSD",
     name: "EUR/USD",
     asset_class: "fx",
@@ -218,6 +227,14 @@ export const assets = [
     country_code: "JP",
     currency: "JPY",
     source_symbol: "USDJPY=X",
+  },
+  {
+    symbol: "USDCNH",
+    name: "USD/CNH",
+    asset_class: "fx",
+    country_code: "CN",
+    currency: "CNH",
+    source_symbol: "USDCNH=X",
   },
   {
     symbol: "GLD",

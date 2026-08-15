@@ -1,4 +1,4 @@
-.PHONY: help install install-browsers dev build start lint lint-fix format format-check typecheck test test-watch test-coverage test-eval test-e2e test-e2e-ui ci db-migrate db-seed ingest-fred ingest-imf ingest-markets ingest-events ingest-manual ingest-all compute-features compute-signals compute-forecasts backfill-signals compute-alerts compute-briefs setup
+.PHONY: help install install-browsers dev build start lint lint-fix format format-check typecheck test test-watch test-coverage test-eval test-e2e test-e2e-ui ci db-migrate db-seed ingest-fred ingest-imf ingest-markets ingest-events ingest-manual ingest-all compute-features compute-signals compute-forecasts backfill-signals compute-alerts compute-briefs compute-watchlist-briefs setup
 
 help: ## Show available commands
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-16s\033[0m %s\n", $$1, $$2}'
@@ -98,5 +98,8 @@ compute-alerts: ## Evaluate watchlist alert rules → in-app alert_events
 
 compute-briefs: ## Local-only Gemini briefs → Turso (blocked in CI)
 	npm run compute:briefs
+
+compute-watchlist-briefs: ## Local-only Gemini briefs for starred symbols (+ optional email)
+	npm run compute:watchlist-briefs
 
 setup: install install-browsers db-migrate db-seed ## Install deps + browsers + migrate + seed

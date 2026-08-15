@@ -11,8 +11,40 @@ describe("parseFredObservations", () => {
     ]);
 
     expect(parsed).toEqual([
-      { observedFor: "2024-01-01", value: 3.5 },
-      { observedFor: "2024-04-01", value: 4.1 },
+      {
+        observedFor: "2024-01-01",
+        value: 3.5,
+        releasedAt: null,
+        vintage: undefined,
+      },
+      {
+        observedFor: "2024-04-01",
+        value: 4.1,
+        releasedAt: null,
+        vintage: undefined,
+      },
+    ]);
+  });
+
+  it("captures ALFRED realtime_start as vintage", () => {
+    const parsed = parseFredObservations(
+      [
+        {
+          date: "2024-01-01",
+          value: "3.5",
+          realtime_start: "2024-02-10",
+          realtime_end: "9999-12-31",
+        },
+      ],
+      { alfred: true },
+    );
+    expect(parsed).toEqual([
+      {
+        observedFor: "2024-01-01",
+        value: 3.5,
+        releasedAt: "2024-02-10",
+        vintage: "2024-02-10",
+      },
     ]);
   });
 });
@@ -35,7 +67,14 @@ describe("fetchFredSeriesObservations", () => {
       fetchImpl: fetchImpl as unknown as typeof fetch,
     });
 
-    expect(rows).toEqual([{ observedFor: "2024-01-01", value: 100.2 }]);
+    expect(rows).toEqual([
+      {
+        observedFor: "2024-01-01",
+        value: 100.2,
+        releasedAt: null,
+        vintage: undefined,
+      },
+    ]);
     expect(fetchImpl).toHaveBeenCalledOnce();
     const calledUrl = String(fetchImpl.mock.calls[0]?.[0]);
     expect(calledUrl).toContain("series_id=CPIAUCSL");

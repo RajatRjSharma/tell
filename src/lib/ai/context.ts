@@ -54,6 +54,13 @@ export function formatResearchContext(context: ResearchContext): string {
     }
   }
 
+  if (context.ragHits && context.ragHits.length > 0) {
+    lines.push("", "retrieved_notes:");
+    for (const hit of context.ragHits) {
+      lines.push(`- [${hit.kind}] ${hit.title}: ${hit.body.slice(0, 280)}`);
+    }
+  }
+
   return lines.join("\n");
 }
 
@@ -72,6 +79,9 @@ export function extractCitations(context: ResearchContext): string[] {
       `event:${event.source ?? "policy"}:${event.date}:${event.title.slice(0, 48)}`,
     );
   }
+  for (const hit of (context.ragHits ?? []).slice(0, 4)) {
+    citations.add(`rag:${hit.kind}:${hit.refId}`);
+  }
   return [...citations];
 }
 
@@ -81,6 +91,7 @@ export async function buildResearchContext(
     symbol?: string | null;
     horizon?: string;
     macroIndicators?: readonly string[];
+    query?: string | null;
   },
 ): Promise<ResearchContext> {
   const horizon = options?.horizon ?? "1d";
@@ -96,7 +107,8 @@ export async function buildResearchContext(
       : (await listLatestOutlook(db, { horizons: [horizon] })).slice(0, 12);
 
   const macroIndicators = options?.macroIndicators ?? DEFAULT_MACRO_INDICATORS;
-  const [macroRows, events] = await Promise.all([
+  const { searchResearchFts } = await import("@/lib/ai/rag");
+  const [macroRows, events, ragHits] = await Promise.all([
     Promise.all(
       macroIndicators.map((indicatorId) =>
         listReadings(db, {
@@ -110,6 +122,9 @@ export async function buildResearchContext(
       limit: 6,
       symbol,
     }),
+    options?.query
+      ? searchResearchFts(db, options.query, 6)
+      : Promise.resolve([]),
   ]);
 
   const regime =
@@ -146,6 +161,12 @@ export async function buildResearchContext(
       source: event.source,
       title: event.title,
       type: event.type,
+    })),
+    ragHits: ragHits.map((hit) => ({
+      kind: hit.kind,
+      refId: hit.refId,
+      title: hit.title,
+      body: hit.body,
     })),
   };
 }

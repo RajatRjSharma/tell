@@ -203,3 +203,24 @@ CREATE TABLE IF NOT EXISTS alert_events (
 
 CREATE INDEX IF NOT EXISTS idx_alert_events_user
   ON alert_events (user_id, created_at DESC);
+
+CREATE TABLE IF NOT EXISTS auth_otps (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  email TEXT NOT NULL,
+  purpose TEXT NOT NULL,
+  code_hash TEXT NOT NULL,
+  expires_at TEXT NOT NULL,
+  attempts INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_auth_otps_lookup
+  ON auth_otps (email, purpose, created_at DESC);
+
+CREATE VIRTUAL TABLE IF NOT EXISTS research_fts USING fts5(
+  kind,
+  ref_id,
+  title,
+  body,
+  tokenize = 'porter'
+);

@@ -87,11 +87,16 @@ Daily Actions runs this after `compute:signals` (no AI keys).
 upserts historical `signals`, then evaluates `forecast_log` so quality hit rates have
 real sample size. Optional: `BACKFILL_FROM` / `BACKFILL_TO`, `FORECAST_SYMBOLS`,
 `BACKFILL_SKIP_FORECASTS=1`. Do **not** run this every day in CI — use locally or
-occasionally after rule changes. Macro still uses current vintages (not ALFRED).
+occasionally after rule changes. FRED ingest also stores ALFRED vintages for key US
+series (`CPI`, `UNRATE`, `INDPRO`, `GDP`); live features still read `vintage=current`.
 
 `compute-alerts` checks enabled rules (direction flip, became direction, confidence
-below) against the latest signals and writes unread `alert_events`. First observation
-after creating a rule is a baseline only (no false fire).
+below) against the latest signals and writes unread `alert_events` (and emails when
+SMTP is configured). First observation after creating a rule is a baseline only (no
+false fire).
+
+`make compute-watchlist-briefs` (local Gemini only) emails a personal brief for each
+user with a non-empty watchlist when SMTP is set.
 
 ## Daily ingest (GitHub Actions)
 
@@ -144,11 +149,14 @@ For full auth e2e in CI, add repo secrets: `JWT_SECRET`, `TURSO_DATABASE_URL`, `
 
 ## Auth
 
-- `/register` · `/login`
+- `/register` (OTP email verify) · `/login`
 - Cookie JWT (`tell_session`) backed by Turso `users`
-- APIs: `/api/auth/register` · `login` · `logout` · `me`
+- APIs: `/api/auth/otp/request` · `/api/auth/otp/verify` · `login` · `logout` · `me`
+  (legacy `POST /api/auth/register` remains for scripts)
+- SMTP: `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM`,
+  `SMTP_USE_TLS`, plus `OTP_EXPIRE_MINUTES` / `OTP_LENGTH`
 - Watchlist (signed-in): `GET/POST/DELETE /api/watchlist` — saved symbols filter the dashboard by default when non-empty
-- Alerts (signed-in): `GET/POST /api/alerts`, `PATCH/DELETE /api/alerts/rules/:id`, `POST /api/alerts/read` — rules on watchlist symbols; in-app inbox after daily evaluate
+- Alerts (signed-in): `GET/POST /api/alerts`, `PATCH/DELETE /api/alerts/rules/:id`, `POST /api/alerts/read` — rules on watchlist symbols; in-app inbox + email after daily evaluate
 
 ## Read APIs
 
@@ -166,6 +174,7 @@ Public JSON endpoints (Turso-backed):
 | `GET /api/events` | Policy events (`?source=Fed&country=US&symbol=SPY&since=YYYY-MM-DD&limit=30`) |
 | `GET /api/events/impact` | Historical forward returns after similar events (`?symbol=SPY&source=Fed&sentiment=any`) |
 | `GET /api/macro/strip` | US CPI / curve / VIX sparkline strip (`?limit=24`) |
+| `GET /api/risk/near-term` | Today / tomorrow risk-on|mixed|risk-off ensemble bias |
 | `GET /api/readings?country=US&indicator=CPI` | Macro series (`from`/`to`/`limit`) |
 
 ## AI (Gemini + Groq)

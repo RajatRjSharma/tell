@@ -23,6 +23,12 @@ export type ResearchContext = {
     title: string;
     type: string | null;
   }>;
+  ragHits?: Array<{
+    kind: string;
+    refId: string;
+    title: string;
+    body: string;
+  }>;
 };
 
 export type BriefResult = {
