@@ -2,15 +2,10 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { buildHealthReport, healthHttpStatus } from "@/lib/api/health";
-import packageJson from "../../../../package.json";
 
 export const dynamic = "force-dynamic";
 
-/**
- * Liveness / readiness style health.
- * - Default: app + config + database + data counts
- * - `?deep=1`: also probe Yahoo (+ Finnhub if key set)
- */
+/** Readiness: same checks as /api/health (use for uptime / deploy probes). */
 export async function GET(request: NextRequest) {
   const deep =
     request.nextUrl.searchParams.get("deep") === "1" ||
@@ -23,10 +18,6 @@ export async function GET(request: NextRequest) {
     db = null;
   }
 
-  const report = await buildHealthReport(db, {
-    deep,
-    version: packageJson.version,
-  });
-
+  const report = await buildHealthReport(db, { deep });
   return NextResponse.json(report, { status: healthHttpStatus(report) });
 }

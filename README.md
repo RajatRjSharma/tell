@@ -129,7 +129,8 @@ Public JSON endpoints (Turso-backed):
 
 | Route | Purpose |
 |-------|---------|
-| `GET /api/health` | DB ping |
+| `GET /api/health` | App + config + DB + data counts (`?deep=1` probes Yahoo/Finnhub) |
+| `GET /api/ready` | Same as health (deploy / uptime readiness probe) |
 | `GET /api/assets` | Asset universe |
 | `GET /api/outlook` | Latest signals (`?symbols=SPY,TLT&horizons=1d,1w&asOf=YYYY-MM-DD`) |
 | `GET /api/outlook/SPY` | One asset (`?live=1` adds near-real-time quote) |
