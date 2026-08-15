@@ -109,12 +109,12 @@ export function PriceChart({
 
   return (
     <section className="mt-6 border-t border-[var(--line)] pt-5">
-      <div className="flex items-end justify-between gap-3">
-        <div>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div className="min-w-0">
           <h4 className="text-xs font-semibold text-[var(--muted-strong)]">
             Price
           </h4>
-          <p className="mt-1 font-mono text-[10px] text-[var(--muted)]">
+          <p className="mt-1 break-words font-mono text-[10px] text-[var(--muted)]">
             {payload?.from && payload?.to
               ? `Daily closes: ${payload.from} → ${payload.to}`
               : "Daily closing prices"}

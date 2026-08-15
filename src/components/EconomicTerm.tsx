@@ -152,8 +152,10 @@ export function EconomicTerm({
   const entry = ECONOMIC_GLOSSARY[term];
 
   return (
-    <span className={`inline-flex items-center gap-1 ${className}`.trim()}>
-      <span>{children ?? entry.label}</span>
+    <span
+      className={`inline-flex max-w-full items-center gap-1 ${className}`.trim()}
+    >
+      <span className="min-w-0">{children ?? entry.label}</span>
       <InfoTip label={entry.label}>{entry.meaning}</InfoTip>
     </span>
   );

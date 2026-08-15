@@ -45,6 +45,7 @@ export function SiteHeader({
   const router = useRouter();
   const [sessionUser, setSessionUser] = useState(user);
   const [loggingOut, setLoggingOut] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   async function logout() {
     setLoggingOut(true);
@@ -73,8 +74,8 @@ export function SiteHeader({
           <span className="text-[15px] font-semibold tracking-[-0.02em]">
             Tell
           </span>
-          <span className="hidden h-4 w-px bg-[var(--line-strong)] sm:block" />
-          <span className="hidden text-xs text-[var(--muted)] sm:block">
+          <span className="hidden h-4 w-px bg-[var(--line-strong)] lg:block" />
+          <span className="site-header-section hidden min-w-0 truncate text-xs text-[var(--muted)] lg:block">
             {sectionLabel}
           </span>
         </Link>
@@ -84,58 +85,79 @@ export function SiteHeader({
           className="site-header-nav flex items-center gap-2 text-sm"
         >
           {leadingActions}
-          {NAV_ITEMS.map((item) => (
-            <Link
-              key={item.id}
-              href={item.href}
-              data-testid={item.testId}
-              aria-current={active === item.id ? "page" : undefined}
-              className={`nav-link ${
-                active === item.id ? "nav-link-active" : ""
-              } ${item.id === "methodology" ? "nav-method-link" : ""} ${
-                item.id === "system" ? "nav-system-link" : ""
-              }`}
+          <div className="site-header-menu" data-open={menuOpen}>
+            <button
+              type="button"
+              className="button-secondary site-header-menu-trigger"
+              data-testid="mobile-menu-trigger"
+              aria-expanded={menuOpen}
+              aria-controls="site-header-menu-content"
+              onClick={() => setMenuOpen((current) => !current)}
             >
-              {item.label}
-            </Link>
-          ))}
-          {sessionUser ? (
-            <>
-              <span
-                data-testid="user-email"
-                className="hidden max-w-48 truncate text-xs text-[var(--muted)] md:block"
-                title={sessionUser.email}
-              >
-                @{sessionUser.username}
-              </span>
-              <button
-                data-testid="logout-button"
-                type="button"
-                onClick={() => void logout()}
-                className="button-secondary"
-                disabled={loggingOut}
-              >
-                Log out
-              </button>
-            </>
-          ) : (
-            <>
-              <Link
-                data-testid="nav-signin"
-                href="/login"
-                className="button-secondary"
-              >
-                Sign in
-              </Link>
-              <Link
-                data-testid="nav-register"
-                href="/register"
-                className="button-primary nav-register-link"
-              >
-                Register
-              </Link>
-            </>
-          )}
+              Menu
+            </button>
+            <div
+              id="site-header-menu-content"
+              className="site-header-menu-content"
+            >
+              {NAV_ITEMS.map((item) => (
+                <Link
+                  key={item.id}
+                  href={item.href}
+                  data-testid={item.testId}
+                  aria-current={active === item.id ? "page" : undefined}
+                  className={`nav-link ${
+                    active === item.id ? "nav-link-active" : ""
+                  }`}
+                  onClick={() => setMenuOpen(false)}
+                >
+                  {item.label}
+                </Link>
+              ))}
+              {sessionUser ? (
+                <>
+                  <span
+                    data-testid="user-email"
+                    className="site-header-user max-w-48 truncate text-xs text-[var(--muted)]"
+                    title={sessionUser.email}
+                  >
+                    @{sessionUser.username}
+                  </span>
+                  <button
+                    data-testid="logout-button"
+                    type="button"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      void logout();
+                    }}
+                    className="button-secondary"
+                    disabled={loggingOut}
+                  >
+                    Log out
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    data-testid="nav-signin"
+                    href="/login"
+                    className="button-secondary"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Sign in
+                  </Link>
+                  <Link
+                    data-testid="nav-register"
+                    href="/register"
+                    className="button-primary"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Register
+                  </Link>
+                </>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </header>

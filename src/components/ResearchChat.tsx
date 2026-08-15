@@ -194,13 +194,13 @@ export function ResearchChat({
                 <label className="sr-only" htmlFor="ask-tell-input">
                   Research question
                 </label>
-                <div className="flex gap-2">
+                <div className="flex min-w-0 gap-2">
                   <input
                     id="ask-tell-input"
                     value={input}
                     onChange={(event) => setInput(event.target.value)}
                     placeholder="Why is TLT bearish?"
-                    className="min-h-11 flex-1 rounded-[10px] border border-[var(--line-strong)] bg-[var(--surface)] px-3 text-sm"
+                    className="min-h-11 min-w-0 flex-1 rounded-[10px] border border-[var(--line-strong)] bg-[var(--surface)] px-3 text-sm"
                     disabled={loading}
                     autoFocus
                   />

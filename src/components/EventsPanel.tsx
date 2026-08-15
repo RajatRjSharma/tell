@@ -143,11 +143,11 @@ export function EventsPanel({
                       </span>
                     ) : null}
                   </div>
-                  <p className="mt-1 text-sm font-medium tracking-[-0.02em]">
+                  <p className="mt-1 break-words text-sm font-medium tracking-[-0.02em]">
                     {event.title}
                   </p>
                   {event.summary ? (
-                    <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-[var(--muted-strong)]">
+                    <p className="mt-1 line-clamp-2 break-words text-xs leading-relaxed text-[var(--muted-strong)]">
                       {event.summary}
                     </p>
                   ) : null}

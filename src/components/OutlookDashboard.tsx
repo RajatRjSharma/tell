@@ -332,7 +332,7 @@ export function OutlookDashboard({
             </div>
             <h1
               data-testid="home-heading"
-              className="max-w-4xl text-balance text-[clamp(2.35rem,5vw,5.4rem)] font-semibold leading-[0.94] tracking-[-0.065em]"
+              className="max-w-4xl text-balance text-[clamp(2.1rem,10vw,5.4rem)] font-semibold leading-[0.98] tracking-[-0.055em] sm:leading-[0.94] sm:tracking-[-0.065em]"
             >
               Global activity,
               <br />
@@ -340,7 +340,7 @@ export function OutlookDashboard({
             </h1>
           </div>
 
-          <div className="max-w-md border-l border-[var(--line-strong)] pl-5 lg:mb-1">
+          <div className="max-w-md border-l border-[var(--line-strong)] pl-4 sm:pl-5 lg:mb-1">
             <p className="text-sm leading-6 text-[var(--muted-strong)]">
               Transparent signals across{" "}
               <EconomicTerm term="equities">equities</EconomicTerm>,{" "}
@@ -625,20 +625,20 @@ export function OutlookDashboard({
           </div>
 
           <aside
-            className="h-fit rounded-[16px] border border-[var(--line)] bg-[var(--surface-raised)] p-5 xl:sticky xl:top-24"
+            className="h-fit min-w-0 rounded-[16px] border border-[var(--line)] bg-[var(--surface-raised)] p-4 sm:p-5 xl:sticky xl:top-24"
             aria-live="polite"
           >
             {selectedAsset && selectedSignal ? (
               <>
-                <div className="flex items-start justify-between gap-4">
-                  <div>
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div className="min-w-0">
                     <span className="font-mono text-xs text-[var(--muted)]">
                       {selectedAsset.assetClass} / {selectedAsset.countryCode}
                     </span>
                     <h3 className="mt-2 text-2xl font-semibold tracking-[-0.045em]">
                       {selectedAsset.symbol}
                     </h3>
-                    <p className="mt-1 text-sm text-[var(--muted-strong)]">
+                    <p className="mt-1 break-words text-sm text-[var(--muted-strong)]">
                       {shortName(selectedAsset)}
                     </p>
                   </div>
@@ -755,7 +755,7 @@ export function OutlookDashboard({
                             driver.code
                           )}
                         </span>
-                        <p className="text-xs leading-5 text-[var(--muted-strong)]">
+                        <p className="min-w-0 break-words text-xs leading-5 text-[var(--muted-strong)]">
                           {driver.detail}
                         </p>
                       </div>

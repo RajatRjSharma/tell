@@ -1,8 +1,10 @@
 import { expect, test } from "@playwright/test";
+import { openAuthMenuIfNeeded } from "./helpers";
 
 test.describe("methodology", () => {
   test("page renders disclaimer and is linked from home", async ({ page }) => {
     await page.goto("/");
+    await openAuthMenuIfNeeded(page);
     await page.getByTestId("nav-methodology").click();
     await expect(page).toHaveURL(/\/methodology/);
     await expect(page.getByRole("heading", { level: 1 })).toContainText(

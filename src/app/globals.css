@@ -56,14 +56,25 @@
 html {
   scroll-behavior: smooth;
   overflow-x: clip;
+  max-width: 100%;
 }
 
 body {
+  width: 100%;
+  max-width: 100%;
   background: var(--page);
   color: var(--text);
   font-family: var(--font-geist-sans), sans-serif;
+  overflow-wrap: anywhere;
   text-rendering: optimizeLegibility;
   overflow-x: clip;
+}
+
+img,
+svg,
+video,
+canvas {
+  max-width: 100%;
 }
 
 button,
@@ -214,6 +225,21 @@ button:disabled {
   border-color: var(--text);
   background: var(--surface-hover);
   color: var(--text);
+}
+
+.site-header-menu,
+.site-header-menu-content {
+  min-width: 0;
+}
+
+.site-header-menu-trigger {
+  min-width: 3.5rem;
+}
+
+.site-header-menu-content {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .button-primary:active,
@@ -385,10 +411,7 @@ button:disabled {
 
 .outlook-grid {
   display: grid;
-  grid-template-columns: minmax(8rem, 1.45fr) minmax(5.5rem, 0.8fr) minmax(
-      5.5rem,
-      0.7fr
-    );
+  grid-template-columns: minmax(0, 1fr) auto minmax(4.6rem, auto);
   align-items: center;
   gap: 1rem;
   width: 100%;
@@ -669,11 +692,14 @@ button:disabled {
 
 .chat-bubble {
   max-width: 92%;
+  min-width: 0;
   border-radius: 12px;
   padding: 0.7rem 0.85rem;
   font-size: 0.8rem;
   line-height: 1.45;
   white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .chat-bubble-user {
@@ -763,13 +789,7 @@ button:disabled {
   display: none;
 }
 
-@media (max-width: 639px) {
-  .nav-system-link,
-  .nav-register-link,
-  .nav-method-link {
-    display: none;
-  }
-
+@media (max-width: 1023px) {
   .ask-tell-label-full {
     display: none;
   }
@@ -780,14 +800,68 @@ button:disabled {
 
   .site-header-inner {
     gap: 0.5rem;
+    padding-right: max(1rem, env(safe-area-inset-right));
+    padding-left: max(1rem, env(safe-area-inset-left));
   }
 
   .site-header-nav {
     gap: 0.35rem;
   }
 
+  .site-header-menu {
+    position: relative;
+  }
+
+  .site-header-menu-content {
+    position: absolute;
+    top: calc(100% + 0.6rem);
+    right: 0;
+    z-index: 30;
+    display: none;
+    width: min(15rem, calc(100vw - 2rem));
+    align-items: stretch;
+    flex-direction: column;
+    gap: 0.35rem;
+    border: 1px solid var(--line-strong);
+    border-radius: 14px;
+    background: var(--surface-raised);
+    box-shadow: var(--shadow);
+    padding: 0.5rem;
+  }
+
+  .site-header-menu[data-open="true"] .site-header-menu-content {
+    display: flex;
+  }
+
+  .site-header-menu-content .nav-link,
+  .site-header-menu-content .button-primary,
+  .site-header-menu-content .button-secondary {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .site-header-user {
+    max-width: none;
+    padding: 0.55rem 0.8rem 0.2rem;
+  }
+}
+
+@media (max-width: 639px) {
+  input,
+  select,
+  textarea {
+    font-size: 1rem;
+  }
+
+  .button-primary,
+  .button-secondary,
+  .nav-link {
+    min-height: 2.75rem;
+  }
+
   .outlook-grid {
-    gap: 0.65rem;
+    grid-template-columns: minmax(0, 1fr) auto minmax(4.25rem, auto);
+    gap: 0.5rem;
   }
 
   .outlook-grid-header,
@@ -798,6 +872,57 @@ button:disabled {
 
   .row-arrow {
     display: none;
+  }
+
+  #market-outlook,
+  #methodology-content,
+  #system-content {
+    padding-right: max(1rem, env(safe-area-inset-right));
+    padding-left: max(1rem, env(safe-area-inset-left));
+  }
+
+  .macro-strip-item,
+  .metric-cell {
+    padding-right: 1rem;
+    padding-left: 1rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .site-header-menu {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .site-header-menu-trigger {
+    display: none;
+  }
+
+  .site-header-menu-content {
+    position: static;
+    display: flex;
+    width: auto;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    padding: 0;
+  }
+
+  .site-header-menu-content .nav-link,
+  .site-header-menu-content .button-primary,
+  .site-header-menu-content .button-secondary {
+    width: auto;
+    justify-content: center;
+  }
+
+  .site-header-user {
+    max-width: 12rem;
+    padding: 0;
   }
 }
 
@@ -832,8 +957,52 @@ button:disabled {
 
 .swagger-wrap .swagger-ui .info,
 .swagger-wrap .swagger-ui .scheme-container,
-.swagger-wrap .swagger-ui table {
+.swagger-wrap .swagger-ui table,
+.swagger-wrap .swagger-ui .opblock-summary,
+.swagger-wrap .swagger-ui .parameters-col_description,
+.swagger-wrap .swagger-ui .response-col_description,
+.swagger-wrap .swagger-ui .execute-wrapper,
+.swagger-wrap .swagger-ui pre,
+.swagger-wrap .swagger-ui .model-box {
   max-width: 100%;
+}
+
+.swagger-wrap .swagger-ui .opblock-summary-path,
+.swagger-wrap .swagger-ui .opblock-summary-description,
+.swagger-wrap .swagger-ui .parameter__name,
+.swagger-wrap .swagger-ui .response-col_status,
+.swagger-wrap .swagger-ui .microlight,
+.swagger-wrap .swagger-ui code,
+.swagger-wrap .swagger-ui pre {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.swagger-wrap .swagger-ui table,
+.swagger-wrap .swagger-ui .highlight-code,
+.swagger-wrap .swagger-ui .curl-command {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+@media (max-width: 639px) {
+  .swagger-wrap .swagger-ui .opblock-summary {
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+
+  .swagger-wrap .swagger-ui .opblock-summary-control {
+    margin-left: 0;
+  }
+
+  .swagger-wrap .swagger-ui .execute-wrapper {
+    padding-inline: 0;
+  }
+
+  .swagger-wrap .swagger-ui .btn.execute {
+    width: 100%;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

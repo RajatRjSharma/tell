@@ -178,7 +178,11 @@ export function EventImpactPanel({
               {symbol ? ` · focused on ${symbol}` : ""}
             </p>
 
-            <div className="mt-4 overflow-x-auto">
+            <div
+              className="mt-4 overflow-x-auto"
+              aria-label="Event impact results table"
+              tabIndex={0}
+            >
               <table className="w-full min-w-[28rem] border-collapse text-left text-sm">
                 <thead>
                   <tr className="border-b border-[var(--line)] font-mono text-[10px] uppercase tracking-[0.08em] text-[var(--muted)]">

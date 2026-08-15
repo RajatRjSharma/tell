@@ -56,7 +56,9 @@ function PresenceList({
             key={key}
             className="flex items-center justify-between gap-3 text-xs"
           >
-            <span className="font-mono text-[var(--muted-strong)]">{key}</span>
+            <span className="min-w-0 break-all font-mono text-[var(--muted-strong)]">
+              {key}
+            </span>
             <span
               className={`rounded-[6px] px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.06em] ${
                 present
@@ -80,11 +82,11 @@ function CheckCard({ name, check }: { name: string; check: HealthCheck }) {
 
   return (
     <article
-      className="rounded-[16px] border border-[var(--line)] bg-[var(--surface)] p-5"
+      className="min-w-0 rounded-[16px] border border-[var(--line)] bg-[var(--surface)] p-4 sm:p-5"
       data-testid={`system-check-${name}`}
     >
       <div className="flex items-start justify-between gap-3">
-        <div>
+        <div className="min-w-0">
           <h2 className="text-sm font-semibold tracking-[-0.02em] capitalize">
             {name}
           </h2>
@@ -135,7 +137,9 @@ function CheckCard({ name, check }: { name: string; check: HealthCheck }) {
         {typeof check.modelVersion === "string" ? (
           <div>
             <dt className="text-[var(--muted)]">Model</dt>
-            <dd className="mt-0.5 text-[var(--text)]">{check.modelVersion}</dd>
+            <dd className="mt-0.5 break-all text-[var(--text)]">
+              {check.modelVersion}
+            </dd>
           </div>
         ) : null}
       </dl>

@@ -28,6 +28,20 @@ export function e2eUsername(email: string): string {
 
 export async function waitForAuthNav(page: Page) {
   await expect(page.getByTestId("auth-nav")).toBeVisible({ timeout: 15_000 });
+  await openAuthMenuIfNeeded(page);
+}
+
+/** Open the compact header menu when logout/nav controls are collapsed. */
+export async function openAuthMenuIfNeeded(page: Page) {
+  const trigger = page.getByTestId("mobile-menu-trigger");
+  if (!(await trigger.isVisible())) return;
+
+  const logout = page.getByTestId("logout-button");
+  const signIn = page.getByTestId("nav-signin");
+  if ((await logout.isVisible()) || (await signIn.isVisible())) return;
+
+  await trigger.click();
+  await expect(logout.or(signIn)).toBeVisible();
 }
 
 /** Start registration through OTP request; leaves the form on the verify step. */
@@ -74,8 +88,10 @@ export async function registerUser(
   await requestRegisterOtp(page, email, username);
   await page.getByTestId("auth-password").fill(password);
   await page.getByTestId("auth-confirm-password").fill(password);
-  await page.getByTestId("auth-submit").click();
-  await expect(page).toHaveURL("/");
+  await Promise.all([
+    page.waitForURL("/", { timeout: 20_000 }),
+    page.getByTestId("auth-submit").click(),
+  ]);
   await waitForAuthNav(page);
   await expect(page.getByTestId("user-email")).toHaveText(`@${username}`);
 }
@@ -94,6 +110,7 @@ export async function loginUser(
 }
 
 export async function logoutUser(page: Page) {
+  await openAuthMenuIfNeeded(page);
   await page.getByTestId("logout-button").click();
   await expect(page).toHaveURL(/\/login/, { timeout: 15_000 });
   await expect(page.getByTestId("auth-title")).toHaveText("Sign in");

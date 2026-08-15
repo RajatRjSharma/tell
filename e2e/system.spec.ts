@@ -1,8 +1,10 @@
 import { expect, test } from "@playwright/test";
+import { openAuthMenuIfNeeded } from "./helpers";
 
 test.describe("system status", () => {
   test("renders health UI from the System nav link", async ({ page }) => {
     await page.goto("/");
+    await openAuthMenuIfNeeded(page);
     await page.getByTestId("nav-system").click();
     await expect(page).toHaveURL(/\/system/);
     await expect(page.getByTestId("system-page")).toBeVisible();

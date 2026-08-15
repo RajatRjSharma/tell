@@ -132,11 +132,11 @@ export function ResearchBrief({
 
         {state === "ready" && active?.brief ? (
           <div className="space-y-3">
-            <div>
-              <p className="text-sm font-medium tracking-[-0.02em]">
+            <div className="min-w-0">
+              <p className="break-words text-sm font-medium tracking-[-0.02em]">
                 {active.brief.title}
               </p>
-              <p className="mt-2 text-xs leading-5 text-[var(--muted-strong)]">
+              <p className="mt-2 break-words text-xs leading-5 text-[var(--muted-strong)]">
                 {active.brief.summary}
               </p>
             </div>
@@ -194,7 +194,7 @@ export function ResearchBrief({
                     className="grid grid-cols-[0.5rem_1fr] gap-2 text-xs leading-5 text-[var(--muted-strong)]"
                   >
                     <span className="mt-1.5 h-1 w-1 rounded-full bg-[var(--accent)]" />
-                    <span>{bullet}</span>
+                    <span className="min-w-0 break-words">{bullet}</span>
                   </li>
                 ))}
               </ul>
@@ -209,7 +209,7 @@ export function ResearchBrief({
                   {active.brief.risks.map((risk) => (
                     <li
                       key={risk}
-                      className="text-xs leading-5 text-[var(--muted)]"
+                      className="break-words text-xs leading-5 text-[var(--muted)]"
                     >
                       {risk}
                     </li>
@@ -218,7 +218,7 @@ export function ResearchBrief({
               </div>
             ) : null}
 
-            <p className="font-mono text-[10px] text-[var(--muted)]">
+            <p className="break-all font-mono text-[10px] text-[var(--muted)]">
               {active.brief.model}
               {active.brief.source ? ` · ${active.brief.source}` : ""}
               {active.brief.cached ? " · cached" : ""}
