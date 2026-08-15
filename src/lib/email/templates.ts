@@ -6,6 +6,19 @@ function escapeHtml(value: string): string {
     .replace(/"/g, "&quot;");
 }
 
+function safeAppUrl(value: string | undefined): string {
+  const fallback = "https://tell-gamma.vercel.app";
+  if (!value) return fallback;
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" || url.protocol === "http:"
+      ? url.toString().replace(/\/$/, "")
+      : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 function layout(options: {
   preheader: string;
   title: string;
@@ -53,9 +66,11 @@ export function otpEmailTemplate(options: {
   code: string;
   expireMinutes: number;
 }): { subject: string; html: string; text: string } {
-  const subject = `Your Tell verification code: ${options.code}`;
+  // Keep OTPs out of subjects and preheaders: both are commonly exposed on
+  // lock screens, mail logs, forwarding rules, and analytics.
+  const subject = "Your Tell verification code";
   const html = layout({
-    preheader: `Use ${options.code} to finish creating your Tell account.`,
+    preheader: `Complete your Tell registration within ${options.expireMinutes} minutes.`,
     title: "Verify your email",
     bodyHtml: `
       <p style="margin:0 0 16px;">Enter this one-time code to complete registration. It expires in ${options.expireMinutes} minutes.</p>
@@ -85,7 +100,7 @@ export function alertEmailTemplate(options: {
   appUrl?: string;
 }): { subject: string; html: string; text: string } {
   const subject = `Tell alert · ${options.symbol} ${options.horizon}`;
-  const appUrl = options.appUrl ?? "https://tell-gamma.vercel.app";
+  const appUrl = safeAppUrl(options.appUrl);
   const html = layout({
     preheader: options.body,
     title: options.title,
@@ -134,9 +149,9 @@ export function watchlistBriefEmailTemplate(options: {
   appUrl?: string;
 }): { subject: string; html: string; text: string } {
   const subject = `Tell watchlist brief · ${options.asOf ?? "latest"}`;
-  const appUrl = options.appUrl ?? "https://tell-gamma.vercel.app";
-  const bullets = options.bullets
-    .slice(0, 6)
+  const appUrl = safeAppUrl(options.appUrl);
+  const displayedBullets = options.bullets.slice(0, 6);
+  const bullets = displayedBullets
     .map((item) => `<li style="margin:0 0 8px;">${escapeHtml(item)}</li>`)
     .join("");
   const html = layout({
@@ -158,9 +173,11 @@ export function watchlistBriefEmailTemplate(options: {
     options.symbols.join(", "),
     "",
     options.summary,
-    ...options.bullets.map((item) => `• ${item}`),
+    ...displayedBullets.map((item) => `• ${item}`),
     "",
     `Open: ${appUrl}`,
+    "",
+    "Research aid only. Not financial advice.",
   ].join("\n");
   return { subject, html, text };
 }

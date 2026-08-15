@@ -8,9 +8,13 @@ import {
 describe("email templates", () => {
   it("builds a professional OTP message", () => {
     const template = otpEmailTemplate({ code: "123456", expireMinutes: 10 });
-    expect(template.subject).toContain("123456");
+    expect(template.subject).not.toContain("123456");
     expect(template.html).toContain("Tell Research");
     expect(template.html).toContain("123456");
+    const preheader = template.html.match(
+      /<div style="display:none[^>]*>(.*?)<\/div>/,
+    )?.[1];
+    expect(preheader).not.toContain("123456");
     expect(template.text).toContain("Expires in 10 minutes");
   });
 
@@ -38,5 +42,20 @@ describe("email templates", () => {
     expect(template.subject).toContain("watchlist brief");
     expect(template.html).toContain("SPY · TLT");
     expect(template.text).toContain("Curve still inverted");
+    expect(template.text).toContain("Not financial advice");
+  });
+
+  it("rejects unsafe link schemes in favor of the production fallback", () => {
+    const template = alertEmailTemplate({
+      title: "SPY update",
+      body: "Fixture",
+      symbol: "SPY",
+      horizon: "1d",
+      asOfDate: "2026-08-15",
+      appUrl: "javascript:alert(1)",
+    });
+
+    expect(template.html).not.toContain("javascript:");
+    expect(template.html).toContain("https://tell-gamma.vercel.app");
   });
 });

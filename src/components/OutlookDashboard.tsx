@@ -147,10 +147,6 @@ export function OutlookDashboard({
   } | null>(null);
   const [chatOpen, setChatOpen] = useState(false);
 
-  useEffect(() => {
-    setSessionUser(user);
-  }, [user]);
-
   const watchSet = useMemo(() => new Set(watchlist), [watchlist]);
 
   const signalMap = useMemo(() => {

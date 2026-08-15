@@ -28,7 +28,7 @@ Code lifecycle in `src/lib/auth/otp.ts`:
 | -------- | ------ |
 | Length | `OTP_LENGTH`, default 6, clamped between 4 and 8 |
 | Generation | `crypto.randomInt` zero-padded to the configured length |
-| Storage | SHA-256 hash in `auth_otps.code_hash`; the plaintext code is never stored |
+| Storage | HMAC-SHA256 in `auth_otps.code_hash` using `OTP_PEPPER` (or `JWT_SECRET`); plaintext is never stored |
 | Lifetime | `OTP_EXPIRE_MINUTES`, default 10, clamped between 5 and 60 |
 | Replacement | Requesting a new code deletes previous rows for that email and purpose |
 | Attempt limit | 5 failures, after which the code is rejected until a new one is requested |
@@ -76,9 +76,12 @@ Configuration is read at send time in `src/lib/email/mailer.ts`:
 | `SMTP_PASSWORD` | none | Required, app password for Gmail |
 | `SMTP_FROM` | `SMTP_USER` | Accepts `Name <address>` |
 | `SMTP_USE_TLS` | true | Only the literal `false` disables STARTTLS |
+| `EMAIL_DELIVERY_ENABLED` | true | Global kill switch for every outbound email path |
 | `APP_URL` | `https://tell-gamma.vercel.app` | Link target inside templates |
 
-Transport rules: `secure` is enabled only on port 465, and `requireTLS` applies to every other port when TLS is enabled. If any required field is missing, `sendMail` returns `{ sent: false, skipped: "SMTP not configured" }` instead of throwing, which is why alert evaluation still records inbox entries without email.
+Transport rules: `secure` is enabled on port 465; other ports require STARTTLS. Production-like environments cannot disable TLS. Connections use bounded connect, greeting, and socket timeouts, require TLS 1.2 or newer, and verify certificates. Recipient/subject validation blocks header injection and oversized message bodies. If configuration is missing or delivery is switched off, `sendMail` returns a skipped result instead of throwing, so alert evaluation still records inbox entries.
+
+`TEST_MODE=1` is a hard delivery block. Playwright does not load `.env`: it creates a disposable local libSQL database, blanks all provider/SMTP keys, and obtains OTPs through the local-only echo path. CI therefore needs no production SMTP, Turso, or AI secrets.
 
 Gmail specifics: use an app password from an account with two-factor authentication, host `smtp.gmail.com`, port 587. Treat the app password as a secret; if it is ever committed or pasted into a chat, revoke it in the Google account and issue a new one.
 
@@ -94,9 +97,11 @@ Gmail specifics: use an app password from an account with two-factor authenticat
 
 Template characteristics:
 
-- Inline styles only, table-free layout, so common clients render them consistently.
+- Inline styles and presentation tables for broad email-client compatibility.
 - Every message ships an HTML body and a text body.
 - Interpolated values are escaped before insertion.
+- OTP codes stay out of subjects and preheaders to reduce lock-screen and mail-log exposure.
+- Link schemes are restricted to HTTP(S).
 - A research-aid disclaimer appears on notification emails.
 - Unit tests in `src/lib/email/templates.test.ts` assert subject lines and body contents.
 
@@ -108,7 +113,7 @@ Template characteristics:
 | Alert email | `src/lib/alerts/evaluate.ts` during `compute:alerts` | Warning logged; the inbox row is still written and the run continues |
 | Watchlist brief | `scripts/compute-watchlist-briefs.ts` | Counted as skipped; other users still processed |
 
-Alert email is opt-in per run through the evaluation options, and the script reports `considered`, `triggered`, `baselined`, `skipped`, and `emailed` so delivery is observable. `alert_events` is unique on `(rule_id, as_of_date)`, which prevents duplicate mail for the same day even if the job runs twice. Watchlist brief email is enabled unless `WATCHLIST_BRIEF_EMAIL=0`.
+Alert email is tied to a rule the user created, and the script reports `considered`, `triggered`, `baselined`, `skipped`, and `emailed` so delivery is observable. `alert_events` is unique on `(rule_id, as_of_date)`, which prevents duplicate mail for the same day even if the job runs twice. Bulk watchlist brief delivery is off by default and requires `WATCHLIST_BRIEF_EMAIL=1`; brief generation itself still runs.
 
 ## Verifying a setup
 
@@ -132,5 +137,6 @@ If step 2 returns 503, SMTP is incomplete. If it returns 500, the credentials or
 1. Set `JWT_SECRET` to a fresh random value of at least 32 characters.
 2. Set all five SMTP variables plus `APP_URL` in the hosting provider.
 3. Leave `TELL_OTP_DEV_ECHO` unset.
-4. Confirm the sender domain or Gmail app password is valid before launch.
-5. If credentials ever leak, revoke first and redeploy with replacements.
+4. Leave `TEST_MODE` unset and set `EMAIL_DELIVERY_ENABLED=true`.
+5. Confirm SPF, DKIM, and DMARC for the sender domain (or a valid Gmail app password).
+6. If credentials ever leak, revoke first and redeploy with replacements.

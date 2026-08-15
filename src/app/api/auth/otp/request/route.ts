@@ -10,7 +10,7 @@ import {
   otpDevEchoEnabled,
   registrationEnabled,
 } from "@/lib/config";
-import { sendMail, isSmtpConfigured } from "@/lib/email/mailer";
+import { isEmailDeliveryAvailable, sendMail } from "@/lib/email/mailer";
 import { otpEmailTemplate } from "@/lib/email/templates";
 import { enforceAuthIdentityRateLimit } from "@/lib/api/rate-limit";
 import { normalizeEmail } from "@/lib/password";
@@ -32,7 +32,7 @@ export async function POST(request: Request) {
     }
 
     const echo = otpDevEchoEnabled();
-    if (!isSmtpConfigured() && !echo) {
+    if (!isEmailDeliveryAvailable() && !echo) {
       return NextResponse.json(
         { error: "Email delivery is not configured on this server" },
         { status: 503 },
@@ -87,7 +87,7 @@ export async function POST(request: Request) {
       expireMinutes: otpExpireMinutes(),
     });
 
-    if (isSmtpConfigured()) {
+    if (isEmailDeliveryAvailable()) {
       await sendMail({
         to: email,
         subject: template.subject,

@@ -15,6 +15,7 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:eval": "tsx scripts/eval-ai.ts",
+    "test:e2e:setup": "tsx scripts/setup-e2e-db.ts",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "playwright:install": "playwright install chromium",

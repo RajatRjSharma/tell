@@ -1,14 +1,42 @@
 import { defineConfig, devices } from "@playwright/test";
-import { config as loadEnv } from "dotenv";
 import { resolve } from "node:path";
-
-loadEnv({ path: resolve(process.cwd(), ".env") });
 
 // Default away from 3000 so local `make dev` does not block e2e webServer.
 const PORT = Number(
   process.env.PLAYWRIGHT_PORT ?? (process.env.CI ? 3000 : 3100),
 );
 const baseURL = `http://127.0.0.1:${PORT}`;
+const databasePath = resolve(process.cwd(), ".tmp/playwright.db");
+const testEnv = {
+  APP_ENV: "test",
+  APP_URL: baseURL,
+  TEST_MODE: "1",
+  JWT_SECRET: "playwright-isolated-jwt-secret-32chars!!",
+  JWT_ISSUER: "tell-e2e",
+  TURSO_DATABASE_URL: `file:${databasePath}`,
+  TURSO_AUTH_TOKEN: "e2e-local-token",
+  TELL_OTP_DEV_ECHO: "1",
+  REGISTRATION_ENABLED: "true",
+  EMAIL_OTP_ENABLED: "true",
+  SMTP_HOST: "",
+  SMTP_PORT: "",
+  SMTP_USER: "",
+  SMTP_PASSWORD: "",
+  SMTP_FROM: "",
+  FRED_API_KEY: "",
+  FINNHUB_API_KEY: "",
+  GEMINI_API_KEY: "",
+  GROQ_API_KEY: "",
+  AUTH_RATE_LIMIT_PER_MINUTE: "300",
+  API_RATE_LIMIT_PER_MINUTE: "300",
+  WRITE_RATE_LIMIT_PER_MINUTE: "120",
+  HEALTH_RATE_LIMIT_PER_MINUTE: "300",
+  BRIEF_RATE_LIMIT_PER_MINUTE: "120",
+  CHAT_RATE_LIMIT_PER_MINUTE: "120",
+};
+
+// Specs use these values only to enable isolated auth scenarios.
+Object.assign(process.env, testEnv);
 
 export default defineConfig({
   testDir: "./e2e",
@@ -33,27 +61,13 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: `npm run build && npx next start --port ${PORT}`,
+    command: `npm run test:e2e:setup && npm run build && npx next start --port ${PORT}`,
     url: baseURL,
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: false,
     timeout: 180_000,
     env: {
       ...process.env,
-      JWT_SECRET:
-        process.env.JWT_SECRET ?? "playwright-local-jwt-secret-32chars!!",
-      JWT_ISSUER: process.env.JWT_ISSUER ?? "tell",
-      TURSO_DATABASE_URL: process.env.TURSO_DATABASE_URL ?? "",
-      TURSO_AUTH_TOKEN: process.env.TURSO_AUTH_TOKEN ?? "",
-      TELL_OTP_DEV_ECHO: "1",
-      REGISTRATION_ENABLED: "true",
-      EMAIL_OTP_ENABLED: "true",
-      // Avoid flaky 429s when many auth flows run in one suite.
-      AUTH_RATE_LIMIT_PER_MINUTE: "300",
-      API_RATE_LIMIT_PER_MINUTE: "300",
-      WRITE_RATE_LIMIT_PER_MINUTE: "120",
-      HEALTH_RATE_LIMIT_PER_MINUTE: "300",
-      BRIEF_RATE_LIMIT_PER_MINUTE: "120",
-      CHAT_RATE_LIMIT_PER_MINUTE: "120",
+      ...testEnv,
     },
   },
 });

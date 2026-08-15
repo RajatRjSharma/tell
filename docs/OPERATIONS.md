@@ -82,6 +82,7 @@ Email:
 | Variable | Purpose |
 | -------- | ------- |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM`, `SMTP_USE_TLS` | Delivery transport |
+| `EMAIL_DELIVERY_ENABLED` | Global outbound email kill switch; defaults to enabled |
 | `OTP_EXPIRE_MINUTES`, `OTP_LENGTH` | Verification code policy |
 | `APP_URL` | Link target inside emails |
 
@@ -100,7 +101,7 @@ Job tuning, all optional:
 | `BRIEF_HORIZONS` | `1d,1w,1m` | Brief horizons |
 | `BRIEF_SYMBOLS` | all seeded assets | Brief universe |
 | `BRIEF_DELAY_MS` | 400 | Pause between brief calls |
-| `WATCHLIST_BRIEF_EMAIL` | enabled | `0` disables watchlist email |
+| `WATCHLIST_BRIEF_EMAIL` | disabled | `1` explicitly enables bulk watchlist email |
 | `FRED_USE_ALFRED` | true | `false` skips vintage fetching |
 | `FRED_ALFRED_REALTIME_START` | `2018-01-01` | Earliest vintage to pull |
 | `CROSS_COUNTRY_PROVIDER` | auto | `imf` forces IMF DataMapper |
@@ -147,6 +148,10 @@ Never commit `.env`. If a credential is exposed, revoke it at the provider befor
 | `make ci` | `npm run ci` | Lint, format, types, unit, build, e2e |
 
 `make help` prints the same list from target comments.
+
+Playwright tests are isolated from real infrastructure: they create
+`.tmp/playwright.db`, blank SMTP/provider keys, and set `TEST_MODE=1`. Do not
+add production secrets to the CI e2e job.
 
 ## Scheduled pipeline
 
