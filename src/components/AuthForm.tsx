@@ -55,14 +55,24 @@ export function AuthForm({ mode }: { mode: Mode }) {
         <p className="mb-2 text-center text-sm tracking-[0.2em] text-zinc-500 uppercase">
           Tell
         </p>
-        <h1 className="mb-8 text-center text-2xl font-semibold tracking-tight">
+        <h1
+          data-testid="auth-title"
+          className="mb-8 text-center text-2xl font-semibold tracking-tight"
+        >
           {title}
         </h1>
 
-        <form onSubmit={onSubmit} className="flex flex-col gap-4">
+        <form
+          data-testid="auth-form"
+          method="post"
+          action="#"
+          onSubmit={onSubmit}
+          className="flex flex-col gap-4"
+        >
           <label className="flex flex-col gap-1.5 text-sm text-zinc-400">
             Email
             <input
+              data-testid="auth-email"
               type="email"
               autoComplete="email"
               required
@@ -75,6 +85,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
           <label className="flex flex-col gap-1.5 text-sm text-zinc-400">
             Password
             <input
+              data-testid="auth-password"
               type="password"
               autoComplete={isRegister ? "new-password" : "current-password"}
               required
@@ -86,12 +97,17 @@ export function AuthForm({ mode }: { mode: Mode }) {
           </label>
 
           {error ? (
-            <p className="text-sm text-red-400" role="alert">
+            <p
+              data-testid="auth-error"
+              className="text-sm text-red-400"
+              role="alert"
+            >
               {error}
             </p>
           ) : null}
 
           <button
+            data-testid="auth-submit"
             type="submit"
             disabled={loading}
             className="mt-2 rounded-md bg-zinc-100 px-4 py-2.5 text-sm font-medium text-zinc-950 disabled:opacity-60"
@@ -101,7 +117,11 @@ export function AuthForm({ mode }: { mode: Mode }) {
         </form>
 
         <p className="mt-6 text-center text-sm text-zinc-500">
-          <Link href={altHref} className="text-zinc-300 hover:underline">
+          <Link
+            data-testid="auth-alt-link"
+            href={altHref}
+            className="text-zinc-300 hover:underline"
+          >
             {altLabel}
           </Link>
         </p>

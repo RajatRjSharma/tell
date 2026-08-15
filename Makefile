@@ -1,4 +1,4 @@
-.PHONY: help install dev build start lint lint-fix format format-check typecheck test test-watch test-coverage ci db-migrate db-seed setup
+.PHONY: help install dev build start lint lint-fix format format-check typecheck test test-watch test-coverage test-e2e test-e2e-ui ci db-migrate db-seed setup
 
 help: ## Show available commands
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-16s\033[0m %s\n", $$1, $$2}'
@@ -39,7 +39,13 @@ test-watch: ## Run tests in watch mode
 test-coverage: ## Run tests with coverage
 	npm run test:coverage
 
-ci: ## Full local CI (lint, format, types, test, build)
+test-e2e: ## Run Playwright e2e tests
+	npm run test:e2e
+
+test-e2e-ui: ## Open Playwright UI mode
+	npm run test:e2e:ui
+
+ci: ## Full local CI (lint, format, types, unit, build, e2e)
 	npm run ci
 
 db-migrate: ## Apply Turso schema

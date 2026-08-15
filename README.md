@@ -35,11 +35,19 @@ make lint
 make format-check
 make typecheck
 make test
-make ci                # lint + format + types + test + build
+make test-e2e          # Playwright (needs .env for full auth flows)
+make ci                # lint + format + types + unit + build + e2e
 make help              # list all make targets
 ```
 
-CI runs on every push/PR to `main` via GitHub Actions.
+First time for Playwright browsers:
+
+```bash
+npx playwright install chromium
+```
+
+CI runs on every push/PR to `main` via GitHub Actions (unit + e2e).
+For full auth e2e in CI, add repo secrets: `JWT_SECRET`, `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`.
 
 ## Auth
 
