@@ -1,11 +1,15 @@
 import type { NextRequest } from "next/server";
 import { listResearchBriefs } from "@/lib/ai/store";
+import { isSession, requireApiSession } from "@/lib/api/auth-guard";
 import { jsonError, jsonOk, parseLimit } from "@/lib/api/http";
 import { getDb } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
+  const auth = await requireApiSession(request);
+  if (!isSession(auth)) return auth;
+
   try {
     const sp = request.nextUrl.searchParams;
     const symbol = sp.get("symbol");

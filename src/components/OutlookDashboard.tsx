@@ -292,6 +292,7 @@ export function OutlookDashboard({
       });
     } finally {
       setSessionUser(null);
+      router.push("/login");
       router.refresh();
     }
   }

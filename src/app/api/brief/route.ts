@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server";
 import { generateBrief } from "@/lib/ai/brief";
 import { AiConfigError, AiProviderError } from "@/lib/ai/gemini";
+import { isSession, requireApiSession } from "@/lib/api/auth-guard";
 import { jsonError, jsonOk } from "@/lib/api/http";
 import { getDb } from "@/lib/db";
 import { GENERIC_AI, safePublicDetail } from "@/lib/security/http-errors";
@@ -8,6 +9,9 @@ import { GENERIC_AI, safePublicDetail } from "@/lib/security/http-errors";
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
+  const auth = await requireApiSession(request);
+  if (!isSession(auth)) return auth;
+
   try {
     const sp = request.nextUrl.searchParams;
     const symbol = sp.get("symbol");

@@ -6,6 +6,7 @@ import { verifySession, type SessionPayload } from "@/lib/session-token";
 const PUBLIC_EXACT = new Set([
   "/api/health",
   "/api/ready",
+  "/api/openapi",
   "/api/auth/me",
   "/api/auth/config",
   "/api/auth/login",
@@ -27,7 +28,7 @@ export function isPublicApiRoute(pathname: string, method: string): boolean {
   const path = normalizeApiPath(pathname);
   const verb = method.toUpperCase();
 
-  if (path === "/api/health" || path === "/api/ready") {
+  if (path === "/api/health" || path === "/api/ready" || path === "/api/openapi") {
     return verb === "GET" || verb === "HEAD";
   }
   if (path === "/api/auth/me") return verb === "GET" || verb === "HEAD";
@@ -39,6 +40,14 @@ export function isPublicApiRoute(pathname: string, method: string): boolean {
   if (path === "/api/auth/otp/verify") return verb === "POST";
 
   return PUBLIC_EXACT.has(path) && verb === "OPTIONS";
+}
+
+/** Pages that work without a session (everything else redirects to login). */
+export function isPublicPageRoute(pathname: string): boolean {
+  const path = normalizeApiPath(pathname);
+  if (path === "/login" || path === "/register" || path === "/docs") return true;
+  if (path.startsWith("/.well-known/")) return true;
+  return false;
 }
 
 export function readBearerToken(request: Request): string | null {
@@ -78,4 +87,19 @@ export function unauthorizedApiResponse(
       headers: { "WWW-Authenticate": "Bearer" },
     },
   );
+}
+
+/** Handler-level gate for product APIs (proxy also enforces this). */
+export async function requireApiSession(
+  request: NextRequest | Request,
+): Promise<SessionPayload | NextResponse> {
+  const session = await authenticateApiRequest(request);
+  if (!session) return unauthorizedApiResponse();
+  return session;
+}
+
+export function isSession(
+  value: SessionPayload | NextResponse,
+): value is SessionPayload {
+  return !(value instanceof NextResponse);
 }

@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { assets } from "@/data/seed";
@@ -11,17 +12,21 @@ export const dynamic = "force-dynamic";
 
 export default async function Home() {
   const session = await getSession();
+  if (!session) {
+    redirect("/login");
+  }
+
   const db = getDb();
   const [signals, watchlist, macroStrip, nearTermBias] = await Promise.all([
     listLatestOutlook(db),
-    session ? listWatchlist(db, session.sub) : Promise.resolve([] as string[]),
+    listWatchlist(db, session.sub),
     getMacroStrip(db, { limit: 24 }),
     getNearTermRiskBias(db),
   ]);
 
   return (
     <OutlookDashboard
-      user={session ? { id: session.sub, email: session.email } : null}
+      user={{ id: session.sub, email: session.email }}
       assets={assets.map((asset) => ({
         symbol: asset.symbol,
         name: asset.name,

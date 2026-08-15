@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import {
   authenticateApiRequest,
   isPublicApiRoute,
+  isPublicPageRoute,
   unauthorizedApiResponse,
 } from "@/lib/api/auth-guard";
 import { enforceRateLimit } from "@/lib/api/rate-limit";
@@ -30,10 +31,40 @@ function withCommonHeaders(
   return response;
 }
 
+function loginRedirect(request: NextRequest): NextResponse {
+  const url = request.nextUrl.clone();
+  url.pathname = "/login";
+  url.search = "";
+  const next = `${request.nextUrl.pathname}${request.nextUrl.search}`;
+  if (next && next !== "/" && next !== "/login") {
+    url.searchParams.set("next", next);
+  }
+  return NextResponse.redirect(url);
+}
+
 export async function proxy(request: NextRequest) {
   const requestId = newRequestId();
 
   if (!request.nextUrl.pathname.startsWith("/api/")) {
+    const path = request.nextUrl.pathname;
+    if (!isPublicPageRoute(path)) {
+      const session = await authenticateApiRequest(request);
+      if (!session) {
+        return withCommonHeaders(loginRedirect(request), request, requestId);
+      }
+    } else if (path === "/login" || path === "/register") {
+      const session = await authenticateApiRequest(request);
+      if (session) {
+        const home = request.nextUrl.clone();
+        home.pathname = "/";
+        home.search = "";
+        return withCommonHeaders(
+          NextResponse.redirect(home),
+          request,
+          requestId,
+        );
+      }
+    }
     const response = NextResponse.next();
     return withCommonHeaders(response, request, requestId);
   }

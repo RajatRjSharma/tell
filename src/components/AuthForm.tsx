@@ -14,6 +14,14 @@ type AuthPublicConfig = {
 
 const REGISTER_PASSWORD_MIN = 12;
 
+function safeNextPath(): string {
+  if (typeof window === "undefined") return "/";
+  const raw = new URLSearchParams(window.location.search).get("next");
+  if (!raw || !raw.startsWith("/") || raw.startsWith("//")) return "/";
+  if (raw === "/login" || raw === "/register") return "/";
+  return raw;
+}
+
 export function AuthForm({ mode }: { mode: Mode }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -79,7 +87,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
           setError(data.error ?? "Something went wrong");
           return;
         }
-        router.push("/");
+        router.push(safeNextPath());
         router.refresh();
         return;
       }
@@ -135,7 +143,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
         setError(data.error ?? "Verification failed");
         return;
       }
-      router.push("/");
+      router.push(safeNextPath());
       router.refresh();
     } catch {
       setError("Network error. Try again.");
@@ -148,7 +156,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
     <main className="grid min-h-[100dvh] bg-[var(--page)] text-[var(--text)] lg:grid-cols-[minmax(0,1.05fr)_minmax(28rem,0.95fr)]">
       <section className="relative hidden overflow-hidden border-r border-[var(--line)] p-12 lg:flex lg:flex-col lg:justify-between">
         <Link
-          href="/"
+          href="/login"
           className="flex w-fit items-center gap-3 focus-visible:outline-none"
         >
           <span className="grid h-9 w-9 place-items-center rounded-[10px] bg-[var(--text)] font-mono text-xs font-semibold text-[var(--page)]">
@@ -342,16 +350,10 @@ export function AuthForm({ mode }: { mode: Mode }) {
               </Link>
             ) : null}
             <Link
-              href="/"
+              href="/docs"
               className="w-fit text-[var(--muted)] transition-colors hover:text-[var(--text)]"
             >
-              Back to outlook
-            </Link>
-            <Link
-              href="/methodology"
-              className="w-fit text-[var(--muted)] transition-colors hover:text-[var(--text)]"
-            >
-              Methodology
+              API docs
             </Link>
           </div>
         </div>

@@ -2,6 +2,7 @@ import type { NextRequest } from "next/server";
 import { answerResearchQuestion } from "@/lib/ai/chat";
 import { AiConfigError, AiProviderError } from "@/lib/ai/gemini";
 import type { ChatMessage } from "@/lib/ai/types";
+import { isSession, requireApiSession } from "@/lib/api/auth-guard";
 import { jsonError, jsonOk } from "@/lib/api/http";
 import { getDb } from "@/lib/db";
 import { GENERIC_AI, safePublicDetail } from "@/lib/security/http-errors";
@@ -9,6 +10,9 @@ import { GENERIC_AI, safePublicDetail } from "@/lib/security/http-errors";
 export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
+  const auth = await requireApiSession(request);
+  if (!isSession(auth)) return auth;
+
   try {
     const body = (await request.json()) as {
       message?: unknown;

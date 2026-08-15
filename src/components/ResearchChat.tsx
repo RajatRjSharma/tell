@@ -1,11 +1,27 @@
 "use client";
 
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import {
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type FormEvent,
+} from "react";
+import { createPortal } from "react-dom";
 
 type ChatTurn = {
   role: "user" | "assistant";
   content: string;
 };
+
+function useIsClient() {
+  return useSyncExternalStore(
+    () => () => undefined,
+    () => true,
+    () => false,
+  );
+}
 
 export function ResearchChat({
   symbol,
@@ -25,11 +41,28 @@ export function ResearchChat({
   const [error, setError] = useState<string | null>(null);
   const [turns, setTurns] = useState<ChatTurn[]>([]);
   const listRef = useRef<HTMLDivElement | null>(null);
+  const titleId = useId();
+  const dialogId = useId();
+  const isClient = useIsClient();
 
   useEffect(() => {
     if (!open) return;
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight });
   }, [open, turns, loading]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onOpenChange(false);
+    };
+    window.addEventListener("keydown", onKey);
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = previous;
+    };
+  }, [open, onOpenChange]);
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
@@ -88,93 +121,120 @@ export function ResearchChat({
     }
   }
 
+  const drawer =
+    open && isClient
+      ? createPortal(
+          <div className="chat-layer" role="presentation">
+            <button
+              type="button"
+              className="chat-backdrop"
+              aria-label="Close Ask Tell"
+              onClick={() => onOpenChange(false)}
+            />
+            <div
+              id={dialogId}
+              className="chat-drawer"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby={titleId}
+            >
+              <div className="flex shrink-0 items-start justify-between gap-3 border-b border-[var(--line)] px-4 py-3">
+                <div>
+                  <p
+                    id={titleId}
+                    className="text-sm font-semibold tracking-[-0.02em]"
+                  >
+                    Ask Tell
+                  </p>
+                  <p className="mt-1 font-mono text-[10px] text-[var(--muted)]">
+                    Groq · grounded in {symbol} / {horizon}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className="font-mono text-[11px] text-[var(--muted)] hover:text-[var(--text)]"
+                  onClick={() => onOpenChange(false)}
+                >
+                  Close
+                </button>
+              </div>
+
+              <div ref={listRef} className="chat-thread">
+                {turns.length === 0 ? (
+                  <p className="text-sm leading-6 text-[var(--muted)]">
+                    Ask about the regime, a signal, or why an asset looks
+                    bullish or bearish. Answers use your Turso evidence only.
+                  </p>
+                ) : (
+                  turns.map((turn, index) => (
+                    <div
+                      key={`${turn.role}-${index}`}
+                      className={`chat-bubble chat-bubble-${turn.role}`}
+                    >
+                      {turn.content}
+                    </div>
+                  ))
+                )}
+                {loading ? (
+                  <div className="chat-bubble chat-bubble-assistant">
+                    Thinking…
+                  </div>
+                ) : null}
+                {error ? (
+                  <p className="text-sm text-[var(--negative)]" role="alert">
+                    {error}
+                  </p>
+                ) : null}
+              </div>
+
+              <form
+                onSubmit={onSubmit}
+                className="shrink-0 border-t border-[var(--line)] p-3"
+              >
+                <label className="sr-only" htmlFor="ask-tell-input">
+                  Research question
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    id="ask-tell-input"
+                    value={input}
+                    onChange={(event) => setInput(event.target.value)}
+                    placeholder="Why is TLT bearish?"
+                    className="min-h-11 flex-1 rounded-[10px] border border-[var(--line-strong)] bg-[var(--surface)] px-3 text-sm"
+                    disabled={loading}
+                    autoFocus
+                  />
+                  <button
+                    type="submit"
+                    className="button-primary min-h-11"
+                    disabled={loading || !input.trim()}
+                  >
+                    Send
+                  </button>
+                </div>
+                <p className="mt-2 text-[10px] text-[var(--muted)]">
+                  Research aid only. Not financial advice.
+                </p>
+              </form>
+            </div>
+          </div>,
+          document.body,
+        )
+      : null;
+
   return (
     <>
       <button
         type="button"
         className="button-secondary"
+        data-testid="ask-tell-button"
         aria-expanded={open}
+        aria-controls={open ? dialogId : undefined}
         onClick={() => onOpenChange(!open)}
       >
         Ask Tell
       </button>
-
-      {open ? (
-        <div className="chat-drawer" role="dialog" aria-label="Ask Tell">
-          <div className="flex items-start justify-between gap-3 border-b border-[var(--line)] px-4 py-3">
-            <div>
-              <p className="text-sm font-semibold tracking-[-0.02em]">
-                Ask Tell
-              </p>
-              <p className="mt-1 font-mono text-[10px] text-[var(--muted)]">
-                Groq · grounded in {symbol} / {horizon}
-              </p>
-            </div>
-            <button
-              type="button"
-              className="font-mono text-[11px] text-[var(--muted)] hover:text-[var(--text)]"
-              onClick={() => onOpenChange(false)}
-            >
-              Close
-            </button>
-          </div>
-
-          <div ref={listRef} className="chat-thread">
-            {turns.length === 0 ? (
-              <p className="text-sm leading-6 text-[var(--muted)]">
-                Ask about the regime, a signal, or why an asset looks bullish or
-                bearish. Answers use your Turso evidence only.
-              </p>
-            ) : (
-              turns.map((turn, index) => (
-                <div
-                  key={`${turn.role}-${index}`}
-                  className={`chat-bubble chat-bubble-${turn.role}`}
-                >
-                  {turn.content}
-                </div>
-              ))
-            )}
-            {loading ? (
-              <div className="chat-bubble chat-bubble-assistant">Thinking…</div>
-            ) : null}
-            {error ? (
-              <p className="text-sm text-[var(--negative)]" role="alert">
-                {error}
-              </p>
-            ) : null}
-          </div>
-
-          <form
-            onSubmit={onSubmit}
-            className="border-t border-[var(--line)] p-3"
-          >
-            <label className="sr-only" htmlFor="ask-tell-input">
-              Research question
-            </label>
-            <div className="flex gap-2">
-              <input
-                id="ask-tell-input"
-                value={input}
-                onChange={(event) => setInput(event.target.value)}
-                placeholder="Why is TLT bearish?"
-                className="min-h-11 flex-1 rounded-[10px] border border-[var(--line-strong)] bg-[var(--surface)] px-3 text-sm"
-                disabled={loading}
-              />
-              <button
-                type="submit"
-                className="button-primary min-h-11"
-                disabled={loading || !input.trim()}
-              >
-                Send
-              </button>
-            </div>
-            <p className="mt-2 text-[10px] text-[var(--muted)]">
-              Research aid only. Not financial advice.
-            </p>
-          </form>
-        </div>
-      ) : null}
+      {drawer}
     </>
   );
 }

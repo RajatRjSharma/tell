@@ -29,20 +29,11 @@ test.describe("auth validation", () => {
     await expect(page.getByTestId("auth-error")).toBeVisible();
   });
 
-  test("exposes public auth config and protects product APIs", async ({
-    request,
-  }) => {
-    const config = await request.get("/api/auth/config");
-    expect(config.ok()).toBeTruthy();
-    const body = (await config.json()) as {
-      registrationEnabled: boolean;
-      emailOtpEnabled: boolean;
-    };
-    expect(typeof body.registrationEnabled).toBe("boolean");
-    expect(typeof body.emailOtpEnabled).toBe("boolean");
-
-    const outlook = await request.get("/api/outlook");
-    expect(outlook.status()).toBe(401);
+  test("login page links to API docs", async ({ page }) => {
+    await page.goto("/login");
+    await page.getByRole("link", { name: "API docs" }).click();
+    await expect(page).toHaveURL(/\/docs/);
+    await expect(page.locator(".swagger-ui")).toBeVisible({ timeout: 20_000 });
   });
 });
 
@@ -57,7 +48,7 @@ test.describe("auth flow", () => {
     await expect(page.getByTestId("logout-button")).toBeVisible();
 
     await logoutUser(page);
-    await expect(page.getByTestId("nav-register")).toBeVisible();
+    await expect(page).toHaveURL(/\/login/);
   });
 
   test("rejects duplicate registration", async ({ page }) => {

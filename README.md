@@ -153,6 +153,8 @@ For full auth e2e in CI, add repo secrets: `JWT_SECRET`, `TURSO_DATABASE_URL`, `
 
 ## Auth
 
+- App pages require a session; `/` and `/methodology` redirect to `/login` when signed out
+- Public: `/login`, `/register`, `/docs` (Swagger UI), `/api/openapi`
 - `/register` (OTP email verify) · `/login`
 - Cookie JWT (`AUTH_COOKIE_NAME`, default `tell_session`) backed by Turso `users`
 - Registration requires email OTP (`REGISTRATION_ENABLED`, `EMAIL_OTP_ENABLED`, SMTP)

@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { getSession } from "@/lib/auth";
 import { SIGNAL_MODEL_VERSION } from "@/lib/signals/score";
 
 export const metadata: Metadata = {
@@ -20,7 +22,11 @@ const SECTIONS = [
   { id: "disclaimer", label: "Disclaimer" },
 ] as const;
 
-export default function MethodologyPage() {
+export default async function MethodologyPage() {
+  if (!(await getSession())) {
+    redirect("/login?next=/methodology");
+  }
+
   return (
     <div className="min-h-[100dvh] bg-[var(--page)] text-[var(--text)]">
       <a className="skip-link" href="#methodology-content">

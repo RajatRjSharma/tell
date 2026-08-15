@@ -72,9 +72,11 @@ Cookie sessions are vulnerable to classic CSRF. Mutating `/api` calls without a 
 
 ## Public endpoints
 
-Only these skip authentication:
+Pages require a session except `/login`, `/register`, `/docs` (Swagger), and `/.well-known/*`. Signed-out visits to `/` or `/methodology` redirect to login.
 
-- `GET /api/health`, `GET /api/ready`
+API routes that skip authentication:
+
+- `GET /api/health`, `GET /api/ready`, `GET /api/openapi`
 - `GET /api/auth/me`, `GET /api/auth/config`
 - `POST /api/auth/login`, `logout`, `register` (disabled), `otp/request`, `otp/verify`
 

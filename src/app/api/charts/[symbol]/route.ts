@@ -1,4 +1,5 @@
 import type { NextRequest } from "next/server";
+import { isSession, requireApiSession } from "@/lib/api/auth-guard";
 import { getChartSeries } from "@/lib/api/charts";
 import {
   jsonError,
@@ -14,6 +15,9 @@ export async function GET(
   request: NextRequest,
   context: { params: Promise<{ symbol: string }> },
 ) {
+  const auth = await requireApiSession(request);
+  if (!isSession(auth)) return auth;
+
   try {
     const { symbol: rawSymbol } = await context.params;
     const symbol = rawSymbol.trim().toUpperCase();

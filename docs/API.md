@@ -1,5 +1,7 @@
 # API reference
 
+Interactive Swagger UI: [`/docs`](/docs) (served from OpenAPI at [`/api/openapi`](/api/openapi)).
+
 All handlers live under `src/app/api/**/route.ts` and return JSON. Errors use the shape `{ "error": string }`. Success responses default to status 200.
 
 Shared helpers in `src/lib/api/http.ts`:
@@ -13,13 +15,14 @@ Authenticated endpoints require a verified JWT from the `AUTH_COOKIE_NAME` cooki
 
 ## Authentication gate
 
-`src/proxy.ts` verifies the session on every `/api/*` request before the route runs, and also enforces rate limits, CSRF Origin checks, method allowlisting, body size limits, and JSON Content-Type on mutating requests. See [Security](SECURITY.md).
+`src/proxy.ts` verifies the session on every `/api/*` request before the route runs, and also enforces rate limits, CSRF Origin checks, method allowlisting, body size limits, and JSON Content-Type on mutating requests. HTML pages (except `/login`, `/register`, and `/.well-known/*`) redirect to `/login` when there is no session. See [Security](SECURITY.md).
 
 Public (no token):
 
 | Method and path | Why |
 | --------------- | --- |
 | `GET /api/health`, `GET /api/ready` | Uptime probes |
+| `GET /api/openapi` | OpenAPI JSON for Swagger UI at `/docs` |
 | `GET /api/auth/me` | Session probe |
 | `GET /api/auth/config` | Public registration/OTP flags |
 | `POST /api/auth/login` | Sign in |
@@ -56,16 +59,16 @@ Exceeded limit response: `429` with `{ error, retryAfterSec, category }` and a `
 | `GET /api/auth/config` | No | `{ registrationEnabled, emailOtpEnabled }` |
 | `POST /api/auth/otp/request` | No | Email a verification code |
 | `POST /api/auth/otp/verify` | No | Verify code and create account |
-| `GET /api/assets` | No | Seeded asset universe |
-| `GET /api/readings` | No | Macro series history |
-| `GET /api/outlook` | No | Latest signals across symbols |
-| `GET /api/outlook/[symbol]` | No | Per-symbol signals and optional live quote |
-| `GET /api/charts/[symbol]` | No | Price bars with signal markers |
-| `GET /api/quality` | No | Forecast hit rates |
-| `GET /api/macro/strip` | No | Macro sparkline series |
-| `GET /api/risk/near-term` | No | Today and tomorrow risk bias |
-| `GET /api/events` | No | Policy events |
-| `GET /api/events/impact` | No | Event study statistics |
+| `GET /api/assets` | Yes | Seeded asset universe |
+| `GET /api/readings` | Yes | Macro series history |
+| `GET /api/outlook` | Yes | Latest signals across symbols |
+| `GET /api/outlook/[symbol]` | Yes | Per-symbol signals and optional live quote |
+| `GET /api/charts/[symbol]` | Yes | Price bars with signal markers |
+| `GET /api/quality` | Yes | Forecast hit rates |
+| `GET /api/macro/strip` | Yes | Macro sparkline series |
+| `GET /api/risk/near-term` | Yes | Today and tomorrow risk bias |
+| `GET /api/events` | Yes | Policy events |
+| `GET /api/events/impact` | Yes | Event study statistics |
 | `GET /api/watchlist` | Yes | List saved symbols |
 | `POST /api/watchlist` | Yes | Add symbol |
 | `DELETE /api/watchlist` | Yes | Remove symbol |
@@ -74,11 +77,12 @@ Exceeded limit response: `429` with `{ error, retryAfterSec, category }` and a `
 | `PATCH /api/alerts/rules/[id]` | Yes | Enable or disable rule |
 | `DELETE /api/alerts/rules/[id]` | Yes | Delete rule |
 | `POST /api/alerts/read` | Yes | Mark alerts read |
-| `GET /api/brief` | Rate limited | Gemini research brief |
-| `GET /api/brief/history` | No | Stored brief history |
-| `POST /api/chat` | Rate limited | Grounded research chat |
+| `GET /api/brief` | Yes | Gemini research brief |
+| `GET /api/brief/history` | Yes | Stored brief history |
+| `POST /api/chat` | Yes | Grounded research chat |
 | `GET /api/health` | No | Health with optional deep probes |
 | `GET /api/ready` | No | Readiness, same checks |
+| `GET /api/openapi` | No | OpenAPI 3.0 JSON (Swagger) |
 
 ## Authentication
 

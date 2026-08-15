@@ -1,0 +1,38 @@
+/** Product APIs that must reject unauthenticated callers with 401. */
+export const PROTECTED_API_GET_PATHS = [
+  "/api/outlook",
+  "/api/assets",
+  "/api/readings?country=US&indicator=CPI",
+  "/api/outlook/SPY",
+  "/api/charts/SPY",
+  "/api/quality",
+  "/api/macro/strip",
+  "/api/risk/near-term",
+  "/api/events",
+  "/api/events/impact",
+  "/api/brief",
+  "/api/brief/history",
+  "/api/watchlist",
+  "/api/alerts",
+] as const;
+
+/** OpenAPI path keys that require session security on GET (or POST for chat). */
+export const OPENAPI_SECURED_PATHS = [
+  "/api/assets",
+  "/api/readings",
+  "/api/outlook",
+  "/api/outlook/{symbol}",
+  "/api/charts/{symbol}",
+  "/api/quality",
+  "/api/macro/strip",
+  "/api/risk/near-term",
+  "/api/events",
+  "/api/events/impact",
+  "/api/watchlist",
+  "/api/alerts",
+  "/api/alerts/rules/{id}",
+  "/api/alerts/read",
+  "/api/brief",
+  "/api/brief/history",
+  "/api/chat",
+] as const;

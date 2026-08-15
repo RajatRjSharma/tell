@@ -1,4 +1,5 @@
 import type { NextRequest } from "next/server";
+import { isSession, requireApiSession } from "@/lib/api/auth-guard";
 import { getDb } from "@/lib/db";
 import { jsonError, jsonOk, parseOptionalDate } from "@/lib/api/http";
 import {
@@ -11,6 +12,9 @@ import { SIGNAL_MODEL_VERSION } from "@/lib/signals/score";
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
+  const auth = await requireApiSession(request);
+  if (!isSession(auth)) return auth;
+
   try {
     const sp = request.nextUrl.searchParams;
     const asOfDate = parseOptionalDate(sp.get("asOf"));

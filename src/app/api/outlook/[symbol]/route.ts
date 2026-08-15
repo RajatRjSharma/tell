@@ -1,4 +1,5 @@
 import type { NextRequest } from "next/server";
+import { isSession, requireApiSession } from "@/lib/api/auth-guard";
 import { getDb } from "@/lib/db";
 import { jsonError, jsonOk, parseOptionalDate } from "@/lib/api/http";
 import { listLatestOutlook } from "@/lib/api/outlook";
@@ -11,6 +12,9 @@ export async function GET(
   request: NextRequest,
   context: { params: Promise<{ symbol: string }> },
 ) {
+  const auth = await requireApiSession(request);
+  if (!isSession(auth)) return auth;
+
   try {
     const { symbol: raw } = await context.params;
     const symbol = decodeURIComponent(raw).trim().toUpperCase();

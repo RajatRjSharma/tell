@@ -1,4 +1,5 @@
-import { expect, type Page } from "@playwright/test";
+import { expect, type APIRequestContext, type Page } from "@playwright/test";
+import { PROTECTED_API_GET_PATHS } from "../src/lib/api/protected-paths";
 
 export const hasTurso =
   Boolean(process.env.TURSO_DATABASE_URL) &&
@@ -6,6 +7,13 @@ export const hasTurso =
   Boolean(process.env.JWT_SECRET);
 
 export const E2E_PASSWORD = "TellSecure99!";
+
+export { PROTECTED_API_GET_PATHS };
+
+export function e2eOrigin(baseURL?: string | null): string {
+  const raw = baseURL || process.env.APP_URL || "http://127.0.0.1:3100";
+  return raw.replace(/\/$/, "");
+}
 
 export async function waitForAuthNav(page: Page) {
   await expect(page.getByTestId("auth-nav")).toBeVisible({ timeout: 15_000 });
@@ -45,7 +53,108 @@ export async function registerUser(
   await expect(page.getByTestId("user-email")).toHaveText(email);
 }
 
+export async function loginUser(
+  page: Page,
+  email: string,
+  password: string = E2E_PASSWORD,
+) {
+  await page.goto("/login");
+  await page.getByTestId("auth-email").fill(email);
+  await page.getByTestId("auth-password").fill(password);
+  await page.getByTestId("auth-submit").click();
+  await expect(page).toHaveURL("/");
+  await waitForAuthNav(page);
+  await expect(page.getByTestId("user-email")).toHaveText(email);
+}
+
 export async function logoutUser(page: Page) {
   await page.getByTestId("logout-button").click();
-  await expect(page.getByTestId("nav-signin")).toBeVisible({ timeout: 15_000 });
+  await expect(page).toHaveURL(/\/login/, { timeout: 15_000 });
+  await expect(page.getByTestId("auth-title")).toHaveText("Sign in");
+}
+
+/** Read session cookie from the browser context (set by login / OTP verify). */
+export async function getSessionCookie(
+  page: Page,
+): Promise<{ name: string; value: string }> {
+  const cookies = await page.context().cookies();
+  const session = cookies.find(
+    (cookie) =>
+      cookie.name === "tell_session" || cookie.name.endsWith("_session"),
+  );
+  expect(
+    session,
+    `expected session cookie, got: ${cookies.map((c) => c.name).join(",") || "(none)"}`,
+  ).toBeTruthy();
+  return { name: session!.name, value: session!.value };
+}
+
+/** Authenticated fetch via the page so the browser cookie jar is used. */
+export async function pageApiGet(
+  page: Page,
+  path: string,
+): Promise<{ status: number; json: unknown }> {
+  return page.evaluate(async (apiPath) => {
+    const res = await fetch(apiPath, { credentials: "same-origin" });
+    const json = await res.json().catch(() => null);
+    return { status: res.status, json };
+  }, path);
+}
+
+/** Register via UI then return the session cookie for APIRequestContext calls. */
+export async function registerAndGetCookie(
+  page: Page,
+  email: string,
+  password: string = E2E_PASSWORD,
+) {
+  await registerUser(page, email, password);
+  return getSessionCookie(page);
+}
+
+/** Register via API (OTP echo). Prefer page-based helpers when cookie auth is needed. */
+export async function registerViaApi(
+  request: APIRequestContext,
+  email: string,
+  options?: { password?: string; origin?: string },
+) {
+  const origin = options?.origin ?? e2eOrigin();
+  const password = options?.password ?? E2E_PASSWORD;
+  const headers = {
+    Origin: origin,
+    "Content-Type": "application/json",
+  };
+
+  const otpRes = await request.post("/api/auth/otp/request", {
+    headers,
+    data: { email, purpose: "register" },
+  });
+  expect(otpRes.ok(), await otpRes.text()).toBeTruthy();
+  const otpBody = (await otpRes.json()) as { devCode?: string };
+  expect(otpBody.devCode, "TELL_OTP_DEV_ECHO must expose devCode").toBeTruthy();
+
+  const verifyRes = await request.post("/api/auth/otp/verify", {
+    headers,
+    data: {
+      email,
+      password,
+      otp: otpBody.devCode,
+      purpose: "register",
+    },
+  });
+  expect(verifyRes.status(), await verifyRes.text()).toBe(201);
+
+  const setCookie = verifyRes.headersArray().filter((h) =>
+    h.name.toLowerCase() === "set-cookie",
+  );
+  // Next may attach the session via cookies(); assert the jar picked it up when possible.
+  const jar = await request.storageState();
+  const hasSession = jar.cookies.some(
+    (cookie) =>
+      cookie.name === "tell_session" || cookie.name.endsWith("_session"),
+  );
+  if (!hasSession && setCookie.length === 0) {
+    throw new Error(
+      "OTP verify succeeded but no session cookie was returned to the API request context",
+    );
+  }
 }
