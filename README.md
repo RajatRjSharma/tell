@@ -15,6 +15,7 @@ Global activity → market outlook research platform.
 cp .env.example .env   # fill secrets
 npm install
 npm run db:migrate     # apply Turso schema
+npm run db:seed        # seed countries, indicators, assets
 npm run dev
 ```
 
