@@ -16,8 +16,8 @@ type StripState = {
   error: string | null;
 };
 
-const WIDTH = 96;
-const HEIGHT = 28;
+const WIDTH = 120;
+const HEIGHT = 36;
 
 function macroTerm(id: string): EconomicTermKey | null {
   if (id === "CPI") return "cpi";
@@ -136,43 +136,44 @@ export function MacroSparklineStrip({
     >
       {strip.series.map((series) => (
         <div key={series.id} className="macro-strip-item">
-          <div className="flex items-baseline justify-between gap-3">
-            <div>
-              <span className="font-mono text-[10px] uppercase tracking-[0.1em] text-[var(--muted)]">
-                {macroTerm(series.id) ? (
-                  <EconomicTerm term={macroTerm(series.id)!}>
-                    {series.label}
-                  </EconomicTerm>
-                ) : (
-                  series.label
-                )}
+          <div className="macro-strip-label">
+            {macroTerm(series.id) ? (
+              <EconomicTerm term={macroTerm(series.id)!}>
+                {series.label}
+              </EconomicTerm>
+            ) : (
+              series.label
+            )}
+          </div>
+
+          <div className="macro-strip-reading">
+            <div className="flex items-baseline gap-2">
+              <strong className="font-mono text-lg font-medium tracking-[-0.035em]">
+                {formatSparkValue(series.latest, series.unit)}
+              </strong>
+              <span
+                className={`font-mono text-[10px] ${
+                  (series.change ?? 0) > 0
+                    ? "text-[var(--positive)]"
+                    : (series.change ?? 0) < 0
+                      ? "text-[var(--negative)]"
+                      : "text-[var(--muted)]"
+                }`}
+              >
+                {formatSparkDelta(series.change, series.unit)}
               </span>
-              <div className="mt-1 flex items-baseline gap-2">
-                <strong className="font-mono text-sm tracking-[-0.02em]">
-                  {formatSparkValue(series.latest, series.unit)}
-                </strong>
-                <span
-                  className={`font-mono text-[10px] ${
-                    (series.change ?? 0) > 0
-                      ? "text-[var(--positive)]"
-                      : (series.change ?? 0) < 0
-                        ? "text-[var(--negative)]"
-                        : "text-[var(--muted)]"
-                  }`}
-                >
-                  {formatSparkDelta(series.change, series.unit)}
-                </span>
-              </div>
             </div>
             <Sparkline series={series} />
           </div>
-          <p className="mt-2 font-mono text-[10px] text-[var(--muted)]">
-            {series.asOf ?? "no data"} · US · {periodLabel(series)}
-          </p>
-          <p className="mt-1 text-[10px] leading-4 text-[var(--muted)]">
-            Oldest value on the left, latest on the right. The small change is
-            from the previous reading.
-          </p>
+
+          <div className="macro-strip-footer">
+            <p className="font-mono text-[10px] text-[var(--muted)]">
+              {series.asOf ?? "no data"} · US · {periodLabel(series)}
+            </p>
+            <p className="mt-1 text-[10px] leading-4 text-[var(--muted)]">
+              Oldest value left, latest right. Change is from the prior reading.
+            </p>
+          </div>
         </div>
       ))}
     </section>

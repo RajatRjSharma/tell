@@ -259,8 +259,44 @@ button:disabled {
 }
 
 .macro-strip-item {
+  display: grid;
+  min-width: 0;
+  grid-template-rows: auto auto 1fr;
+  align-content: start;
+  gap: 0.8rem;
   background: var(--surface);
-  padding: 1rem 1.15rem;
+  padding: 1.1rem 1.25rem 1.15rem;
+}
+
+.macro-strip-label {
+  min-height: 1rem;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.macro-strip-reading {
+  display: flex;
+  min-width: 0;
+  min-height: 2.5rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.macro-strip-reading svg {
+  display: block;
+  width: clamp(5.25rem, 8vw, 7.5rem);
+  height: auto;
+  flex: 0 1 auto;
+}
+
+.macro-strip-footer {
+  align-self: end;
+  padding-top: 0.1rem;
 }
 
 .metric-cell {
