@@ -1,44 +1,15 @@
-import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
+import {
+  signSession,
+  verifySession,
+  type SessionPayload,
+} from "@/lib/session-token";
 
 export const SESSION_COOKIE = "tell_session";
 const SESSION_DAYS = 14;
 
-export type SessionPayload = {
-  sub: string;
-  email: string;
-};
-
-function getSecret() {
-  const secret = process.env.JWT_SECRET;
-  if (!secret) {
-    throw new Error("Missing JWT_SECRET");
-  }
-  return new TextEncoder().encode(secret);
-}
-
-export async function signSession(payload: SessionPayload): Promise<string> {
-  return new SignJWT({ email: payload.email })
-    .setProtectedHeader({ alg: "HS256" })
-    .setSubject(payload.sub)
-    .setIssuedAt()
-    .setExpirationTime(`${SESSION_DAYS}d`)
-    .sign(getSecret());
-}
-
-export async function verifySession(
-  token: string,
-): Promise<SessionPayload | null> {
-  try {
-    const { payload } = await jwtVerify(token, getSecret());
-    const sub = payload.sub;
-    const email = payload.email;
-    if (typeof sub !== "string" || typeof email !== "string") return null;
-    return { sub, email };
-  } catch {
-    return null;
-  }
-}
+export type { SessionPayload };
+export { signSession, verifySession };
 
 export async function setSessionCookie(token: string) {
   const jar = await cookies();

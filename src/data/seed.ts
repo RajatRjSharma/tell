@@ -1,5 +1,10 @@
 export const countries = [
-  { code: "US", name: "United States", region: "North America", currency: "USD" },
+  {
+    code: "US",
+    name: "United States",
+    region: "North America",
+    currency: "USD",
+  },
   { code: "IN", name: "India", region: "Asia", currency: "INR" },
   { code: "DE", name: "Germany", region: "Europe", currency: "EUR" },
   { code: "JP", name: "Japan", region: "Asia", currency: "JPY" },

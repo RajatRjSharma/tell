@@ -21,6 +21,18 @@ npm run dev
 
 Never commit `.env`.
 
+## Quality
+
+```bash
+npm run lint
+npm run format:check
+npm run typecheck
+npm run test
+npm run ci          # lint + format + types + test + build
+```
+
+CI runs on every push/PR to `main` via GitHub Actions.
+
 ## Auth
 
 - `/register` · `/login`
