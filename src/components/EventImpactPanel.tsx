@@ -131,7 +131,8 @@ export function EventImpactPanel({
             <EconomicTerm term="forwardReturn">Returns after</EconomicTerm>{" "}
             similar central-bank releases, shown as the{" "}
             <EconomicTerm term="median">median</EconomicTerm> and the share that
-            went up.
+            went up. This is historical context for the selected policy source —
+            not a prediction for the next release.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -175,7 +176,9 @@ export function EventImpactPanel({
               {report.oldestEvent && report.newestEvent
                 ? ` · ${report.oldestEvent} → ${report.newestEvent}`
                 : ""}
-              {symbol ? ` · focused on ${symbol}` : ""}
+              {symbol
+                ? ` · source chosen from ${symbol}'s usual policy map`
+                : ""}
             </p>
 
             <div

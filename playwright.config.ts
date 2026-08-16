@@ -53,6 +53,7 @@ const testEnv = {
 Object.assign(process.env, testEnv);
 
 const signedInSpecs = [
+  /decision\.spec\.ts/,
   /events\.spec\.ts/,
   /impact\.spec\.ts/,
   /macro-strip\.spec\.ts/,

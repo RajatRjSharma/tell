@@ -3,6 +3,12 @@ export type SparkPoint = {
   value: number;
 };
 
+export type MacroSparkContext = {
+  label: string;
+  valueLabel: string;
+  note: string;
+};
+
 export type MacroSparkSeries = {
   id: string;
   label: string;
@@ -12,6 +18,9 @@ export type MacroSparkSeries = {
   change: number | null;
   rangeChange: number | null;
   points: SparkPoint[];
+  /** Extra beginner context (e.g. CPI YoY beside CPI index). */
+  context?: MacroSparkContext | null;
+  periodKind: "monthly_readings" | "market_sessions";
 };
 
 export type MacroStrip = {
@@ -103,17 +112,20 @@ export const MACRO_STRIP_SPECS = [
     label: "CPI",
     unit: "index" as const,
     fallbackIds: [] as string[],
+    periodKind: "monthly_readings" as const,
   },
   {
     id: "T10Y2Y",
     label: "Curve",
     unit: "percent" as const,
     fallbackIds: [] as string[],
+    periodKind: "market_sessions" as const,
   },
   {
     id: "VIXCLS",
     label: "VIX",
     unit: "level" as const,
     fallbackIds: ["VIX"],
+    periodKind: "market_sessions" as const,
   },
 ] as const;

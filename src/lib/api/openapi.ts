@@ -528,10 +528,28 @@ export function buildOpenApiDocument(serverUrl?: string): OpenAPIV3.Document {
       "/api/risk/near-term": {
         get: {
           tags: ["Market"],
-          summary: "Today / tomorrow risk bias",
+          summary: "Next-session risk bias (1d ensemble + dampened carry)",
           security: sessionSecurity,
           responses: {
             "200": { description: "{ asOf, today, tomorrow, sampleSize }" },
+            "401": { $ref: "#/components/responses/Unauthorized" },
+          },
+        },
+      },
+      "/api/regime": {
+        get: {
+          tags: ["Market"],
+          summary: "US regime explainer with inputs and thresholds",
+          security: sessionSecurity,
+          parameters: [
+            {
+              name: "asOf",
+              in: "query",
+              schema: { type: "string", format: "date" },
+            },
+          ],
+          responses: {
+            "200": { description: "{ explainer }" },
             "401": { $ref: "#/components/responses/Unauthorized" },
           },
         },

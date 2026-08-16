@@ -85,24 +85,25 @@ export function NearTermBiasPanel({
     <section
       className="mt-10 rounded-[16px] border border-[var(--line)] bg-[var(--surface)] p-5 sm:p-6"
       data-testid="near-term-bias"
-      aria-label="Today and tomorrow risk bias"
+      aria-label="Next trading session bias"
     >
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-[var(--accent)]">
-            <EconomicTerm term="horizon">Near-term bias</EconomicTerm>
+            Market-wide snapshot
           </p>
           <h2 className="mt-2 text-xl font-semibold tracking-[-0.035em]">
-            Today / tomorrow
+            Next session bias
           </h2>
           <p className="mt-1 text-sm text-[var(--muted)]">
-            Today&apos;s score is the average of all 1-day asset scores.
-            Tomorrow carries 65% of today&apos;s score, so it is less certain.
+            Average of all latest 1-day asset scores across the loaded universe.
+            The follow-on estimate is only a softer carry of that average — not
+            an independent tomorrow forecast.
           </p>
         </div>
         {bias?.asOf ? (
           <p className="font-mono text-[11px] text-[var(--muted)]">
-            as of {bias.asOf} · n={bias.sampleSize}
+            as of {bias.asOf} · n={bias.sampleSize} assets
           </p>
         ) : null}
       </div>
@@ -115,7 +116,7 @@ export function NearTermBiasPanel({
         <div className="mt-5 grid gap-4 sm:grid-cols-2">
           <div className="rounded-[12px] border border-[var(--line)] bg-[var(--page)] p-4">
             <div className="flex items-center justify-between gap-3">
-              <span className="text-sm font-medium">Today</span>
+              <span className="text-sm font-medium">Latest 1d average</span>
               <BiasPill label={bias.today.label} />
             </div>
             <p className="mt-3 font-mono text-2xl tracking-[-0.04em]">
@@ -131,13 +132,13 @@ export function NearTermBiasPanel({
               {bias.today.note}
             </p>
             <p className="mt-3 font-mono text-[11px] text-[var(--muted)]">
-              {bias.today.bullish}↑ · {bias.today.neutral}→ ·{" "}
-              {bias.today.bearish}↓
+              {bias.today.bullish}↑ bullish · {bias.today.neutral}→ neutral ·{" "}
+              {bias.today.bearish}↓ bearish
             </p>
           </div>
           <div className="rounded-[12px] border border-[var(--line)] bg-[var(--page)] p-4">
             <div className="flex items-center justify-between gap-3">
-              <span className="text-sm font-medium">Tomorrow</span>
+              <span className="text-sm font-medium">Softer follow-on</span>
               <BiasPill label={bias.tomorrow.label} />
             </div>
             <p className="mt-3 font-mono text-2xl tracking-[-0.04em]">
@@ -145,9 +146,7 @@ export function NearTermBiasPanel({
               {bias.tomorrow.score.toFixed(2)}
             </p>
             <p className="mt-1 text-[11px] text-[var(--muted)]">
-              <EconomicTerm term="signalScore">
-                65% of today&apos;s score
-              </EconomicTerm>
+              65% of the latest 1d average (carry, not a new model)
             </p>
             <p className="mt-2 text-sm leading-6 text-[var(--muted-strong)]">
               {bias.tomorrow.note}

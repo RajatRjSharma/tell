@@ -373,11 +373,12 @@ button:disabled {
 }
 
 .segment {
-  min-width: 3.25rem;
+  min-width: 4.5rem;
   border-radius: 8px;
   padding: 0.4rem 0.65rem;
   font-family: var(--font-geist-mono), monospace;
-  font-size: 0.72rem;
+  font-size: 0.68rem;
+  line-height: 1.2;
   color: var(--muted);
   transition:
     background-color 180ms ease,

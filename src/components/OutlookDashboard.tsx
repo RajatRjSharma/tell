@@ -14,9 +14,16 @@ import { EventsPanel } from "@/components/EventsPanel";
 import { EventImpactPanel } from "@/components/EventImpactPanel";
 import { MacroSparklineStrip } from "@/components/MacroSparklineStrip";
 import { NearTermBiasPanel } from "@/components/NearTermBiasPanel";
+import { DecisionSummaryPanel } from "@/components/DecisionSummaryPanel";
+import { RegimeExplainerPanel } from "@/components/RegimeExplainerPanel";
 import { SiteHeader } from "@/components/SiteHeader";
 import type { MacroStrip } from "@/lib/macro/sparklines";
 import type { NearTermBias } from "@/lib/risk/near-term";
+import type { RegimeExplainer } from "@/lib/features/regime-explain";
+import { buildDecisionSummary } from "@/lib/decision/summary";
+import { describeHorizon } from "@/lib/decision/horizons";
+import { plainRegimeLabel } from "@/lib/features/regime-explain";
+import type { UsRegime } from "@/lib/features/regime";
 
 type User = { id: string; email: string; username: string };
 
@@ -116,6 +123,7 @@ export function OutlookDashboard({
   initialWatchlist = [],
   initialMacroStrip = null,
   initialNearTermBias = null,
+  initialRegimeExplainer = null,
 }: {
   user: User | null;
   assets: Asset[];
@@ -123,6 +131,7 @@ export function OutlookDashboard({
   initialWatchlist?: string[];
   initialMacroStrip?: MacroStrip | null;
   initialNearTermBias?: NearTermBias | null;
+  initialRegimeExplainer?: RegimeExplainer | null;
 }) {
   const router = useRouter();
   const sessionUser = user;
@@ -259,7 +268,35 @@ export function OutlookDashboard({
       !latest || signal.asOfDate > latest.asOfDate ? signal : latest,
     null,
   );
-  const regime = latestSignal?.regime ?? "neutral";
+  const regime = (latestSignal?.regime ?? "neutral") as UsRegime;
+  const regimeLabel = plainRegimeLabel(regime);
+
+  const decisionSummary = useMemo(
+    () =>
+      buildDecisionSummary({
+        signals: currentSignals,
+        horizon,
+        scope: {
+          level: assetClass === "all" ? "world" : "asset",
+          label:
+            assetClass === "all"
+              ? "World · all loaded markets"
+              : assetClass === "watchlist"
+                ? `Watchlist · ${watchlist.length} assets`
+                : `${assetClass} markets`,
+        },
+        asOfDate: latestSignal?.asOfDate ?? null,
+      }),
+    [
+      assetClass,
+      currentSignals,
+      horizon,
+      latestSignal?.asOfDate,
+      watchlist.length,
+    ],
+  );
+
+  const horizonInfo = describeHorizon(horizon);
 
   useEffect(() => {
     if (!sessionUser || !effectiveSelectedSymbol) return;
@@ -322,32 +359,31 @@ export function OutlookDashboard({
           <div>
             <div className="mb-5 flex flex-wrap items-center gap-3">
               <span className={`regime-mark regime-${regime}`}>
-                <EconomicTerm term="regime">
-                  {regime.replace("_", " ")}
-                </EconomicTerm>
+                <EconomicTerm term="regime">{regimeLabel}</EconomicTerm>
               </span>
               <span className="font-mono text-[11px] text-[var(--muted)]">
-                Data through {formatDate(latestSignal?.asOfDate ?? null)}
+                Data through {formatDate(latestSignal?.asOfDate ?? null)} · US
+                condition label
               </span>
             </div>
             <h1
               data-testid="home-heading"
               className="max-w-4xl text-balance text-[clamp(2.1rem,10vw,5.4rem)] font-semibold leading-[0.98] tracking-[-0.055em] sm:leading-[0.94] sm:tracking-[-0.065em]"
             >
-              Global activity,
+              What the data suggests,
               <br />
-              translated into market outlook.
+              in plain language.
             </h1>
           </div>
 
           <div className="max-w-md border-l border-[var(--line-strong)] pl-4 sm:pl-5 lg:mb-1">
             <p className="text-sm leading-6 text-[var(--muted-strong)]">
-              Transparent signals across{" "}
+              Transparent research leans across{" "}
               <EconomicTerm term="equities">equities</EconomicTerm>,{" "}
               <EconomicTerm term="fx">FX</EconomicTerm>,{" "}
               <EconomicTerm term="commodities">commodities</EconomicTerm>, and{" "}
-              <EconomicTerm term="rates">rates</EconomicTerm>. Every view
-              includes its evidence and confidence.
+              <EconomicTerm term="rates">rates</EconomicTerm>. Every view says
+              what, where, when, why, and how strong the evidence looks.
             </p>
             <p className="mt-3 text-xs leading-5 text-[var(--muted)]">
               Research aid only. Not financial advice or a guaranteed
@@ -357,6 +393,10 @@ export function OutlookDashboard({
         </section>
 
         <MacroSparklineStrip initialStrip={initialMacroStrip} />
+
+        <RegimeExplainerPanel explainer={initialRegimeExplainer} />
+
+        <DecisionSummaryPanel summary={decisionSummary} />
 
         <NearTermBiasPanel initialBias={initialNearTermBias} />
 
@@ -369,7 +409,7 @@ export function OutlookDashboard({
               {counts.bullish}
             </strong>
             <span className="metric-note">
-              of {currentSignals.length} assets
+              of {currentSignals.length} assets in this view
             </span>
           </div>
           <div className="metric-cell">
@@ -377,7 +417,7 @@ export function OutlookDashboard({
               <EconomicTerm term="neutral" />
             </span>
             <strong className="metric-value">{counts.neutral}</strong>
-            <span className="metric-note">{horizon} horizon</span>
+            <span className="metric-note">{horizonInfo.shortLabel}</span>
           </div>
           <div className="metric-cell">
             <span className="metric-label">
@@ -426,8 +466,9 @@ export function OutlookDashboard({
             </p>
             <p className="mt-2 text-xs text-[var(--muted)]">
               <EconomicTerm term="horizon">
-                Forecast periods: 1d, 1w, 1m
+                Forecast periods use trading sessions
               </EconomicTerm>
+              : {horizonInfo.longLabel}.
             </p>
           </div>
 
@@ -443,8 +484,9 @@ export function OutlookDashboard({
                   aria-pressed={horizon === item}
                   onClick={() => setHorizon(item)}
                   className="segment"
+                  title={describeHorizon(item).longLabel}
                 >
-                  {item}
+                  {describeHorizon(item).shortLabel}
                 </button>
               ))}
             </div>
@@ -482,7 +524,7 @@ export function OutlookDashboard({
                 <EconomicTerm term="signalScore">Score</EconomicTerm>
               </span>
               <span>
-                <EconomicTerm term="confidence" />
+                <EconomicTerm term="confidence">Evidence</EconomicTerm>
               </span>
             </div>
 
@@ -679,7 +721,7 @@ export function OutlookDashboard({
                   </div>
                   <div className="detail-stat">
                     <span>
-                      <EconomicTerm term="confidence" />
+                      <EconomicTerm term="confidence">Evidence</EconomicTerm>
                     </span>
                     <strong>
                       {formatConfidence(selectedSignal.confidence)}
@@ -778,8 +820,9 @@ export function OutlookDashboard({
                         className={`horizon-tile ${
                           horizon === item.horizon ? "horizon-tile-active" : ""
                         }`}
+                        title={describeHorizon(item.horizon).longLabel}
                       >
-                        <span>{item.horizon}</span>
+                        <span>{describeHorizon(item.horizon).shortLabel}</span>
                         <strong>
                           {item.signal ? formatScore(item.signal.score) : "N/A"}
                         </strong>

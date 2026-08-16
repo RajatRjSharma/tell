@@ -18,9 +18,9 @@ const SPEECH = /\b(speech|remarks|testimony|hearing|interview|panel)\b/i;
 const DATA = /\b(survey|statistics|data|report|minutes|accounts)\b/i;
 
 const SOURCE_ASSETS: Record<string, string[]> = {
-  Fed: ["SPY", "TLT", "GLD", "USDJPY", "MCHI"],
-  ECB: ["EWG", "EURUSD", "TLT", "GLD"],
-  BoE: ["EWU", "GBPUSD", "TLT", "GLD"],
+  Fed: ["SPY", "TLT", "GLD", "USO", "USDJPY", "MCHI", "INDA", "USDCNH"],
+  ECB: ["EWG", "EURUSD", "TLT", "GLD", "SPY"],
+  BoE: ["EWU", "GBPUSD", "TLT", "GLD", "SPY"],
 };
 
 export { SOURCE_ASSETS };

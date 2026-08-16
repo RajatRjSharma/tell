@@ -1,5 +1,6 @@
 import type { Client } from "@libsql/client";
 import { listReadings } from "@/lib/api/readings-query";
+import { changeOverLags } from "@/lib/features/series";
 import {
   MACRO_STRIP_SPECS,
   seriesDelta,
@@ -28,6 +29,25 @@ async function loadSparkPoints(
     }));
 }
 
+function cpiYoyContext(points: SparkPoint[]): MacroSparkSeries["context"] {
+  if (points.length === 0) return null;
+  const asOf = points[points.length - 1]!.date;
+  const yoy = changeOverLags(points, asOf, 12);
+  if (yoy == null) {
+    return {
+      label: "Inflation (YoY)",
+      valueLabel: "n/a",
+      note: "Need ~13 monthly CPI readings to compute year-over-year inflation.",
+    };
+  }
+  const pct = `${(yoy * 100).toFixed(1)}%`;
+  return {
+    label: "Inflation (YoY)",
+    valueLabel: pct,
+    note: "Regime classification uses this YoY inflation rate, not the CPI index level shown above.",
+  };
+}
+
 export async function getMacroStrip(
   db: Client,
   options?: { limit?: number },
@@ -36,12 +56,14 @@ export async function getMacroStrip(
   const series: MacroSparkSeries[] = [];
 
   for (const spec of MACRO_STRIP_SPECS) {
-    let points = await loadSparkPoints(db, spec.id, limit);
+    // CPI needs extra history for YoY context.
+    const fetchLimit = spec.id === "CPI" ? Math.max(limit, 18) : limit;
+    let points = await loadSparkPoints(db, spec.id, fetchLimit);
     let id: string = spec.id;
 
     if (points.length === 0) {
       for (const fallback of spec.fallbackIds) {
-        points = await loadSparkPoints(db, fallback, limit);
+        points = await loadSparkPoints(db, fallback, fetchLimit);
         if (points.length > 0) {
           id = fallback;
           break;
@@ -49,8 +71,11 @@ export async function getMacroStrip(
       }
     }
 
-    const latestPoint = points[points.length - 1] ?? null;
-    const { change, rangeChange } = seriesDelta(points);
+    // Chart still shows the requested window.
+    const chartPoints =
+      points.length > limit ? points.slice(points.length - limit) : points;
+    const latestPoint = chartPoints[chartPoints.length - 1] ?? null;
+    const { change, rangeChange } = seriesDelta(chartPoints);
 
     series.push({
       id,
@@ -60,7 +85,9 @@ export async function getMacroStrip(
       asOf: latestPoint?.date ?? null,
       change,
       rangeChange,
-      points,
+      points: chartPoints,
+      context: spec.id === "CPI" ? cpiYoyContext(points) : null,
+      periodKind: spec.periodKind,
     });
   }
 

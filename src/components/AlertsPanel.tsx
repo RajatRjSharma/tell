@@ -43,11 +43,36 @@ export function AlertsPanel({
   const [result, setResult] = useState<AlertsState | null>(null);
   const [busy, setBusy] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [template, setTemplate] = useState<
+    "flip" | "became_bearish" | "became_bullish" | "weak_evidence"
+  >("flip");
   const [ruleType, setRuleType] = useState<AlertRuleType>("direction_change");
   const [direction, setDirection] = useState("bearish");
   const [confidence, setConfidence] = useState("0.4");
   const [symbolOverride, setSymbolOverride] = useState<string | null>(null);
   const [horizonOverride, setHorizonOverride] = useState<string | null>(null);
+
+  function applyTemplate(
+    next: "flip" | "became_bearish" | "became_bullish" | "weak_evidence",
+  ) {
+    setTemplate(next);
+    if (next === "flip") {
+      setRuleType("direction_change");
+      return;
+    }
+    if (next === "became_bearish") {
+      setRuleType("became_direction");
+      setDirection("bearish");
+      return;
+    }
+    if (next === "became_bullish") {
+      setRuleType("became_direction");
+      setDirection("bullish");
+      return;
+    }
+    setRuleType("confidence_below");
+    setConfidence("0.4");
+  }
 
   const requestKey = user?.id ?? "guest";
   const active = result?.key === requestKey ? result : null;
@@ -222,8 +247,8 @@ export function AlertsPanel({
         <div>
           <h2 className="text-sm font-semibold tracking-[-0.02em]">Alerts</h2>
           <p className="mt-1 text-xs text-[var(--muted)]">
-            In-app inbox for watchlist signal rules. Evaluated after daily
-            signals.
+            Star an asset, pick a plain-language template, and Tell will notify
+            you after the next daily signal run when the rule matches.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -325,65 +350,75 @@ export function AlertsPanel({
                     onChange={(event) => setHorizonOverride(event.target.value)}
                     data-testid="alerts-horizon"
                   >
-                    {["1d", "1w", "1m"].map((item) => (
-                      <option key={item} value={item}>
-                        {item}
-                      </option>
-                    ))}
+                    <option value="1d">Next session (1d)</option>
+                    <option value="1w">About 1 week (1w)</option>
+                    <option value="1m">About 1 month (1m)</option>
                   </select>
                 </label>
               </div>
 
               <label className="block text-xs text-[var(--muted)]">
-                Rule
+                What should Tell watch for?
                 <select
                   className="select-control mt-1 w-full"
-                  value={ruleType}
+                  value={template}
                   onChange={(event) =>
-                    setRuleType(event.target.value as AlertRuleType)
+                    applyTemplate(
+                      event.target.value as
+                        | "flip"
+                        | "became_bearish"
+                        | "became_bullish"
+                        | "weak_evidence",
+                    )
                   }
                   data-testid="alerts-rule-type"
                 >
-                  <option value="direction_change">Any direction flip</option>
-                  <option value="became_direction">Became direction</option>
-                  <option value="confidence_below">Confidence below</option>
+                  <option value="flip">
+                    Tell me if the outlook flips direction
+                  </option>
+                  <option value="became_bearish">
+                    Tell me if it becomes bearish
+                  </option>
+                  <option value="became_bullish">
+                    Tell me if it becomes bullish
+                  </option>
+                  <option value="weak_evidence">
+                    Tell me if evidence strength falls below 40%
+                  </option>
                 </select>
               </label>
 
+              <p
+                className="rounded-[10px] bg-[var(--page)] px-3 py-2 text-[11px] leading-5 text-[var(--muted-strong)]"
+                data-testid="alerts-template-help"
+              >
+                {template === "flip"
+                  ? `Example: if ${symbol || "SPY"} ${horizon} moves from neutral to bullish or bearish after the next daily run, you get an inbox note.`
+                  : template === "became_bearish"
+                    ? `Example: only fires when ${symbol || "SPY"} ${horizon} newly becomes bearish.`
+                    : template === "became_bullish"
+                      ? `Example: only fires when ${symbol || "SPY"} ${horizon} newly becomes bullish.`
+                      : `Example: fires when ${symbol || "SPY"} ${horizon} evidence strength drops below 40% after previously being at or above that level.`}
+              </p>
+
               {ruleType === "became_direction" ? (
-                <label className="block text-xs text-[var(--muted)]">
-                  Target direction
-                  <select
-                    className="select-control mt-1 w-full"
-                    value={direction}
-                    onChange={(event) => setDirection(event.target.value)}
-                    data-testid="alerts-direction"
-                  >
-                    <option value="bullish">Bullish</option>
-                    <option value="neutral">Neutral</option>
-                    <option value="bearish">Bearish</option>
-                  </select>
-                </label>
+                <input type="hidden" value={direction} readOnly />
               ) : null}
 
               {ruleType === "confidence_below" ? (
-                <label className="block text-xs text-[var(--muted)]">
-                  Confidence threshold (0-1)
-                  <input
-                    className="select-control mt-1 w-full"
-                    value={confidence}
-                    onChange={(event) => setConfidence(event.target.value)}
-                    data-testid="alerts-confidence"
-                    inputMode="decimal"
-                  />
-                </label>
+                <input
+                  type="hidden"
+                  value={confidence}
+                  data-testid="alerts-confidence"
+                  readOnly
+                />
               ) : null}
 
               <p className="text-[11px] leading-5 text-[var(--muted)]">
                 Help:{" "}
                 <EconomicTerm term="horizon">forecast period</EconomicTerm>,{" "}
-                <EconomicTerm term="confidence">confidence</EconomicTerm>,{" "}
-                <EconomicTerm term="bullish">bullish</EconomicTerm>,{" "}
+                <EconomicTerm term="confidence">evidence strength</EconomicTerm>
+                , <EconomicTerm term="bullish">bullish</EconomicTerm>,{" "}
                 <EconomicTerm term="neutral">neutral</EconomicTerm>,{" "}
                 <EconomicTerm term="bearish">bearish</EconomicTerm>
               </p>

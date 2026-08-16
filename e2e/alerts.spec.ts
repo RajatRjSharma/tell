@@ -29,7 +29,10 @@ test.describe("alerts", () => {
 
     await page.getByTestId("alerts-symbol").selectOption("SPY");
     await page.getByTestId("alerts-horizon").selectOption("1d");
-    await page.getByTestId("alerts-rule-type").selectOption("direction_change");
+    await page.getByTestId("alerts-rule-type").selectOption("flip");
+    await expect(page.getByTestId("alerts-template-help")).toContainText(
+      /flips direction|inbox note/i,
+    );
 
     const createResponse = page.waitForResponse(
       (res) =>

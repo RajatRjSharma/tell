@@ -58,9 +58,9 @@ export const ECONOMIC_GLOSSARY = {
       "A number from -1 to +1. Positive favors a rise and negative favors a fall. Tell combines market regime, recent price momentum, volatility, drawdown, and a few asset-specific rules. Scores from -0.15 to +0.15 are neutral.",
   },
   confidence: {
-    label: "Confidence",
+    label: "Evidence strength",
     meaning:
-      "How much usable evidence supports the signal. It rises when more model inputs are available and when the score is farther from neutral. It is not the probability of being correct.",
+      "How complete and decisive the model inputs look, scored from about 20 to 90. It is not the probability that the outlook will be correct.",
   },
   hitRate: {
     label: "Hit rate",
@@ -75,7 +75,7 @@ export const ECONOMIC_GLOSSARY = {
   horizon: {
     label: "Time horizon",
     meaning:
-      "How far ahead the forecast looks: 1d is 1 market day, 1w is about 5 market days, and 1m is about 21 market days.",
+      "How far ahead the forecast looks in trading sessions: 1d is the next session, 1w is about 5 sessions, and 1m is about 21 sessions. These are market sessions, not calendar days.",
   },
   momentum: {
     label: "Momentum",
@@ -126,6 +126,11 @@ export const ECONOMIC_GLOSSARY = {
     meaning:
       "The middle result after sorting all results. It is less distorted by one unusually large gain or loss than an average.",
   },
+  readings: {
+    label: "Monthly readings",
+    meaning:
+      "Published economic observations, usually one per month for series like CPI. Weekends do not matter here because the series is not daily.",
+  },
   sessions: {
     label: "Market sessions",
     meaning:
@@ -135,6 +140,11 @@ export const ECONOMIC_GLOSSARY = {
     label: "Forward return",
     meaning:
       "The price change measured after an event, over the stated time period.",
+  },
+  nextSession: {
+    label: "Next session",
+    meaning:
+      "The next day the market is open for that asset. On a weekend, Friday’s data usually informs Monday’s session.",
   },
 } as const;
 

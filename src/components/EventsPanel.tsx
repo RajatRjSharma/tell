@@ -34,6 +34,16 @@ function sentimentLabel(value: number | null): string | null {
   return "mixed";
 }
 
+function normalizeText(value: string): string {
+  return value.trim().replace(/\s+/g, " ").toLowerCase();
+}
+
+function uniqueSummary(title: string, summary: string | null): string | null {
+  if (!summary) return null;
+  if (normalizeText(title) === normalizeText(summary)) return null;
+  return summary;
+}
+
 export function EventsPanel({
   symbol,
   countryCode,
@@ -54,6 +64,7 @@ export function EventsPanel({
     const controller = new AbortController();
     const params = new URLSearchParams({ limit: "12" });
     if (symbol) params.set("symbol", symbol);
+    if (countryCode) params.set("country", countryCode);
 
     fetch(`/api/events?${params}`, { signal: controller.signal })
       .then(async (response) => {
@@ -79,14 +90,9 @@ export function EventsPanel({
       });
 
     return () => controller.abort();
-  }, [requestKey, symbol, enabled]);
+  }, [requestKey, symbol, countryCode, enabled]);
 
-  const scoped = countryCode
-    ? events.filter(
-        (event) => !event.countryCode || event.countryCode === countryCode,
-      )
-    : events;
-  const visible = scoped.length > 0 ? scoped.slice(0, 8) : events.slice(0, 8);
+  const visible = events.slice(0, 8);
 
   return (
     <section
@@ -100,7 +106,12 @@ export function EventsPanel({
           </h2>
           <p className="mt-1 text-xs text-[var(--muted)]">
             Fed, ECB, and BoE releases from free RSS feeds.
-            {symbol ? ` Highlighting relevance to ${symbol}.` : ""}
+            {symbol
+              ? ` Showing events tagged as relevant to ${symbol}${
+                  countryCode ? ` / ${countryCode}` : ""
+                }.`
+              : " Showing the latest central-bank releases."}{" "}
+            Tone tags are keyword-based, not asset-specific forecasts.
           </p>
         </div>
         <span className="font-mono text-[10px] text-[var(--muted)]">
@@ -119,13 +130,14 @@ export function EventsPanel({
           <p className="text-sm text-[var(--muted)]">Loading events…</p>
         ) : visible.length === 0 ? (
           <p className="text-sm text-[var(--muted)]">
-            No events yet — run{" "}
+            No tagged events for this scope yet. Try another asset, or run{" "}
             <code className="font-mono">make ingest-events</code>.
           </p>
         ) : (
           <ul className="space-y-3">
             {visible.map((event) => {
               const tone = sentimentLabel(event.sentiment);
+              const summary = uniqueSummary(event.title, event.summary);
               const body = (
                 <>
                   <div className="flex flex-wrap items-center gap-2">
@@ -146,9 +158,14 @@ export function EventsPanel({
                   <p className="mt-1 break-words text-sm font-medium tracking-[-0.02em]">
                     {event.title}
                   </p>
-                  {event.summary ? (
+                  {summary ? (
                     <p className="mt-1 line-clamp-2 break-words text-xs leading-relaxed text-[var(--muted-strong)]">
-                      {event.summary}
+                      {summary}
+                    </p>
+                  ) : null}
+                  {event.assetsImpact.length > 0 ? (
+                    <p className="mt-2 font-mono text-[10px] text-[var(--muted)]">
+                      Often watched with: {event.assetsImpact.join(", ")}
                     </p>
                   ) : null}
                 </>

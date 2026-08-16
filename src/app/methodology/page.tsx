@@ -128,32 +128,38 @@ export default async function MethodologyPage() {
             <ol className="mt-4 list-decimal space-y-2 pl-5 text-sm leading-7 text-[var(--muted-strong)]">
               <li>
                 <strong className="text-[var(--text)]">
-                  <EconomicTerm term="riskOff">risk_off</EconomicTerm>
+                  <EconomicTerm term="riskOff">Risk-off stress</EconomicTerm>
                 </strong>{" "}
-                - elevated VIX stress
+                - VIX ≥ 30, or VIX ≥ 25 with an inverted curve
               </li>
               <li>
-                <strong className="text-[var(--text)]">inflationary</strong> -
-                hot CPI with non-collapsing growth
+                <strong className="text-[var(--text)]">
+                  Inflation pressure
+                </strong>{" "}
+                - hot CPI YoY with non-collapsing growth
               </li>
               <li>
-                <strong className="text-[var(--text)]">slowdown</strong> - weak
+                <strong className="text-[var(--text)]">Slowdown</strong> - weak
                 growth and/or inverted{" "}
                 <EconomicTerm term="yieldCurve">curve</EconomicTerm>
               </li>
               <li>
-                <strong className="text-[var(--text)]">expansion</strong> -
+                <strong className="text-[var(--text)]">Expansion</strong> -
                 solid growth, calm vol, non-inverted curve
               </li>
               <li>
-                <strong className="text-[var(--text)]">neutral</strong> -
-                otherwise
+                <strong className="text-[var(--text)]">
+                  Neutral / unclear
+                </strong>{" "}
+                - otherwise
               </li>
             </ol>
             <p className="mt-4 text-sm leading-7 text-[var(--muted-strong)]">
-              The same regime biases different asset classes differently (e.g.
-              inflationary is typically harder for long duration, mixed for
-              equities, more constructive for commodities).
+              The home page shows a beginner explainer with the live inputs,
+              thresholds, and usual asset-class tilts. The same US regime still
+              biases different asset classes differently in rules-v1 (e.g.
+              inflation pressure is typically harder for long duration, mixed
+              for equities, more constructive for commodities).
             </p>
           </section>
 
@@ -163,8 +169,8 @@ export default async function MethodologyPage() {
             </h2>
             <p className="mt-3 text-sm leading-7 text-[var(--muted-strong)]">
               For each asset and{" "}
-              <EconomicTerm term="horizon">forecast period</EconomicTerm> (1d /
-              1w / 1m means about 1 / 5 / 21{" "}
+              <EconomicTerm term="horizon">forecast period</EconomicTerm> (Next
+              session / ~1 week / ~1 month means about 1 / 5 / 21{" "}
               <EconomicTerm term="sessions">trading sessions</EconomicTerm>),
               Tell blends:
             </p>
@@ -197,9 +203,11 @@ export default async function MethodologyPage() {
               <strong className="text-[var(--text)]">
                 <EconomicTerm term="neutral">neutral</EconomicTerm>
               </strong>
-              . <EconomicTerm term="confidence">Confidence</EconomicTerm> rises
-              when more model inputs are active and the score is farther from
-              neutral. It is capped at 90%.
+              . <EconomicTerm term="confidence">Evidence strength</EconomicTerm>{" "}
+              rises when more model inputs are active and the score is farther
+              from neutral. It is capped at 90% and is{" "}
+              <strong className="text-[var(--text)]">not</strong> a probability
+              of being correct.
             </p>
             <p className="mt-4 text-sm leading-7 text-[var(--muted-strong)]">
               Drivers are stored as human-readable evidence on each signal - the

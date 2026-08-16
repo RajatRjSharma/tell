@@ -12,6 +12,7 @@ type QualityStats = {
 type QualityPayload = {
   overall: QualityStats;
   byHorizon: Record<string, QualityStats>;
+  bySymbol?: Record<string, QualityStats>;
   error?: string;
 };
 
@@ -21,6 +22,8 @@ type QualityState = {
   payload: QualityPayload | null;
   error: string | null;
 };
+
+type QualityScope = "selected" | "all";
 
 function pct(rate: number | null): string {
   if (rate == null) return "n/a";
@@ -36,8 +39,10 @@ export function SignalQuality({
   horizon: string;
   enabled?: boolean;
 }) {
+  const [scope, setScope] = useState<QualityScope>("all");
   const [result, setResult] = useState<QualityState | null>(null);
-  const requestKey = symbol?.trim().toUpperCase() || "all";
+  const requestKey =
+    scope === "all" ? "all" : symbol?.trim().toUpperCase() || "all";
   const active = result?.key === requestKey ? result : null;
   const state = !enabled ? "auth" : active ? active.status : "loading";
   const payload = active?.payload ?? null;
@@ -88,12 +93,32 @@ export function SignalQuality({
           </h2>
           <p className="mt-1 text-xs text-[var(--muted)]">
             Past forecast accuracy after each selected time period finishes.
-            {requestKey !== "all" ? ` Scoped to ${requestKey}.` : ""}
+            {requestKey === "all"
+              ? " Scoped to all graded assets."
+              : ` Scoped to ${requestKey}.`}
           </p>
         </div>
-        <span className="font-mono text-[10px] text-[var(--muted)]">
-          rules-v1 · {horizon}
-        </span>
+        <div className="flex flex-wrap items-center gap-2">
+          <label className="sr-only" htmlFor="quality-scope">
+            Quality scope
+          </label>
+          <select
+            id="quality-scope"
+            className="select-control text-xs"
+            value={scope}
+            disabled={!enabled}
+            data-testid="quality-scope"
+            onChange={(event) => setScope(event.target.value as QualityScope)}
+          >
+            <option value="all">World / all assets</option>
+            <option value="selected" disabled={!symbol}>
+              Selected asset{symbol ? ` (${symbol})` : ""}
+            </option>
+          </select>
+          <span className="font-mono text-[10px] text-[var(--muted)]">
+            rules-v1 · {horizon}
+          </span>
+        </div>
       </div>
 
       <div className="grid gap-px bg-[var(--line)] sm:grid-cols-3">

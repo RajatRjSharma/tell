@@ -5,6 +5,7 @@ import { assets } from "@/data/seed";
 import { listLatestOutlook } from "@/lib/api/outlook";
 import { getMacroStrip } from "@/lib/macro/strip";
 import { getNearTermRiskBias } from "@/lib/risk/near-term";
+import { getRegimeExplainer } from "@/lib/features/regime-snapshot";
 import { listWatchlist } from "@/lib/watchlist/store";
 import { OutlookDashboard } from "@/components/OutlookDashboard";
 
@@ -17,12 +18,17 @@ export default async function Home() {
   }
 
   const db = getDb();
-  const [signals, watchlist, macroStrip, nearTermBias] = await Promise.all([
-    listLatestOutlook(db),
-    listWatchlist(db, session.sub),
-    getMacroStrip(db, { limit: 24 }),
-    getNearTermRiskBias(db),
-  ]);
+  const [signals, watchlist, macroStrip, nearTermBias, regimeExplainer] =
+    await Promise.all([
+      listLatestOutlook(db),
+      listWatchlist(db, session.sub),
+      getMacroStrip(db, { limit: 24 }),
+      getNearTermRiskBias(db),
+      getRegimeExplainer(db).catch((err) => {
+        console.error("regime explainer load failed", err);
+        return null;
+      }),
+    ]);
 
   return (
     <OutlookDashboard
@@ -42,6 +48,7 @@ export default async function Home() {
       initialWatchlist={watchlist}
       initialMacroStrip={macroStrip}
       initialNearTermBias={nearTermBias}
+      initialRegimeExplainer={regimeExplainer}
     />
   );
 }

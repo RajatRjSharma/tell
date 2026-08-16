@@ -28,10 +28,20 @@ function macroTerm(id: string): EconomicTermKey | null {
 
 function periodLabel(series: MacroSparkSeries): string {
   const count = series.points.length;
-  if (series.id === "CPI") {
+  if (series.periodKind === "monthly_readings" || series.id === "CPI") {
     return `${count} monthly reading${count === 1 ? "" : "s"}`;
   }
   return `${count} market session${count === 1 ? "" : "s"}`;
+}
+
+function unitHelp(series: MacroSparkSeries): string {
+  if (series.id === "CPI") {
+    return "CPI index level (not inflation %). Change is vs the prior month.";
+  }
+  if (series.id === "T10Y2Y") {
+    return "10Y−2Y yield spread in percentage points. Change is vs the prior session.";
+  }
+  return "Expected US equity volatility. Change is vs the prior session.";
 }
 
 function Sparkline({ series }: { series: MacroSparkSeries }) {
@@ -166,13 +176,38 @@ export function MacroSparklineStrip({
             <Sparkline series={series} />
           </div>
 
+          {series.context ? (
+            <p
+              className="font-mono text-[11px] text-[var(--muted-strong)]"
+              data-testid={`macro-context-${series.id}`}
+            >
+              {series.context.label}: {series.context.valueLabel}
+            </p>
+          ) : null}
+
           <div className="macro-strip-footer">
             <p className="font-mono text-[10px] text-[var(--muted)]">
               {series.asOf ?? "no data"} · US · {periodLabel(series)}
             </p>
             <p className="mt-1 text-[10px] leading-4 text-[var(--muted)]">
-              Oldest value left, latest right. Change is from the prior reading.
+              Oldest left, latest right. {unitHelp(series)}
+              {series.periodKind === "market_sessions" ? (
+                <>
+                  {" "}
+                  <EconomicTerm term="sessions">
+                    Market sessions
+                  </EconomicTerm>{" "}
+                  skip weekends and holidays.
+                </>
+              ) : (
+                <> Monthly readings are published roughly once a month.</>
+              )}
             </p>
+            {series.context ? (
+              <p className="mt-1 text-[10px] leading-4 text-[var(--muted)]">
+                {series.context.note}
+              </p>
+            ) : null}
           </div>
         </div>
       ))}

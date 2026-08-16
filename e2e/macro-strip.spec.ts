@@ -12,5 +12,8 @@ test.describe("macro strip", () => {
     await expect(page.getByTestId("macro-strip")).toContainText(
       /market sessions/,
     );
+    await expect(page.getByTestId("macro-strip")).toContainText(
+      /CPI index level|Inflation \(YoY\)|prior month|prior session/i,
+    );
   });
 });
