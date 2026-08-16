@@ -42,9 +42,10 @@ export function RegimeExplainerPanel({
             as of {explainer.asOf}
           </p>
           <p className="mt-2 text-xs leading-5 text-[var(--muted)]">
-            This panel always describes US macro conditions. It is shown as
-            context while viewing {viewScopeLabel}; country-local regimes are
-            not available in rules-v1.
+            Always US macro conditions — it does not change with World / region
+            / country. Use the scope control below to filter markets while
+            viewing {viewScopeLabel}. Country-local regimes are not in rules-v1
+            yet.
           </p>
         </div>
         <button

@@ -32,7 +32,10 @@ test.describe("beginner decision UX", () => {
     await expect(page.getByTestId("outlook-row-INDA")).toBeVisible();
     await expect(page.getByTestId("outlook-row-SPY")).toHaveCount(0);
     await expect(page.getByTestId("regime-explainer")).toContainText(
-      "always describes US macro conditions",
+      "Always US macro conditions",
+    );
+    await expect(page.getByTestId("market-scope-control")).toContainText(
+      "Everything below this control",
     );
 
     await scope.selectOption("region:Europe");

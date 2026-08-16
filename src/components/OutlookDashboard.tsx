@@ -432,6 +432,13 @@ export function OutlookDashboard({
           </div>
         </section>
 
+        <MacroSparklineStrip initialStrip={initialMacroStrip} />
+
+        <RegimeExplainerPanel
+          explainer={initialRegimeExplainer}
+          viewScopeLabel={activeScope.label}
+        />
+
         <section
           className="mt-8 flex flex-col gap-4 rounded-[16px] border border-[var(--line)] bg-[var(--surface)] p-4 sm:flex-row sm:items-end sm:justify-between sm:p-5"
           data-testid="market-scope-control"
@@ -439,19 +446,20 @@ export function OutlookDashboard({
         >
           <div className="max-w-3xl">
             <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--accent)]">
-              One scope for this page
+              Scope starts here
             </p>
             <h2 className="mt-2 text-lg font-semibold tracking-[-0.03em]">
               Viewing {activeScope.label}
             </h2>
             <p className="mt-1 text-sm leading-6 text-[var(--muted-strong)]">
-              {activeScope.description}. This selection filters the decision
-              summary, next-session bias, quality, events, and market rows.
+              {activeScope.description}. Everything below this control follows
+              the selected geography: decision summary, next-session bias,
+              bullish/neutral/bearish counts, signal quality, policy events,
+              event-impact study, and market rows.
             </p>
             <p className="mt-1 text-xs leading-5 text-[var(--muted)]">
-              The macro strip and regime remain a clearly labelled US backdrop
-              in rules-v1; Tell does not yet pretend they are local country
-              regimes.
+              Everything above stays a US macro backdrop (strip + regime). Tell
+              does not yet ship local country regimes.
             </p>
           </div>
           <label className="min-w-0 text-xs text-[var(--muted)] sm:w-64">
@@ -484,13 +492,6 @@ export function OutlookDashboard({
             </select>
           </label>
         </section>
-
-        <MacroSparklineStrip initialStrip={initialMacroStrip} />
-
-        <RegimeExplainerPanel
-          explainer={initialRegimeExplainer}
-          viewScopeLabel={activeScope.label}
-        />
 
         <DecisionSummaryPanel summary={decisionSummary} />
 
