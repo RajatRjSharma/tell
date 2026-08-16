@@ -27,6 +27,14 @@ make compute-forecasts
 make dev                  # http://localhost:3000
 ```
 
+To refresh cloud Turso from your laptop (uses `TURSO_*` in `.env`):
+
+```bash
+make sync-turso-like-actions   # same steps as GitHub Actions
+make sync-turso-local-extras   # IMF DataMapper + features + backfill + briefs
+make sync-turso-everything     # both
+```
+
 For meaningful hit rates, add history before trusting the quality panel:
 
 ```bash
@@ -135,6 +143,9 @@ Never commit `.env`. If a credential is exposed, revoke it at the provider befor
 | `make ingest-markets` | `npm run ingest:markets` | Daily bars from Yahoo |
 | `make ingest-events` | `npm run ingest:events` | Fed, ECB, BoE RSS |
 | `make ingest-all` | – | All four ingest jobs |
+| `make sync-turso-like-actions` | – | Mirror Actions: migrate → ingest → signals → forecasts → alerts into Turso |
+| `make sync-turso-local-extras` | – | Jobs Actions skips: IMF DataMapper, features, backfill, Gemini briefs |
+| `make sync-turso-everything` | – | Actions pipeline + local extras → Turso from `.env` |
 | `make compute-features` | `npm run compute:features` | Print feature and regime snapshot |
 | `make compute-signals` | `npm run compute:signals` | Score outlooks |
 | `make compute-forecasts` | `npm run compute:forecasts` | Grade resolved signals |

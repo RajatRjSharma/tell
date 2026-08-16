@@ -40,6 +40,11 @@ make ingest-markets    # Asset OHLC from Yahoo Finance → Turso asset_readings
 make ingest-events     # Fed / ECB / BoE RSS → Turso events
 make ingest-manual     # IMF DataMapper cross-country (run on your machine)
 make ingest-all        # FRED + IMF (manual) + markets + events locally
+
+# Push provider data into the Turso DB from .env (usually cloud):
+make sync-turso-like-actions   # same pipeline as GitHub Actions
+make sync-turso-local-extras   # IMF DataMapper + features + backfill + Gemini briefs
+make sync-turso-everything     # both of the above
 ```
 
 `make ingest-manual` pulls **true IMF WEO** when you can (DataMapper is often blocked

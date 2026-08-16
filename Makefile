@@ -1,7 +1,7 @@
-.PHONY: help install install-browsers dev build start lint lint-fix format format-check typecheck test test-watch test-coverage test-eval test-e2e test-e2e-ui ci db-migrate db-seed ingest-fred ingest-imf ingest-markets ingest-events ingest-manual ingest-all compute-features compute-signals compute-forecasts backfill-signals compute-alerts compute-briefs compute-watchlist-briefs setup
+.PHONY: help install install-browsers dev build start lint lint-fix format format-check typecheck test test-watch test-coverage test-eval test-e2e test-e2e-ui ci db-migrate db-seed ingest-fred ingest-imf ingest-markets ingest-events ingest-manual ingest-all compute-features compute-signals compute-forecasts backfill-signals compute-alerts compute-briefs compute-watchlist-briefs sync-turso-like-actions sync-turso-local-extras sync-turso-everything setup
 
 help: ## Show available commands
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-16s\033[0m %s\n", $$1, $$2}'
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-28s\033[0m %s\n", $$1, $$2}'
 
 install: ## Install npm dependencies
 	npm install
@@ -101,5 +101,27 @@ compute-briefs: ## Persist Gemini briefs to Turso
 
 compute-watchlist-briefs: ## Gemini briefs for watchlist symbols
 	npm run compute:watchlist-briefs
+
+# Writes to TURSO_DATABASE_URL from .env (cloud Turso when configured that way).
+sync-turso-like-actions: ## Mirror GitHub Actions ingest → Turso (migrate + data + scores + alerts)
+	npm run db:migrate
+	npm run ingest:fred
+	npm run ingest:imf
+	npm run ingest:markets
+	npm run ingest:events
+	npm run compute:signals
+	npm run compute:forecasts
+	npm run compute:alerts
+
+sync-turso-local-extras: ## Jobs Actions skips → Turso (IMF DataMapper, features, backfill, Gemini briefs)
+	$(MAKE) ingest-manual
+	npm run compute:features
+	npm run backfill:signals
+	npm run compute:briefs
+	npm run compute:watchlist-briefs
+
+sync-turso-everything: ## Full local refresh into Turso (Actions pipeline + local-only extras)
+	$(MAKE) sync-turso-like-actions
+	$(MAKE) sync-turso-local-extras
 
 setup: install install-browsers db-migrate db-seed ## Install deps + browsers + migrate + seed

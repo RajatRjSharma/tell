@@ -49,7 +49,7 @@
     <text x="102" y="532" class="body">Finnhub quotes</text>
     <text x="102" y="572" class="body">Fed, ECB, BoE RSS</text>
     <line x1="102" y1="612" x2="326" y2="612" class="rule" />
-    <text x="102" y="652" class="small">DAILY 06:00 UTC</text>
+    <text x="102" y="652" class="small">4× DAILY UTC</text>
     <text x="102" y="684" class="small">GITHUB ACTIONS</text>
   </g>
 
