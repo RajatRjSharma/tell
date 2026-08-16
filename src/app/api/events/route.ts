@@ -19,6 +19,12 @@ export async function GET(request: NextRequest) {
     const sp = request.nextUrl.searchParams;
     const limit = parseLimit(sp.get("limit"), 30, 100);
     const countryCode = sp.get("country")?.trim().toUpperCase() || null;
+    const countryCodes = sp
+      .get("countries")
+      ?.split(",")
+      .map((value) => value.trim().toUpperCase())
+      .filter((value) => /^[A-Z]{2}$/.test(value))
+      .slice(0, 50);
     const source = sp.get("source")?.trim() || null;
     const symbol = sp.get("symbol")?.trim().toUpperCase() || null;
     const sinceRaw = sp.get("since");
@@ -30,6 +36,7 @@ export async function GET(request: NextRequest) {
     const events = await listEvents(getDb(), {
       limit,
       countryCode,
+      countryCodes: countryCode ? null : countryCodes,
       source,
       since,
       symbol,

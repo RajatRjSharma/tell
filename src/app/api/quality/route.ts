@@ -12,8 +12,15 @@ export async function GET(request: NextRequest) {
 
   try {
     const symbol = request.nextUrl.searchParams.get("symbol");
+    const symbols = request.nextUrl.searchParams
+      .get("symbols")
+      ?.split(",")
+      .map((value) => value.trim().toUpperCase())
+      .filter((value) => /^[A-Z0-9.=_-]{1,20}$/.test(value))
+      .slice(0, 100);
     const report = await getQualityReport(getDb(), {
       symbol: symbol?.trim().toUpperCase() || null,
+      symbols: symbol ? null : symbols,
       recentLimit: 12,
     });
 

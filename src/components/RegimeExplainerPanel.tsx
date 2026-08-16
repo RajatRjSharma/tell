@@ -13,8 +13,10 @@ function statusClass(status: string): string {
 
 export function RegimeExplainerPanel({
   explainer,
+  viewScopeLabel,
 }: {
   explainer: RegimeExplainer | null;
+  viewScopeLabel: string;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -38,6 +40,11 @@ export function RegimeExplainerPanel({
           </p>
           <p className="mt-2 font-mono text-[11px] text-[var(--muted)]">
             as of {explainer.asOf}
+          </p>
+          <p className="mt-2 text-xs leading-5 text-[var(--muted)]">
+            This panel always describes US macro conditions. It is shown as
+            context while viewing {viewScopeLabel}; country-local regimes are
+            not available in rules-v1.
           </p>
         </div>
         <button

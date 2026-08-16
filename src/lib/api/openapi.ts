@@ -500,6 +500,12 @@ export function buildOpenApiDocument(serverUrl?: string): OpenAPIV3.Document {
               in: "query",
               schema: { type: "string" },
             },
+            {
+              name: "symbols",
+              in: "query",
+              description: "Comma-separated symbols for a page-wide scope",
+              schema: { type: "string" },
+            },
           ],
           responses: {
             "200": { description: "{ overall, byHorizon, bySymbol, recent }" },
@@ -530,6 +536,14 @@ export function buildOpenApiDocument(serverUrl?: string): OpenAPIV3.Document {
           tags: ["Market"],
           summary: "Next-session risk bias (1d ensemble + dampened carry)",
           security: sessionSecurity,
+          parameters: [
+            {
+              name: "symbols",
+              in: "query",
+              description: "Comma-separated symbols for a page-wide scope",
+              schema: { type: "string" },
+            },
+          ],
           responses: {
             "200": { description: "{ asOf, today, tomorrow, sampleSize }" },
             "401": { $ref: "#/components/responses/Unauthorized" },
@@ -566,6 +580,12 @@ export function buildOpenApiDocument(serverUrl?: string): OpenAPIV3.Document {
               schema: { type: "integer", default: 30, maximum: 100 },
             },
             { name: "country", in: "query", schema: { type: "string" } },
+            {
+              name: "countries",
+              in: "query",
+              description: "Comma-separated country codes for region scope",
+              schema: { type: "string" },
+            },
             { name: "source", in: "query", schema: { type: "string" } },
             { name: "symbol", in: "query", schema: { type: "string" } },
             {
@@ -588,6 +608,13 @@ export function buildOpenApiDocument(serverUrl?: string): OpenAPIV3.Document {
           parameters: [
             { name: "source", in: "query", schema: { type: "string" } },
             { name: "symbol", in: "query", schema: { type: "string" } },
+            {
+              name: "symbols",
+              in: "query",
+              description:
+                "Comma-separated market symbols included in the event study",
+              schema: { type: "string" },
+            },
             {
               name: "sentiment",
               in: "query",

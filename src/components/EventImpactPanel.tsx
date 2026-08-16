@@ -47,17 +47,21 @@ function hitPct(value: number | null): string {
 }
 
 export function EventImpactPanel({
-  symbol,
+  symbols,
+  scopeLabel,
   enabled = true,
 }: {
-  symbol?: string;
+  symbols: string[];
+  scopeLabel: string;
   enabled?: boolean;
 }) {
+  const [source, setSource] = useState<"Fed" | "ECB" | "BoE">("Fed");
   const [sentiment, setSentiment] = useState<"any" | "hawkish" | "dovish">(
     "any",
   );
   const [result, setResult] = useState<ImpactState | null>(null);
-  const requestKey = `${symbol ?? "market"}:${sentiment}`;
+  const symbolKey = [...new Set(symbols)].sort().join(",");
+  const requestKey = `${source}:${symbolKey}:${sentiment}`;
   const active = result?.key === requestKey ? result : null;
   const state = !enabled ? "auth" : active ? active.status : "loading";
   const report = active?.report ?? null;
@@ -66,10 +70,11 @@ export function EventImpactPanel({
     if (!enabled) return;
     const controller = new AbortController();
     const params = new URLSearchParams({
+      source,
       sentiment,
       horizons: "1d,1w,1m",
     });
-    if (symbol) params.set("symbol", symbol);
+    if (symbolKey) params.set("symbols", symbolKey);
 
     fetch(`/api/events/impact?${params}`, { signal: controller.signal })
       .then(async (response) => {
@@ -102,7 +107,7 @@ export function EventImpactPanel({
       });
 
     return () => controller.abort();
-  }, [requestKey, sentiment, symbol, enabled]);
+  }, [requestKey, sentiment, source, symbolKey, enabled]);
 
   const matrix = useMemo(() => {
     if (!report) return [];
@@ -131,28 +136,52 @@ export function EventImpactPanel({
             <EconomicTerm term="forwardReturn">Returns after</EconomicTerm>{" "}
             similar central-bank releases, shown as the{" "}
             <EconomicTerm term="median">median</EconomicTerm> and the share that
-            went up. This is historical context for the selected policy source —
-            not a prediction for the next release.
+            went up. Choose a central bank; the study covers every market in the{" "}
+            {scopeLabel} page scope. This is historical context, not a
+            prediction for the next release.
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <label className="sr-only" htmlFor="impact-sentiment">
-            Sentiment filter
-          </label>
-          <select
-            id="impact-sentiment"
-            className="select-control text-xs"
-            value={sentiment}
-            disabled={!enabled}
-            onChange={(event) =>
-              setSentiment(event.target.value as "any" | "hawkish" | "dovish")
-            }
-            data-testid="impact-sentiment"
+        <div className="flex flex-wrap items-center gap-2">
+          <label
+            className="text-xs text-[var(--muted)]"
+            htmlFor="impact-source"
           >
-            <option value="any">All tones</option>
-            <option value="hawkish">Hawkish tilt</option>
-            <option value="dovish">Dovish tilt</option>
-          </select>
+            Policy source
+            <select
+              id="impact-source"
+              className="select-control ml-2 text-xs"
+              value={source}
+              disabled={!enabled}
+              onChange={(event) =>
+                setSource(event.target.value as "Fed" | "ECB" | "BoE")
+              }
+              data-testid="impact-source"
+            >
+              <option value="Fed">US Federal Reserve</option>
+              <option value="ECB">European Central Bank</option>
+              <option value="BoE">Bank of England</option>
+            </select>
+          </label>
+          <label
+            className="text-xs text-[var(--muted)]"
+            htmlFor="impact-sentiment"
+          >
+            Tone
+            <select
+              id="impact-sentiment"
+              className="select-control ml-2 text-xs"
+              value={sentiment}
+              disabled={!enabled}
+              onChange={(event) =>
+                setSentiment(event.target.value as "any" | "hawkish" | "dovish")
+              }
+              data-testid="impact-sentiment"
+            >
+              <option value="any">All tones</option>
+              <option value="hawkish">Hawkish tilt</option>
+              <option value="dovish">Dovish tilt</option>
+            </select>
+          </label>
         </div>
       </div>
 
@@ -172,13 +201,15 @@ export function EventImpactPanel({
         ) : (
           <>
             <p className="text-xs text-[var(--muted)]">
-              {report.source} · {report.eventCount} events
+              {report.source} · {report.eventCount} matching historical releases
               {report.oldestEvent && report.newestEvent
                 ? ` · ${report.oldestEvent} → ${report.newestEvent}`
                 : ""}
-              {symbol
-                ? ` · source chosen from ${symbol}'s usual policy map`
-                : ""}
+            </p>
+            <p className="mt-2 text-xs leading-5 text-[var(--muted-strong)]">
+              “{report.eventCount} releases” is the event sample considered. The
+              n shown in each result cell can be smaller when enough later price
+              data was not available for that market and time period.
             </p>
 
             <div

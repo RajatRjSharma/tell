@@ -17,6 +17,12 @@ export async function GET(request: NextRequest) {
     const sp = request.nextUrl.searchParams;
     const source = sp.get("source")?.trim() || null;
     const symbol = sp.get("symbol")?.trim().toUpperCase() || null;
+    const symbols = sp
+      .get("symbols")
+      ?.split(",")
+      .map((value) => value.trim().toUpperCase())
+      .filter((value) => /^[A-Z0-9.=_-]{1,20}$/.test(value))
+      .slice(0, 100);
     const sentimentRaw = (sp.get("sentiment") ?? "any").trim().toLowerCase();
     if (
       sentimentRaw !== "any" &&
@@ -39,6 +45,7 @@ export async function GET(request: NextRequest) {
     const report = await buildEventImpactReport(getDb(), {
       source,
       symbol,
+      symbols: symbol ? null : symbols,
       horizons,
       sentimentFilter: sentimentRaw,
     });

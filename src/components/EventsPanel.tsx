@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { typicalEventImpact } from "@/lib/events/interpret";
 
 type PolicyEvent = {
   id: string;
@@ -45,26 +46,29 @@ function uniqueSummary(title: string, summary: string | null): string | null {
 }
 
 export function EventsPanel({
-  symbol,
-  countryCode,
+  scopeLabel,
+  countryCodes = [],
+  symbols = [],
   enabled = true,
 }: {
-  symbol?: string;
-  countryCode?: string | null;
+  scopeLabel: string;
+  countryCodes?: string[];
+  symbols?: string[];
   enabled?: boolean;
 }) {
   const [result, setResult] = useState<EventsState | null>(null);
-  const requestKey = `${symbol ?? "all"}:${countryCode ?? "all"}`;
+  const countryKey = [...new Set(countryCodes)].sort().join(",");
+  const requestKey = countryKey || "world";
   const active = result?.key === requestKey ? result : null;
   const state = !enabled ? "auth" : active ? active.status : "loading";
   const events = active?.payload?.events ?? [];
+  const scopeSymbols = new Set(symbols);
 
   useEffect(() => {
     if (!enabled) return;
     const controller = new AbortController();
     const params = new URLSearchParams({ limit: "12" });
-    if (symbol) params.set("symbol", symbol);
-    if (countryCode) params.set("country", countryCode);
+    if (countryKey) params.set("countries", countryKey);
 
     fetch(`/api/events?${params}`, { signal: controller.signal })
       .then(async (response) => {
@@ -90,7 +94,7 @@ export function EventsPanel({
       });
 
     return () => controller.abort();
-  }, [requestKey, symbol, countryCode, enabled]);
+  }, [requestKey, countryKey, enabled]);
 
   const visible = events.slice(0, 8);
 
@@ -106,12 +110,8 @@ export function EventsPanel({
           </h2>
           <p className="mt-1 text-xs text-[var(--muted)]">
             Fed, ECB, and BoE releases from free RSS feeds.
-            {symbol
-              ? ` Showing events tagged as relevant to ${symbol}${
-                  countryCode ? ` / ${countryCode}` : ""
-                }.`
-              : " Showing the latest central-bank releases."}{" "}
-            Tone tags are keyword-based, not asset-specific forecasts.
+            {` Scoped to ${scopeLabel}.`} Tone tags are keyword-based, not
+            asset-specific forecasts.
           </p>
         </div>
         <span className="font-mono text-[10px] text-[var(--muted)]">
@@ -138,6 +138,9 @@ export function EventsPanel({
             {visible.map((event) => {
               const tone = sentimentLabel(event.sentiment);
               const summary = uniqueSummary(event.title, event.summary);
+              const relevantAssets = event.assetsImpact.filter((symbol) =>
+                scopeSymbols.has(symbol),
+              );
               const body = (
                 <>
                   <div className="flex flex-wrap items-center gap-2">
@@ -163,9 +166,15 @@ export function EventsPanel({
                       {summary}
                     </p>
                   ) : null}
-                  {event.assetsImpact.length > 0 ? (
+                  <p className="mt-2 text-xs leading-5 text-[var(--muted-strong)]">
+                    {typicalEventImpact(event.sentiment, event.source)} This is
+                    a common sensitivity, not a prediction of the actual market
+                    reaction.
+                  </p>
+                  {relevantAssets.length > 0 ? (
                     <p className="mt-2 font-mono text-[10px] text-[var(--muted)]">
-                      Often watched with: {event.assetsImpact.join(", ")}
+                      Markets in this view often watched with this release:{" "}
+                      {relevantAssets.join(", ")}
                     </p>
                   ) : null}
                 </>

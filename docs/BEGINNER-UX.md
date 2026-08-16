@@ -26,10 +26,12 @@ Longer horizons (`3m` / `6m` / `1y`) exist in the scoring library but are not pr
 
 ## Scope
 
-- Decision summary follows the current market filter (world / watchlist / asset class).
-- Signal quality defaults to all graded assets; users can switch to the selected asset.
-- Policy events request the selected symbol and country without silently falling back to an unscoped feed.
-- Regime explanation is still US-backed in rules-v1; non-US assets inherit that backdrop until country regimes ship.
+- One page-wide selector moves from World to region to country.
+- The decision summary, next-session bias, signal quality, policy events, and market rows follow that geography.
+- The asset-class and watchlist filters narrow the selected geography further.
+- Event studies let users choose Fed, ECB, or BoE and compare historical post-release returns for every market in the current page scope.
+- Each policy-event card explains typical tone sensitivity without presenting it as a forecast of the actual reaction.
+- Regime explanation and the macro strip remain explicitly US-backed in rules-v1; non-US views use that as context until country-local regimes ship.
 
 ## Key modules
 

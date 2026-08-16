@@ -24,6 +24,12 @@ import { buildDecisionSummary } from "@/lib/decision/summary";
 import { describeHorizon } from "@/lib/decision/horizons";
 import { plainRegimeLabel } from "@/lib/features/regime-explain";
 import type { UsRegime } from "@/lib/features/regime";
+import {
+  buildMarketScopes,
+  countryMatchesScope,
+  resolveMarketScope,
+  type MarketCountry,
+} from "@/lib/scope/market-scope";
 
 type User = { id: string; email: string; username: string };
 
@@ -34,6 +40,8 @@ type Asset = {
   countryCode: string;
   currency: string;
 };
+
+type Country = MarketCountry;
 
 type Quote = {
   symbol: string;
@@ -119,6 +127,7 @@ function directionLabel(direction: string): string {
 export function OutlookDashboard({
   user,
   assets,
+  countries,
   initialSignals,
   initialWatchlist = [],
   initialMacroStrip = null,
@@ -127,6 +136,7 @@ export function OutlookDashboard({
 }: {
   user: User | null;
   assets: Asset[];
+  countries: Country[];
   initialSignals: OutlookSignalDto[];
   initialWatchlist?: string[];
   initialMacroStrip?: MacroStrip | null;
@@ -135,6 +145,7 @@ export function OutlookDashboard({
 }) {
   const router = useRouter();
   const sessionUser = user;
+  const [scopeValue, setScopeValue] = useState("world");
   const [horizon, setHorizon] = useState<string>("1d");
   const [watchlist, setWatchlist] = useState<string[]>(initialWatchlist);
   const [assetClass, setAssetClass] = useState<AssetClass>(() =>
@@ -167,6 +178,11 @@ export function OutlookDashboard({
   const [chatOpen, setChatOpen] = useState(false);
 
   const watchSet = useMemo(() => new Set(watchlist), [watchlist]);
+  const marketScopes = useMemo(() => buildMarketScopes(countries), [countries]);
+  const activeScope = useMemo(
+    () => resolveMarketScope(scopeValue, marketScopes),
+    [marketScopes, scopeValue],
+  );
 
   const signalMap = useMemo(() => {
     const map = new Map<string, OutlookSignalDto>();
@@ -176,15 +192,23 @@ export function OutlookDashboard({
     return map;
   }, [initialSignals]);
 
+  const scopeAssets = useMemo(
+    () =>
+      assets.filter((asset) =>
+        countryMatchesScope(asset.countryCode, activeScope, countries),
+      ),
+    [activeScope, assets, countries],
+  );
+
   const visibleAssets = useMemo(
     () =>
-      assets.filter((asset) => {
+      scopeAssets.filter((asset) => {
         if (!signalMap.has(`${asset.symbol}:${horizon}`)) return false;
         if (assetClass === "watchlist") return watchSet.has(asset.symbol);
         if (assetClass === "all") return true;
         return asset.assetClass === assetClass;
       }),
-    [assetClass, assets, horizon, signalMap, watchSet],
+    [assetClass, horizon, scopeAssets, signalMap, watchSet],
   );
 
   async function toggleWatch(symbol: string) {
@@ -237,10 +261,9 @@ export function OutlookDashboard({
     (asset) => asset.symbol === selectedSymbol,
   )
     ? selectedSymbol
-    : (visibleAssets[0]?.symbol ?? selectedSymbol);
+    : (visibleAssets[0]?.symbol ?? "");
   const selectedAsset =
-    assets.find((asset) => asset.symbol === effectiveSelectedSymbol) ??
-    assets[0];
+    assets.find((asset) => asset.symbol === effectiveSelectedSymbol) ?? null;
   const selectedSignal =
     signalMap.get(`${effectiveSelectedSymbol}:${horizon}`) ?? null;
   const selectedHorizons = HORIZONS.map((item) => ({
@@ -263,13 +286,28 @@ export function OutlookDashboard({
       .length,
   };
 
-  const latestSignal = initialSignals.reduce<OutlookSignalDto | null>(
+  const latestSignal = currentSignals.reduce<OutlookSignalDto | null>(
     (latest, signal) =>
       !latest || signal.asOfDate > latest.asOfDate ? signal : latest,
     null,
   );
-  const regime = (latestSignal?.regime ?? "neutral") as UsRegime;
+  const regime = (initialRegimeExplainer?.regime ??
+    latestSignal?.regime ??
+    "neutral") as UsRegime;
   const regimeLabel = plainRegimeLabel(regime);
+  const scopeCountryCodes = countries
+    .filter((country) =>
+      countryMatchesScope(country.code, activeScope, countries),
+    )
+    .map((country) => country.code);
+  const scopedSymbols = visibleAssets.map((asset) => asset.symbol);
+  const assetClassLabel =
+    ASSET_CLASSES.find((option) => option.value === assetClass)?.label ??
+    "All markets";
+  const pageScopeLabel =
+    assetClass === "all"
+      ? activeScope.label
+      : `${activeScope.label} · ${assetClassLabel}`;
 
   const decisionSummary = useMemo(
     () =>
@@ -277,22 +315,24 @@ export function OutlookDashboard({
         signals: currentSignals,
         horizon,
         scope: {
-          level: assetClass === "all" ? "world" : "asset",
-          label:
-            assetClass === "all"
-              ? "World · all loaded markets"
-              : assetClass === "watchlist"
-                ? `Watchlist · ${watchlist.length} assets`
-                : `${assetClass} markets`,
+          level:
+            activeScope.kind === "world"
+              ? "world"
+              : activeScope.kind === "region"
+                ? "region"
+                : "country",
+          label: pageScopeLabel,
+          countryCode:
+            activeScope.kind === "country" ? activeScope.countryCode : null,
         },
         asOfDate: latestSignal?.asOfDate ?? null,
       }),
     [
-      assetClass,
+      activeScope,
       currentSignals,
       horizon,
       latestSignal?.asOfDate,
-      watchlist.length,
+      pageScopeLabel,
     ],
   );
 
@@ -362,8 +402,8 @@ export function OutlookDashboard({
                 <EconomicTerm term="regime">{regimeLabel}</EconomicTerm>
               </span>
               <span className="font-mono text-[11px] text-[var(--muted)]">
-                Data through {formatDate(latestSignal?.asOfDate ?? null)} · US
-                condition label
+                US macro backdrop · as of{" "}
+                {formatDate(initialRegimeExplainer?.asOf ?? null)}
               </span>
             </div>
             <h1
@@ -392,13 +432,77 @@ export function OutlookDashboard({
           </div>
         </section>
 
+        <section
+          className="mt-8 flex flex-col gap-4 rounded-[16px] border border-[var(--line)] bg-[var(--surface)] p-4 sm:flex-row sm:items-end sm:justify-between sm:p-5"
+          data-testid="market-scope-control"
+          aria-label="Page market scope"
+        >
+          <div className="max-w-3xl">
+            <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--accent)]">
+              One scope for this page
+            </p>
+            <h2 className="mt-2 text-lg font-semibold tracking-[-0.03em]">
+              Viewing {activeScope.label}
+            </h2>
+            <p className="mt-1 text-sm leading-6 text-[var(--muted-strong)]">
+              {activeScope.description}. This selection filters the decision
+              summary, next-session bias, quality, events, and market rows.
+            </p>
+            <p className="mt-1 text-xs leading-5 text-[var(--muted)]">
+              The macro strip and regime remain a clearly labelled US backdrop
+              in rules-v1; Tell does not yet pretend they are local country
+              regimes.
+            </p>
+          </div>
+          <label className="min-w-0 text-xs text-[var(--muted)] sm:w-64">
+            World, region, or country
+            <select
+              className="select-control mt-1 w-full"
+              value={scopeValue}
+              onChange={(event) => setScopeValue(event.target.value)}
+              data-testid="market-scope"
+            >
+              <option value="world">World · all loaded markets</option>
+              <optgroup label="Regions">
+                {marketScopes
+                  .filter((scope) => scope.kind === "region")
+                  .map((scope) => (
+                    <option key={scope.value} value={scope.value}>
+                      {scope.label}
+                    </option>
+                  ))}
+              </optgroup>
+              <optgroup label="Countries">
+                {marketScopes
+                  .filter((scope) => scope.kind === "country")
+                  .map((scope) => (
+                    <option key={scope.value} value={scope.value}>
+                      {scope.label}
+                    </option>
+                  ))}
+              </optgroup>
+            </select>
+          </label>
+        </section>
+
         <MacroSparklineStrip initialStrip={initialMacroStrip} />
 
-        <RegimeExplainerPanel explainer={initialRegimeExplainer} />
+        <RegimeExplainerPanel
+          explainer={initialRegimeExplainer}
+          viewScopeLabel={activeScope.label}
+        />
 
         <DecisionSummaryPanel summary={decisionSummary} />
 
-        <NearTermBiasPanel initialBias={initialNearTermBias} />
+        <NearTermBiasPanel
+          initialBias={initialNearTermBias}
+          symbols={
+            activeScope.kind === "world" && assetClass === "all"
+              ? undefined
+              : scopedSymbols
+          }
+          scopeLabel={pageScopeLabel}
+        />
 
         <section className="mt-10 grid gap-px overflow-hidden rounded-[16px] bg-[var(--line)] sm:grid-cols-3">
           <div className="metric-cell">
@@ -431,21 +535,32 @@ export function OutlookDashboard({
         </section>
 
         <SignalQuality
-          symbol={effectiveSelectedSymbol || undefined}
+          symbols={
+            activeScope.kind === "world" && assetClass === "all"
+              ? undefined
+              : scopedSymbols
+          }
+          scopeLabel={pageScopeLabel}
           horizon={horizon}
           enabled={Boolean(sessionUser)}
         />
 
         <EventsPanel
-          symbol={effectiveSelectedSymbol || undefined}
-          countryCode={selectedAsset?.countryCode ?? null}
+          scopeLabel={activeScope.label}
+          countryCodes={
+            activeScope.kind === "world" ? undefined : scopeCountryCodes
+          }
+          symbols={scopedSymbols}
           enabled={Boolean(sessionUser)}
         />
 
-        <EventImpactPanel
-          symbol={effectiveSelectedSymbol || undefined}
-          enabled={Boolean(sessionUser)}
-        />
+        {selectedAsset ? (
+          <EventImpactPanel
+            symbols={scopedSymbols}
+            scopeLabel={pageScopeLabel}
+            enabled={Boolean(sessionUser)}
+          />
+        ) : null}
 
         <AlertsPanel
           user={sessionUser}

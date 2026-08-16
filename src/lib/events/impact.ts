@@ -69,6 +69,18 @@ export function assetsForSource(source: string): string[] {
   return SOURCE_ASSETS[source] ?? [];
 }
 
+export function assetsForImpactStudy(
+  source: string,
+  symbols?: string[] | null,
+): string[] {
+  if (!symbols) return assetsForSource(source);
+  return [
+    ...new Set(
+      symbols.map((symbol) => symbol.trim().toUpperCase()).filter(Boolean),
+    ),
+  ];
+}
+
 /** Invert SOURCE_ASSETS — which policy feeds matter for a symbol. */
 export function sourcesForSymbol(symbol: string): string[] {
   const upper = symbol.trim().toUpperCase();
@@ -151,6 +163,7 @@ export async function buildEventImpactReport(
   options?: {
     source?: string | null;
     symbol?: string | null;
+    symbols?: string[] | null;
     horizons?: string[];
     sentimentFilter?: "any" | "hawkish" | "dovish";
     eventLimit?: number;
@@ -183,10 +196,10 @@ export async function buildEventImpactReport(
 
   if (events.length === 0) return null;
 
-  let assets = assetsForSource(source);
-  if (symbol && !assets.includes(symbol)) {
+  let assets = assetsForImpactStudy(source, options?.symbols);
+  if (!options?.symbols && symbol && !assets.includes(symbol)) {
     assets = [symbol, ...assets];
-  } else if (symbol) {
+  } else if (!options?.symbols && symbol) {
     assets = [symbol, ...assets.filter((item) => item !== symbol)];
   }
 
@@ -194,9 +207,11 @@ export async function buildEventImpactReport(
     string,
     Awaited<ReturnType<typeof loadAssetCloses>>
   >();
-  for (const asset of assets) {
-    closesBySymbol.set(asset, await loadAssetCloses(db, asset));
-  }
+  await Promise.all(
+    assets.map(async (asset) => {
+      closesBySymbol.set(asset, await loadAssetCloses(db, asset));
+    }),
+  );
 
   const eventDates = events.map((event) => event.date);
   const datesAsc = [...eventDates].sort();

@@ -23,35 +23,45 @@ type QualityState = {
   error: string | null;
 };
 
-type QualityScope = "selected" | "all";
-
 function pct(rate: number | null): string {
   if (rate == null) return "n/a";
   return `${Math.round(rate * 100)}%`;
 }
 
 export function SignalQuality({
-  symbol,
+  symbols,
+  scopeLabel,
   horizon,
   enabled = true,
 }: {
-  symbol?: string;
+  symbols?: string[];
+  scopeLabel: string;
   horizon: string;
   enabled?: boolean;
 }) {
-  const [scope, setScope] = useState<QualityScope>("all");
   const [result, setResult] = useState<QualityState | null>(null);
-  const requestKey =
-    scope === "all" ? "all" : symbol?.trim().toUpperCase() || "all";
+  const normalizedSymbols = [...new Set(symbols ?? [])].sort();
+  const isEmptyScope = symbols !== undefined && normalizedSymbols.length === 0;
+  const requestKey = isEmptyScope
+    ? "empty"
+    : normalizedSymbols.length === 0
+      ? "all"
+      : normalizedSymbols.join(",");
   const active = result?.key === requestKey ? result : null;
-  const state = !enabled ? "auth" : active ? active.status : "loading";
+  const state = !enabled
+    ? "auth"
+    : isEmptyScope
+      ? "empty"
+      : active
+        ? active.status
+        : "loading";
   const payload = active?.payload ?? null;
 
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled || isEmptyScope) return;
     const controller = new AbortController();
     const query =
-      requestKey === "all" ? "" : `?symbol=${encodeURIComponent(requestKey)}`;
+      requestKey === "all" ? "" : `?symbols=${encodeURIComponent(requestKey)}`;
 
     fetch(`/api/quality${query}`, { signal: controller.signal })
       .then(async (response) => {
@@ -77,7 +87,7 @@ export function SignalQuality({
       });
 
     return () => controller.abort();
-  }, [requestKey, enabled]);
+  }, [requestKey, enabled, isEmptyScope]);
 
   const scoped =
     state === "ready" && payload
@@ -93,28 +103,16 @@ export function SignalQuality({
           </h2>
           <p className="mt-1 text-xs text-[var(--muted)]">
             Past forecast accuracy after each selected time period finishes.
-            {requestKey === "all"
-              ? " Scoped to all graded assets."
-              : ` Scoped to ${requestKey}.`}
+            {` Scoped to ${scopeLabel}.`}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <label className="sr-only" htmlFor="quality-scope">
-            Quality scope
-          </label>
-          <select
-            id="quality-scope"
-            className="select-control text-xs"
-            value={scope}
-            disabled={!enabled}
+          <span
+            className="rounded-[8px] bg-[var(--surface-raised)] px-2 py-1 text-xs text-[var(--muted-strong)]"
             data-testid="quality-scope"
-            onChange={(event) => setScope(event.target.value as QualityScope)}
           >
-            <option value="all">World / all assets</option>
-            <option value="selected" disabled={!symbol}>
-              Selected asset{symbol ? ` (${symbol})` : ""}
-            </option>
-          </select>
+            {scopeLabel}
+          </span>
           <span className="font-mono text-[10px] text-[var(--muted)]">
             rules-v1 · {horizon}
           </span>
@@ -167,6 +165,12 @@ export function SignalQuality({
       {state === "error" ? (
         <p className="px-5 py-3 text-xs text-[var(--muted)]">
           {active?.error ?? "Quality unavailable. Run make compute-forecasts."}
+        </p>
+      ) : null}
+
+      {state === "empty" ? (
+        <p className="px-5 py-3 text-xs text-[var(--muted)]">
+          No markets match this geography and market filter.
         </p>
       ) : null}
 

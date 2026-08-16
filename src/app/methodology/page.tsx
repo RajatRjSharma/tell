@@ -110,6 +110,13 @@ export default async function MethodologyPage() {
               Ingest runs daily via GitHub Actions. Features and signals are
               computed point-in-time on daily bars (no intraday dependency).
             </p>
+            <p className="mt-4 text-sm leading-7 text-[var(--muted-strong)]">
+              The page-wide World, region, or country selector filters market
+              rows, the decision summary, near-term bias, signal quality, and
+              tagged policy events. The macro strip and rules-v1 regime remain
+              US-only context; they are not presented as local regimes for other
+              countries.
+            </p>
           </section>
 
           <section id="regimes" className="mt-12 scroll-mt-28">

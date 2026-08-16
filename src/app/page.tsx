@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { getDb } from "@/lib/db";
-import { assets } from "@/data/seed";
+import { assets, countries } from "@/data/seed";
 import { listLatestOutlook } from "@/lib/api/outlook";
 import { getMacroStrip } from "@/lib/macro/strip";
 import { getNearTermRiskBias } from "@/lib/risk/near-term";
@@ -43,6 +43,11 @@ export default async function Home() {
         assetClass: asset.asset_class,
         countryCode: asset.country_code,
         currency: asset.currency,
+      }))}
+      countries={countries.map((country) => ({
+        code: country.code,
+        name: country.name,
+        region: country.region,
       }))}
       initialSignals={signals}
       initialWatchlist={watchlist}

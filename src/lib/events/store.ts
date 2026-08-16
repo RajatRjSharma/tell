@@ -110,6 +110,7 @@ export async function listEvents(
   options?: {
     limit?: number;
     countryCode?: string | null;
+    countryCodes?: string[] | null;
     source?: string | null;
     since?: string | null;
     symbol?: string | null;
@@ -122,6 +123,16 @@ export async function listEvents(
   if (options?.countryCode) {
     filters.push("country_code = ?");
     args.push(options.countryCode);
+  } else if (options?.countryCodes?.length) {
+    const countryCodes = [
+      ...new Set(options.countryCodes.map((code) => code.trim().toUpperCase())),
+    ].filter(Boolean);
+    if (countryCodes.length > 0) {
+      filters.push(
+        `country_code IN (${countryCodes.map(() => "?").join(",")})`,
+      );
+      args.push(...countryCodes);
+    }
   }
   if (options?.source) {
     filters.push("source = ?");

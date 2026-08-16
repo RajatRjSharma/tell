@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  assetsForImpactStudy,
   buildImpactRows,
   collectForwardReturns,
   filterEventsForStudy,
@@ -8,6 +9,7 @@ import {
   sourcesForSymbol,
   summarizeReturnSample,
 } from "@/lib/events/impact";
+import { typicalEventImpact } from "@/lib/events/interpret";
 import type { PolicyEvent } from "@/lib/events/store";
 
 function event(overrides?: Partial<PolicyEvent>): PolicyEvent {
@@ -33,6 +35,20 @@ describe("impact helpers", () => {
     expect(sourcesForSymbol("TLT")).toEqual(
       expect.arrayContaining(["Fed", "ECB", "BoE"]),
     );
+  });
+
+  it("uses every explicitly scoped market in an impact study", () => {
+    expect(assetsForImpactStudy("Fed", ["inda", "EWG", "INDA"])).toEqual([
+      "INDA",
+      "EWG",
+    ]);
+    expect(assetsForImpactStudy("ECB")).toContain("EURUSD");
+  });
+
+  it("describes event sensitivity without claiming a prediction", () => {
+    expect(typicalEventImpact(0.35, "Fed")).toContain("US dollar");
+    expect(typicalEventImpact(-0.35, "ECB")).toContain("may weaken");
+    expect(typicalEventImpact(null, "BoE")).toContain("depends");
   });
 
   it("summarizes return samples", () => {

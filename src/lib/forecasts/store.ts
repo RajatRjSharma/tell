@@ -82,6 +82,7 @@ export async function listForecasts(
   db: Client,
   options?: {
     symbol?: string | null;
+    symbols?: string[] | null;
     horizon?: string | null;
     modelVersion?: string;
     limit?: number;
@@ -95,6 +96,14 @@ export async function listForecasts(
   if (options?.symbol) {
     filters.push("symbol = ?");
     args.push(options.symbol.trim().toUpperCase());
+  } else if (options?.symbols?.length) {
+    const symbols = [
+      ...new Set(options.symbols.map((symbol) => symbol.trim().toUpperCase())),
+    ].filter(Boolean);
+    if (symbols.length > 0) {
+      filters.push(`symbol IN (${symbols.map(() => "?").join(",")})`);
+      args.push(...symbols);
+    }
   }
   if (options?.horizon) {
     filters.push("horizon = ?");
@@ -129,6 +138,7 @@ export async function getQualityReport(
   db: Client,
   options?: {
     symbol?: string | null;
+    symbols?: string[] | null;
     modelVersion?: string;
     recentLimit?: number;
   },
@@ -136,6 +146,7 @@ export async function getQualityReport(
   const modelVersion = options?.modelVersion ?? SIGNAL_MODEL_VERSION;
   const rows = await listForecasts(db, {
     symbol: options?.symbol,
+    symbols: options?.symbols,
     modelVersion,
     limit: 2000,
   });

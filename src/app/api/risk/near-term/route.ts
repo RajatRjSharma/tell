@@ -9,7 +9,13 @@ export async function GET(request: NextRequest) {
   if (!isSession(auth)) return auth;
 
   try {
-    const bias = await getNearTermRiskBias(getDb());
+    const symbols = request.nextUrl.searchParams
+      .get("symbols")
+      ?.split(",")
+      .map((value) => value.trim().toUpperCase())
+      .filter((value) => /^[A-Z0-9.=_-]{1,20}$/.test(value))
+      .slice(0, 100);
+    const bias = await getNearTermRiskBias(getDb(), { symbols });
     return NextResponse.json(bias);
   } catch (error) {
     console.error("near-term bias error", error);

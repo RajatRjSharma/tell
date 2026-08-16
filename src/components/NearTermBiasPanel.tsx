@@ -5,6 +5,7 @@ import { EconomicTerm, type EconomicTermKey } from "@/components/EconomicTerm";
 import type { NearTermBias } from "@/lib/risk/near-term";
 
 type State = {
+  key: string;
   status: "ready" | "error";
   bias: NearTermBias | null;
   error: string | null;
@@ -41,45 +42,81 @@ function BiasPill({ label }: { label: "risk-on" | "mixed" | "risk-off" }) {
 
 export function NearTermBiasPanel({
   initialBias = null,
+  symbols,
+  scopeLabel,
 }: {
   initialBias?: NearTermBias | null;
+  symbols?: string[];
+  scopeLabel: string;
 }) {
-  const [state, setState] = useState<State | null>(
-    initialBias ? { status: "ready", bias: initialBias, error: null } : null,
-  );
+  const isUnfilteredWorld = symbols === undefined;
+  const symbolKey = [...new Set(symbols ?? [])].sort().join(",");
+  const requestKey = isUnfilteredWorld ? "world" : symbolKey || "empty";
+  const [results, setResults] = useState<Record<string, State>>(() => {
+    const initialResults: Record<string, State> = {};
+    if (initialBias) {
+      initialResults.world = {
+        key: "world",
+        status: "ready",
+        bias: initialBias,
+        error: null,
+      };
+    }
+    return initialResults;
+  });
+  const active = results[requestKey] ?? null;
 
   useEffect(() => {
-    if (initialBias) return;
+    if (requestKey === "empty" || (requestKey === "world" && initialBias))
+      return;
+
     let cancelled = false;
-    fetch("/api/risk/near-term")
+    const query = symbolKey ? `?symbols=${encodeURIComponent(symbolKey)}` : "";
+    fetch(`/api/risk/near-term${query}`)
       .then(async (res) => {
         const data = (await res.json()) as NearTermBias & { error?: string };
         if (cancelled) return;
         if (!res.ok) {
-          setState({
-            status: "error",
-            bias: null,
-            error: data.error ?? "Failed to load near-term bias",
-          });
+          setResults((current) => ({
+            ...current,
+            [requestKey]: {
+              key: requestKey,
+              status: "error",
+              bias: null,
+              error: data.error ?? "Failed to load near-term bias",
+            },
+          }));
           return;
         }
-        setState({ status: "ready", bias: data, error: null });
+        setResults((current) => ({
+          ...current,
+          [requestKey]: {
+            key: requestKey,
+            status: "ready",
+            bias: data,
+            error: null,
+          },
+        }));
       })
       .catch(() => {
         if (!cancelled) {
-          setState({
-            status: "error",
-            bias: null,
-            error: "Failed to load near-term bias",
-          });
+          setResults((current) => ({
+            ...current,
+            [requestKey]: {
+              key: requestKey,
+              status: "error",
+              bias: null,
+              error: "Failed to load near-term bias",
+            },
+          }));
         }
       });
     return () => {
       cancelled = true;
     };
-  }, [initialBias]);
+  }, [initialBias, requestKey, symbolKey]);
 
-  const bias = state?.bias ?? initialBias;
+  const bias = active?.bias ?? null;
 
   return (
     <section
@@ -90,15 +127,15 @@ export function NearTermBiasPanel({
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-[var(--accent)]">
-            Market-wide snapshot
+            {scopeLabel} snapshot
           </p>
           <h2 className="mt-2 text-xl font-semibold tracking-[-0.035em]">
             Next session bias
           </h2>
           <p className="mt-1 text-sm text-[var(--muted)]">
-            Average of all latest 1-day asset scores across the loaded universe.
-            The follow-on estimate is only a softer carry of that average — not
-            an independent tomorrow forecast.
+            Average of the latest 1-day scores across {scopeLabel}. The
+            follow-on estimate is only a softer carry of that average — not an
+            independent tomorrow forecast.
           </p>
         </div>
         {bias?.asOf ? (
@@ -108,8 +145,12 @@ export function NearTermBiasPanel({
         ) : null}
       </div>
 
-      {state?.status === "error" ? (
-        <p className="mt-5 text-sm text-[var(--negative)]">{state.error}</p>
+      {active?.status === "error" ? (
+        <p className="mt-5 text-sm text-[var(--negative)]">{active.error}</p>
+      ) : requestKey === "empty" ? (
+        <p className="mt-5 text-sm text-[var(--muted)]">
+          No markets match this geography and market filter.
+        </p>
       ) : !bias ? (
         <p className="mt-5 text-sm text-[var(--muted)]">Loading bias…</p>
       ) : (

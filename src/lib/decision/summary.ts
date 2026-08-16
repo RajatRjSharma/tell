@@ -4,7 +4,7 @@ import type { OutlookSignalDto } from "@/lib/api/outlook";
 export type DecisionLean = "up" | "down" | "mixed" | "unclear";
 
 export type DecisionScope = {
-  level: "world" | "country" | "asset";
+  level: "world" | "region" | "country" | "asset";
   label: string;
   countryCode?: string | null;
   symbol?: string | null;

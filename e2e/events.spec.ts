@@ -6,5 +6,11 @@ test.describe("policy events", () => {
     await expect(page.getByTestId("events-panel")).toBeVisible({
       timeout: 20_000,
     });
+    await expect(page.getByTestId("events-panel")).toContainText(
+      "Typical sensitivity:",
+    );
+    await expect(page.getByTestId("events-panel")).toContainText(
+      "not a prediction",
+    );
   });
 });
