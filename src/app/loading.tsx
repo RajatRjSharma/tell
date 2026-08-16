@@ -16,7 +16,7 @@ export default function Loading() {
             />
           ))}
         </div>
-        <div className="mt-10 grid gap-6 xl:grid-cols-[minmax(0,1fr)_25rem]">
+        <div className="mt-10 grid gap-6 lg:grid-cols-[minmax(17rem,24rem)_minmax(0,1fr)]">
           <div className="h-[32rem] animate-pulse rounded-[16px] bg-[var(--surface)]" />
           <div className="h-[29rem] animate-pulse rounded-[16px] bg-[var(--surface)]" />
         </div>

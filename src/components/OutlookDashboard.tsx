@@ -631,8 +631,8 @@ export function OutlookDashboard({
           </div>
         </div>
 
-        <section className="mt-5 grid gap-6 xl:grid-cols-[minmax(0,1fr)_25rem]">
-          <div className="overflow-hidden rounded-[16px] border border-[var(--line)] bg-[var(--surface)]">
+        <section className="mt-5 grid gap-6 lg:grid-cols-[minmax(17rem,24rem)_minmax(0,1fr)]">
+          <div className="min-w-0 overflow-hidden rounded-[16px] border border-[var(--line)] bg-[var(--surface)]">
             <div className="outlook-grid outlook-grid-header">
               <span>Instrument</span>
               <span>View</span>
@@ -783,7 +783,7 @@ export function OutlookDashboard({
           </div>
 
           <aside
-            className="h-fit min-w-0 rounded-[16px] border border-[var(--line)] bg-[var(--surface-raised)] p-4 sm:p-5 xl:sticky xl:top-24"
+            className="h-fit min-w-0 rounded-[16px] border border-[var(--line)] bg-[var(--surface-raised)] p-4 sm:p-5 lg:sticky lg:top-24"
             aria-live="polite"
           >
             {selectedAsset && selectedSignal ? (
