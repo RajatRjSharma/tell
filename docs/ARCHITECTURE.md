@@ -151,7 +151,7 @@ Manual, key-dependent extras:
 tell/
 ├── .github/workflows/
 │   ├── ci.yml                        # lint, format, types, unit, build, e2e
-│   └── ingest.yml                    # daily 06:00 UTC pipeline
+│   └── ingest.yml                    # 4× daily UTC ingest pipeline
 ├── db/schema.sql                     # Turso schema, idempotent
 ├── docs/                             # documentation + architecture diagram
 │   ├── tell-architecture.svg

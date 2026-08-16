@@ -106,9 +106,9 @@ watchlist and emails it when SMTP is configured.
 
 Workflow: `.github/workflows/ingest.yml`
 
-- Runs **twice daily** at **06:00 UTC** and **21:30 UTC**, plus **Actions → Daily ingest → Run workflow**
+- Runs **four times daily** at **00:00**, **06:00**, **12:00**, and **18:00 UTC**, plus **Actions → Daily ingest → Run workflow**
 - Pipeline: **migrate → FRED → cross-country (World Bank on Actions) → Yahoo markets → policy RSS → signals → forecasts → alerts**
-- Kept to two runs/day so free Yahoo/FRED/World Bank usage stays polite (hourly would risk Yahoo throttling with little new daily-bar data)
+- Kept to four runs/day so free Yahoo/FRED/World Bank usage stays polite (hourly would risk Yahoo throttling with little new daily-bar data)
 - If you miss `make ingest-manual`, Actions still fills cross-country via World Bank
 - If you *did* run manual IMF, later World Bank runs **do not overwrite** those WEO rows
 

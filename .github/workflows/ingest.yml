@@ -2,11 +2,16 @@ name: Daily ingest
 
 on:
   schedule:
-    # Twice daily, kept sparse for free Yahoo/FRED/World Bank limits.
-    # 06:00 UTC: morning refresh (macro + prior session)
-    # 21:30 UTC: after US cash equity close (~16:00 ET)
+    # Four times daily (~every 6h). Still sparse vs hourly to stay polite
+    # to free Yahoo / FRED / World Bank limits.
+    # 00:00 UTC · Asia session wrap
+    # 06:00 UTC · morning macro + prior session
+    # 12:00 UTC · Europe midday / US open approach
+    # 18:00 UTC · US cash session afternoon
+    - cron: "0 0 * * *"
     - cron: "0 6 * * *"
-    - cron: "30 21 * * *"
+    - cron: "0 12 * * *"
+    - cron: "0 18 * * *"
   workflow_dispatch:
 
 concurrency:

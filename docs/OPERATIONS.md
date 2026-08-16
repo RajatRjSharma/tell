@@ -164,7 +164,7 @@ parallel browser workers; set `PLAYWRIGHT_WORKERS=1` if you need serial runs.
 
 ## Scheduled pipeline
 
-`.github/workflows/ingest.yml` runs **twice daily** at **06:00 UTC** and **21:30 UTC**, and on manual dispatch, with `concurrency: daily-ingest` so runs never overlap, a 30 minute timeout, Node 22, and `npm ci`:
+`.github/workflows/ingest.yml` runs **four times daily** at **00:00**, **06:00**, **12:00**, and **18:00 UTC**, and on manual dispatch, with `concurrency: daily-ingest` so runs never overlap, a 30 minute timeout, Node 22, and `npm ci`:
 
 1. `db:migrate`
 2. `ingest:fred` with `FRED_API_KEY`
@@ -175,7 +175,7 @@ parallel browser workers; set `PLAYWRIGHT_WORKERS=1` if you need serial runs.
 7. `compute:forecasts`
 8. `compute:alerts`
 
-Frequency is capped at two runs/day: daily bars and FRED prints barely change more often, and Yahoo/World Bank are the fragile free endpoints.
+Frequency is four runs/day (~every 6 hours): enough for session refreshes without going hourly against free Yahoo/World Bank limits.
 
 Still local-only: `make ingest-manual`, `make compute-features`, `make backfill-signals`, `make compute-briefs`, and `make compute-watchlist-briefs`. Brief/chat stay out of the schedule because they need paid keys.
 
