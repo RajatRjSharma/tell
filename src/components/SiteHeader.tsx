@@ -70,7 +70,7 @@ export function SiteHeader({
           className="site-header-brand group flex min-w-0 items-center gap-2 sm:gap-3 focus-visible:outline-none"
           aria-label="Tell home"
         >
-          <BrandWordmark markClassName="group-hover:-translate-y-0.5" />
+          <BrandWordmark />
           <span className="hidden h-4 w-px bg-[var(--line-strong)] lg:block" />
           <span className="site-header-section hidden min-w-0 truncate text-xs text-[var(--muted)] lg:block">
             {sectionLabel}
