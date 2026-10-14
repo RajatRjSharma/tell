@@ -10,7 +10,7 @@ Documentation: [index](docs/README.md) Â· [architecture](docs/ARCHITECTURE.md) Â
 
 - Next.js (Vercel)
 - Turso
-- GitHub Actions (CI + daily ingest)
+- GitHub Actions (CI + ingest four times daily)
 - Free data + Gemini / Groq
 
 ## Setup
