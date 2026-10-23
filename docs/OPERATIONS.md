@@ -135,12 +135,12 @@ Never commit `.env`. If a credential is exposed, revoke it at the provider befor
 | `make setup` | – | Install, browsers, migrate, seed |
 | `make dev` | `npm run dev` | Dev server |
 | `make build` | `npm run build` | Production build |
-| `make db-migrate` | `npm run db:migrate` | Apply `db/schema.sql`, idempotent |
+| `make db-migrate` | `npm run db:migrate` | Apply `db/schema.sql`, sync seed catalog, retire replaced symbols; idempotent |
 | `make db-seed` | `npm run db:seed` | Countries, indicators, assets |
-| `make ingest-fred` | `npm run ingest:fred` | US macro, current plus ALFRED vintages |
+| `make ingest-fred` | `npm run ingest:fred` | US macro, current plus ALFRED vintages; same-day Treasury 2Y/10Y |
 | `make ingest-imf` | `npm run ingest:imf` | Cross-country macro with World Bank fallback |
 | `make ingest-manual` | – | Force IMF DataMapper locally |
-| `make ingest-markets` | `npm run ingest:markets` | Daily bars from Yahoo |
+| `make ingest-markets` | `npm run ingest:markets` | Daily bars from Yahoo; ECB reference FX if Yahoo is empty |
 | `make ingest-events` | `npm run ingest:events` | Fed, ECB, BoE, BoJ, RBI RSS |
 | `make ingest-global-macro` | `npm run ingest:global-macro` | Monthly CPI YoY (IMF SDMX) and policy rates (BIS) for all six countries |
 | `make ingest-all` | – | All five ingest jobs |

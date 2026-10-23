@@ -2,7 +2,12 @@ import { resolve } from "node:path";
 import { config } from "dotenv";
 import { createClient } from "@libsql/client";
 import { assets } from "../src/data/seed";
-import { fetchYahooDailyBars, unixSeconds } from "../src/lib/yahoo";
+import { ECB_FX_PAIRS, fetchEcbFxBars } from "../src/lib/ecb-fx";
+import {
+  fetchYahooDailyBars,
+  unixSeconds,
+  type AssetBar,
+} from "../src/lib/yahoo";
 import {
   latestAssetBarDate,
   toAssetReadingUpserts,
@@ -41,18 +46,38 @@ async function ingestMarkets() {
     assets,
     (asset) => `${asset.symbol} (${asset.source_symbol}, ${asset.asset_class})`,
     async (asset) => {
+      const latest = await latestAssetBarDate(db, asset.symbol);
       const start = fullRefresh
         ? startIso
-        : incrementalStart(
-            await latestAssetBarDate(db, asset.symbol),
-            startIso,
-            BAR_OVERLAP_DAYS,
-          );
-      const bars = await fetchYahooDailyBars(
-        asset.source_symbol,
-        unixSeconds(new Date(`${start}T00:00:00.000Z`)),
-        toUnix,
-      );
+        : incrementalStart(latest, startIso, BAR_OVERLAP_DAYS);
+
+      let bars: AssetBar[] = [];
+      let yahooError: unknown = null;
+      try {
+        bars = await fetchYahooDailyBars(
+          asset.source_symbol,
+          unixSeconds(new Date(`${start}T00:00:00.000Z`)),
+          toUnix,
+        );
+      } catch (error) {
+        yahooError = error;
+      }
+
+      // Official ECB closes only fill dates we don't have, never overwrite OHLC.
+      if (bars.length === 0 && ECB_FX_PAIRS[asset.symbol]) {
+        const ecbBars = (await fetchEcbFxBars(asset.symbol, start)).filter(
+          (bar) => !latest || bar.date > latest,
+        );
+        console.log(
+          `  ${asset.symbol}: Yahoo empty, ${ecbBars.length} ECB reference closes`,
+        );
+        return upsertAssetReadings(
+          db,
+          toAssetReadingUpserts(asset.symbol, ecbBars),
+        );
+      }
+      if (yahooError) throw yahooError;
+
       return upsertAssetReadings(db, toAssetReadingUpserts(asset.symbol, bars));
     },
     { pauseMs: 400 },

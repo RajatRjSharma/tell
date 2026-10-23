@@ -12,6 +12,10 @@ import {
 } from "../src/lib/ingest/incremental";
 import { assertFailureBudget, runIsolated } from "../src/lib/ingest/run";
 import {
+  fetchRecentTreasuryCurve,
+  treasuryToReadings,
+} from "../src/lib/treasury";
+import {
   latestReadingDate,
   toReadingUpserts,
   upsertReadings,
@@ -88,6 +92,27 @@ async function ingestFred() {
     },
     { pauseMs: 200 },
   );
+
+  // Treasury publishes the par curve the same afternoon; FRED lags a day or
+  // two. Only add dates FRED doesn't have yet — FRED overwrites them later.
+  try {
+    const treasury = treasuryToReadings(await fetchRecentTreasuryCurve());
+    for (const [indicatorId, readings] of Object.entries(treasury)) {
+      const latest = await latestReadingDate(db, "US", indicatorId);
+      const fresh = readings.filter(
+        (row) => !latest || row.observedFor > latest,
+      );
+      const written = await upsertReadings(
+        db,
+        toReadingUpserts("US", indicatorId, "Treasury", fresh),
+      );
+      console.log(`  ${indicatorId} (Treasury same-day): ${written}`);
+    }
+  } catch (err) {
+    console.warn(
+      `  Treasury same-day fill skipped: ${err instanceof Error ? err.message : err}`,
+    );
+  }
 
   const count = await db.execute({
     sql: `SELECT COUNT(*) AS n FROM readings WHERE source IN (?, ?) AND country_code = ?`,

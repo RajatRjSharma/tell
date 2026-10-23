@@ -235,7 +235,7 @@ Default asset mapping per source:
 
 | Source | Assets |
 | ------ | ------ |
-| `Fed` | `SPY`, `TLT`, `GLD`, `USO`, `USDJPY`, `MCHI`, `INDA`, `USDCNH` |
+| `Fed` | `SPY`, `TLT`, `GLD`, `USO`, `USDJPY`, `MCHI`, `INDA`, `USDCNY` |
 | `ECB` | `EWG`, `EURUSD`, `TLT`, `GLD`, `SPY` |
 | `BoE` | `EWU`, `GBPUSD`, `TLT`, `GLD`, `SPY` |
 | `BoJ` | `EWJ`, `USDJPY`, `TLT`, `GLD`, `SPY` |

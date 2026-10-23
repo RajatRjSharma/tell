@@ -33,9 +33,10 @@ Tell separates three concerns: data collection, offline scoring, and request-tim
 ```mermaid
 flowchart TB
   subgraph SRC[Sources]
-    FRED[FRED and ALFRED]
+    FRED[FRED, ALFRED, Treasury yield XML]
     CROSS[IMF or World Bank]
-    YF[Yahoo Finance]
+    GLOBAL[IMF SDMX CPI and BIS policy rates]
+    YF[Yahoo Finance, ECB FX fallback]
     RSS[Fed, ECB, BoE, BoJ, RBI RSS]
     FH[Finnhub quotes]
   end
@@ -43,6 +44,7 @@ flowchart TB
   subgraph JOBS[Scheduled jobs]
     I1[ingest fred]
     I2[ingest imf]
+    I5[ingest global macro]
     I3[ingest markets]
     I4[ingest events]
     C1[compute signals]
@@ -73,6 +75,7 @@ flowchart TB
 
   FRED --> I1 --> READ
   CROSS --> I2 --> READ
+  GLOBAL --> I5 --> READ
   YF --> I3 --> BARS
   RSS --> I4 --> EV
   I4 --> FTS
@@ -201,7 +204,7 @@ Seeded countries: `US`, `IN`, `DE`, `JP`, `GB`, `CN`.
 | Class | Symbols |
 | ----- | ------- |
 | Equity | `SPY`, `INDA`, `EWG`, `EWJ`, `EWU`, `MCHI` |
-| FX | `EURUSD`, `GBPUSD`, `USDJPY`, `USDCNH` |
+| FX | `EURUSD`, `GBPUSD`, `USDJPY`, `USDCNY` |
 | Commodity | `GLD`, `USO` |
 | Rates | `TLT` |
 
@@ -212,9 +215,10 @@ Seeded countries: `US`, `IN`, `DE`, `JP`, `GB`, `CN`.
 | Hosting | Vercel, Next.js 16.3, React 19 | Yes |
 | Database | Turso through `@libsql/client` | Yes |
 | Sessions | `JWT_SECRET` with `jose`, `bcryptjs` hashes | Yes |
-| US macro | FRED with `FRED_API_KEY` | For ingest |
+| US macro | FRED with `FRED_API_KEY`; Treasury yield XML for same-day 2Y/10Y | For ingest |
 | Cross-country macro | IMF DataMapper, World Bank fallback | No key |
-| Market bars | Yahoo Finance | No key |
+| Local monthly macro | IMF SDMX 3.0 CPI, BIS central bank policy rates | No key |
+| Market bars | Yahoo Finance; ECB reference rates (Frankfurter) when Yahoo FX is empty | No key |
 | Live quotes | Finnhub with `FINNHUB_API_KEY` | Optional |
 | Policy events | Fed, ECB, BoE, BoJ, RBI RSS | No key |
 | Briefs and chat | `GEMINI_API_KEY`, `GROQ_API_KEY` | Optional |

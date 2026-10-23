@@ -245,12 +245,12 @@ export const assets = [
     source_symbol: "USDJPY=X",
   },
   {
-    symbol: "USDCNH",
-    name: "USD/CNH",
+    symbol: "USDCNY",
+    name: "USD/CNY",
     asset_class: "fx",
     country_code: "CN",
-    currency: "CNH",
-    source_symbol: "USDCNH=X",
+    currency: "CNY",
+    source_symbol: "CNY=X",
   },
   {
     symbol: "GLD",

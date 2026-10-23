@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { config } from "dotenv";
 import { createClient } from "@libsql/client";
+import { retireSymbols, syncCatalog } from "../src/lib/catalog";
 
 config({ path: resolve(process.cwd(), ".env") });
 
@@ -39,6 +40,12 @@ async function migrate() {
   await softUpgradeForecastLog(db);
   await softUpgradeUsers(db);
   await softUpgradeAuthOtps(db);
+
+  // Keep the reference catalog current so new indicators/assets need no manual seed.
+  await syncCatalog(db);
+  for (const change of await retireSymbols(db)) {
+    console.log(`Retired symbol ${change}`);
+  }
 
   const tables = await db.execute(
     "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name",

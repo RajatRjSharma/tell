@@ -1,7 +1,7 @@
 import { resolve } from "node:path";
 import { config } from "dotenv";
-import { createClient, type Client } from "@libsql/client";
-import { countries, indicators } from "../src/data/seed";
+import { createClient } from "@libsql/client";
+import { countries } from "../src/data/seed";
 import type { ParsedReading } from "../src/lib/fred";
 import { fetchBisPolicyRates } from "../src/lib/bis";
 import {
@@ -38,32 +38,6 @@ const SOURCES: GlobalSource[] = [
   },
 ];
 
-/** Readings reference `indicators`; make sure the rows exist without a full seed. */
-async function ensureIndicators(db: Client, ids: string[]) {
-  for (const indicator of indicators.filter((i) => ids.includes(i.id))) {
-    await db.execute({
-      sql: `INSERT INTO indicators (id, name, unit, frequency, source, source_series_id, description)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-            ON CONFLICT(id) DO UPDATE SET
-              name = excluded.name,
-              unit = excluded.unit,
-              frequency = excluded.frequency,
-              source = excluded.source,
-              source_series_id = excluded.source_series_id,
-              description = excluded.description`,
-      args: [
-        indicator.id,
-        indicator.name,
-        indicator.unit,
-        indicator.frequency,
-        indicator.source,
-        indicator.source_series_id,
-        indicator.description,
-      ],
-    });
-  }
-}
-
 async function ingestGlobalMacro() {
   const url = process.env.TURSO_DATABASE_URL;
   const authToken = process.env.TURSO_AUTH_TOKEN;
@@ -75,10 +49,6 @@ async function ingestGlobalMacro() {
   const startPeriod = process.env.GLOBAL_MACRO_START ?? "2018-01";
   const countryCodes = countries.map((country) => country.code);
   const db = createClient({ url, authToken });
-  await ensureIndicators(
-    db,
-    SOURCES.map((source) => source.indicatorId),
-  );
 
   console.log(
     `Ingesting monthly inflation (IMF) and policy rates (BIS) for ${countryCodes.join(", ")} from ${startPeriod}...`,

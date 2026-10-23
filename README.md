@@ -63,7 +63,9 @@ Optional: set `FRED_OBSERVATION_START`, `IMF_MIN_YEAR`, or `MARKET_OBSERVATION_S
 
 FRED and market ingests are incremental: each series re-reads a short overlap before
 its latest stored date (400 days for FRED revisions, 14 days for daily bars). Set
-`INGEST_FULL_REFRESH=1` to re-pull full history. Requests time out and retry on
+`INGEST_FULL_REFRESH=1` to re-pull full history. `ingest:fred` also adds the latest
+2Y/10Y yields from the Treasury XML feed for days FRED hasn't published yet, and
+`ingest:markets` falls back to official ECB reference rates when Yahoo returns no FX bars. Requests time out and retry on
 429/5xx, and one failing series no longer aborts the run — a job exits non-zero only
 when more than half of its series fail.
 
