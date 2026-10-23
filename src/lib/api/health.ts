@@ -204,7 +204,7 @@ export async function checkFinnhubQuote(
   const started = Date.now();
   try {
     const url = new URL("https://finnhub.io/api/v1/quote");
-    url.searchParams.set("symbol", "AAPL");
+    url.searchParams.set("symbol", "SPY");
     url.searchParams.set("token", process.env.FINNHUB_API_KEY!);
     const res = await fetchImpl(url, {
       signal: AbortSignal.timeout(8_000),

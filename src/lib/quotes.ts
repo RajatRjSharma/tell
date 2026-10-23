@@ -1,4 +1,5 @@
 import { liveMarketQuotesEnabled } from "@/lib/config";
+import { isUsMarketOpen } from "@/lib/market-hours";
 
 export type Quote = {
   symbol: string;
@@ -7,13 +8,30 @@ export type Quote = {
   changePercent: number | null;
   previousClose: number | null;
   asOfUnix: number | null;
-  source: "finnhub" | "yahoo";
+  source: "finnhub";
 };
 
-/** Finnhub symbol mapping (equities/ETFs on free tier). */
-export function toFinnhubQuoteSymbol(symbol: string): string | null {
-  const fx = new Set(["EURUSD", "GBPUSD", "USDJPY"]);
-  if (fx.has(symbol)) return null; // free candle/FX quote often blocked
+/**
+ * Why a quote is or isn't present:
+ * - `live`: fresh provider quote (cached up to `QUOTE_TTL_MS`)
+ * - `closed`: US session closed, no provider call made
+ * - `unsupported`: instrument has no licensed live feed (FX on Finnhub free)
+ * - `disabled`: `LIVE_MARKET_QUOTES=false` or no `FINNHUB_API_KEY`
+ * - `unavailable`: provider call failed or returned no price
+ */
+export type QuoteStatus =
+  "live" | "closed" | "unsupported" | "disabled" | "unavailable";
+
+export type LiveQuoteResult = { quote: Quote | null; status: QuoteStatus };
+
+export const QUOTE_TTL_MS = 60_000;
+
+/** Finnhub free tier serves US-listed stocks/ETFs; FX quotes need a paid plan. */
+export function toFinnhubQuoteSymbol(
+  symbol: string,
+  assetClass?: string | null,
+): string | null {
+  if (assetClass === "fx") return null;
   return symbol;
 }
 
@@ -24,15 +42,12 @@ export async function fetchFinnhubQuote(
   const apiKey = options?.apiKey ?? process.env.FINNHUB_API_KEY;
   if (!apiKey) return null;
 
-  const fhSymbol = toFinnhubQuoteSymbol(symbol);
-  if (!fhSymbol) return null;
-
   const fetchImpl = options?.fetchImpl ?? fetch;
   const url = new URL("https://finnhub.io/api/v1/quote");
-  url.searchParams.set("symbol", fhSymbol);
+  url.searchParams.set("symbol", symbol);
   url.searchParams.set("token", apiKey);
 
-  const res = await fetchImpl(url);
+  const res = await fetchImpl(url, { signal: AbortSignal.timeout(5_000) });
   if (!res.ok) return null;
 
   const data = (await res.json()) as {
@@ -56,71 +71,62 @@ export async function fetchFinnhubQuote(
   };
 }
 
-/** Yahoo quote fallback when Finnhub isn't available. */
-export async function fetchYahooQuote(
-  yahooSymbol: string,
-  tellSymbol: string,
-  options?: { fetchImpl?: typeof fetch },
-): Promise<Quote | null> {
-  const fetchImpl = options?.fetchImpl ?? fetch;
-  const url = new URL(
-    `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(yahooSymbol)}`,
-  );
-  url.searchParams.set("interval", "1d");
-  url.searchParams.set("range", "5d");
+type CacheEntry = { at: number; result: LiveQuoteResult };
 
-  const res = await fetchImpl(url.toString(), {
-    headers: {
-      "User-Agent": "TellMacroBot/0.1 (research; quote)",
-      Accept: "application/json",
-    },
-  });
-  if (!res.ok) return null;
+const cache = new Map<string, CacheEntry>();
+const inflight = new Map<string, Promise<LiveQuoteResult>>();
 
-  const data = (await res.json()) as {
-    chart?: {
-      result?: Array<{
-        meta?: {
-          regularMarketPrice?: number;
-          previousClose?: number;
-          chartPreviousClose?: number;
-          regularMarketTime?: number;
-        };
-      }>;
-    };
-  };
-
-  const meta = data.chart?.result?.[0]?.meta;
-  const price = meta?.regularMarketPrice;
-  if (!Number.isFinite(price)) return null;
-
-  const previousClose = meta?.previousClose ?? meta?.chartPreviousClose ?? null;
-  const change =
-    previousClose != null && Number.isFinite(previousClose)
-      ? price! - previousClose
-      : null;
-  const changePercent =
-    change != null && previousClose ? change / previousClose : null;
-
-  return {
-    symbol: tellSymbol,
-    price: price!,
-    change,
-    changePercent,
-    previousClose,
-    asOfUnix: meta?.regularMarketTime ?? null,
-    source: "yahoo",
-  };
+export function clearQuoteCache(): void {
+  cache.clear();
+  inflight.clear();
 }
 
+/**
+ * Live quote for one instrument, shared across users: at most one provider
+ * call per symbol per minute, and none outside the US session.
+ */
 export async function fetchLiveQuote(
   tellSymbol: string,
-  yahooSymbol: string,
-  options?: { fetchImpl?: typeof fetch; apiKey?: string },
-): Promise<Quote | null> {
-  if (!liveMarketQuotesEnabled()) return null;
+  options?: {
+    assetClass?: string | null;
+    apiKey?: string;
+    fetchImpl?: typeof fetch;
+    now?: () => number;
+  },
+): Promise<LiveQuoteResult> {
+  const apiKey = options?.apiKey ?? process.env.FINNHUB_API_KEY;
+  if (!liveMarketQuotesEnabled() || !apiKey) {
+    return { quote: null, status: "disabled" };
+  }
 
-  const fh = await fetchFinnhubQuote(tellSymbol, options);
-  if (fh) return fh;
-  return fetchYahooQuote(yahooSymbol, tellSymbol, options);
+  const finnhubSymbol = toFinnhubQuoteSymbol(tellSymbol, options?.assetClass);
+  if (!finnhubSymbol) return { quote: null, status: "unsupported" };
+
+  const now = options?.now ?? Date.now;
+  if (!isUsMarketOpen(new Date(now()))) {
+    return { quote: null, status: "closed" };
+  }
+
+  const cached = cache.get(finnhubSymbol);
+  if (cached && now() - cached.at < QUOTE_TTL_MS) return cached.result;
+
+  const pending = inflight.get(finnhubSymbol);
+  if (pending) return pending;
+
+  const request = fetchFinnhubQuote(finnhubSymbol, {
+    apiKey,
+    fetchImpl: options?.fetchImpl,
+  })
+    .then((quote): LiveQuoteResult => {
+      const result: LiveQuoteResult = quote
+        ? { quote: { ...quote, symbol: tellSymbol }, status: "live" }
+        : { quote: null, status: "unavailable" };
+      cache.set(finnhubSymbol, { at: now(), result });
+      return result;
+    })
+    .catch((): LiveQuoteResult => ({ quote: null, status: "unavailable" }))
+    .finally(() => inflight.delete(finnhubSymbol));
+
+  inflight.set(finnhubSymbol, request);
+  return request;
 }

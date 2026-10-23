@@ -52,8 +52,33 @@ type Quote = {
   changePercent: number | null;
   previousClose: number | null;
   asOfUnix: number | null;
-  source: "finnhub" | "yahoo";
+  source: "finnhub";
 };
+
+type QuoteStatus =
+  "live" | "closed" | "unsupported" | "disabled" | "unavailable";
+
+const QUOTE_REFRESH_MS = 60_000;
+
+function quoteStatusMessage(status: QuoteStatus | null): string {
+  if (status === "closed") {
+    return "US market closed. Live prices resume at 09:30 ET; the daily signal is still current.";
+  }
+  if (status === "unsupported") {
+    return "Live FX quotes are not on the free data plan. The daily signal is still current.";
+  }
+  return "Live quote unavailable. Daily signal is still current.";
+}
+
+function formatQuoteTime(unix: number | null): string | null {
+  if (!unix) return null;
+  return new Intl.DateTimeFormat("en", {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "America/New_York",
+    timeZoneName: "short",
+  }).format(new Date(unix * 1000));
+}
 
 type AssetClass = "watchlist" | "all" | "equity" | "fx" | "commodity" | "rates";
 
@@ -177,6 +202,7 @@ export function OutlookDashboard({
   const [quoteResult, setQuoteResult] = useState<{
     symbol: string;
     quote: Quote | null;
+    status: QuoteStatus | null;
     state: "ready" | "unavailable";
   } | null>(null);
   const [chatOpen, setChatOpen] = useState(false);
@@ -280,6 +306,8 @@ export function OutlookDashboard({
     quoteResult?.symbol === effectiveSelectedSymbol
       ? quoteResult.state
       : "loading";
+  const quoteStatus =
+    quoteResult?.symbol === effectiveSelectedSymbol ? quoteResult.status : null;
 
   const counts = {
     bullish: currentSignals.filter((signal) => signal.direction === "bullish")
@@ -351,33 +379,55 @@ export function OutlookDashboard({
   useEffect(() => {
     if (!sessionUser || !effectiveSelectedSymbol) return;
 
+    const symbol = effectiveSelectedSymbol;
     const controller = new AbortController();
+    let timer: ReturnType<typeof setTimeout> | null = null;
 
-    fetch(
-      `/api/outlook/${encodeURIComponent(effectiveSelectedSymbol)}?live=1`,
-      { signal: controller.signal },
-    )
-      .then(async (response) => {
-        if (!response.ok) throw new Error("Quote request failed");
-        const data = (await response.json()) as { quote: Quote | null };
-        setQuoteResult({
-          symbol: effectiveSelectedSymbol,
-          quote: data.quote,
-          state: data.quote ? "ready" : "unavailable",
-        });
+    // The server caches quotes for 60s and only calls the provider during the
+    // US session, so polling only continues while the quote is live.
+    function scheduleRefresh() {
+      timer = setTimeout(() => {
+        if (document.visibilityState === "visible") load();
+        else scheduleRefresh();
+      }, QUOTE_REFRESH_MS);
+    }
+
+    function load() {
+      fetch(`/api/outlook/${encodeURIComponent(symbol)}?live=1`, {
+        signal: controller.signal,
       })
-      .catch((error: unknown) => {
-        if (error instanceof DOMException && error.name === "AbortError") {
-          return;
-        }
-        setQuoteResult({
-          symbol: effectiveSelectedSymbol,
-          quote: null,
-          state: "unavailable",
+        .then(async (response) => {
+          if (!response.ok) throw new Error("Quote request failed");
+          const data = (await response.json()) as {
+            quote: Quote | null;
+            quoteStatus: QuoteStatus | null;
+          };
+          setQuoteResult({
+            symbol,
+            quote: data.quote,
+            status: data.quoteStatus,
+            state: data.quote ? "ready" : "unavailable",
+          });
+          if (data.quoteStatus === "live") scheduleRefresh();
+        })
+        .catch((error: unknown) => {
+          if (error instanceof DOMException && error.name === "AbortError") {
+            return;
+          }
+          setQuoteResult({
+            symbol,
+            quote: null,
+            status: "unavailable",
+            state: "unavailable",
+          });
         });
-      });
+    }
 
-    return () => controller.abort();
+    load();
+    return () => {
+      controller.abort();
+      if (timer) clearTimeout(timer);
+    };
   }, [effectiveSelectedSymbol, sessionUser]);
 
   return (
@@ -863,13 +913,20 @@ export function OutlookDashboard({
                 </div>
 
                 <div className="mt-6">
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
                     <h4 className="text-xs font-semibold text-[var(--muted-strong)]">
                       Live context
                     </h4>
                     {quote ? (
-                      <span className="font-mono text-[10px] text-[var(--muted)]">
+                      <span
+                        className="font-mono text-[10px] text-[var(--muted)]"
+                        data-testid="quote-meta"
+                      >
                         via {quote.source}
+                        {formatQuoteTime(quote.asOfUnix)
+                          ? ` · ${formatQuoteTime(quote.asOfUnix)}`
+                          : ""}
+                        {" · refreshes each minute"}
                       </span>
                     ) : null}
                   </div>
@@ -898,8 +955,11 @@ export function OutlookDashboard({
                         ) : null}
                       </div>
                     ) : (
-                      <p className="text-sm text-[var(--muted)]">
-                        Live quote unavailable. Daily signal is still current.
+                      <p
+                        className="text-sm text-[var(--muted)]"
+                        data-testid="quote-status"
+                      >
+                        {quoteStatusMessage(quoteStatus)}
                       </p>
                     )}
                   </div>

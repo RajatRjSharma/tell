@@ -3,7 +3,7 @@ import { isSession, requireApiSession } from "@/lib/api/auth-guard";
 import { getDb } from "@/lib/db";
 import { jsonError, jsonOk, parseOptionalDate } from "@/lib/api/http";
 import { listLatestOutlook } from "@/lib/api/outlook";
-import { fetchLiveQuote } from "@/lib/quotes";
+import { fetchLiveQuote, type LiveQuoteResult } from "@/lib/quotes";
 import { SIGNAL_MODEL_VERSION } from "@/lib/signals/score";
 
 export const dynamic = "force-dynamic";
@@ -47,12 +47,15 @@ export async function GET(
       symbols: [symbol],
     });
 
-    let quote = null;
-    if (wantLive && assetRow.source_symbol) {
+    let live: LiveQuoteResult | null = null;
+    if (wantLive) {
       try {
-        quote = await fetchLiveQuote(symbol, String(assetRow.source_symbol));
+        live = await fetchLiveQuote(symbol, {
+          assetClass: String(assetRow.asset_class),
+        });
       } catch (err) {
         console.warn("live quote failed", symbol, err);
+        live = { quote: null, status: "unavailable" };
       }
     }
 
@@ -72,7 +75,8 @@ export async function GET(
       modelVersion: SIGNAL_MODEL_VERSION,
       asOf: signals[0]?.asOfDate ?? asOfDate,
       signals,
-      quote,
+      quote: live?.quote ?? null,
+      quoteStatus: live?.status ?? null,
       disclaimer:
         "Research aid only. Not financial advice or guaranteed predictions.",
     });

@@ -65,9 +65,11 @@ async function main() {
       const asset = assets.find((a) => a.symbol === symbol);
       if (!asset) continue;
       try {
-        const q = await fetchLiveQuote(symbol, asset.source_symbol);
+        const { quote: q, status } = await fetchLiveQuote(symbol, {
+          assetClass: asset.asset_class,
+        });
         if (!q) {
-          console.log(`  ${symbol.padEnd(8)} unavailable`);
+          console.log(`  ${symbol.padEnd(8)} ${status}`);
           continue;
         }
         const ch =

@@ -441,10 +441,14 @@ export function buildOpenApiDocument(serverUrl?: string): OpenAPIV3.Document {
               name: "live",
               in: "query",
               schema: { type: "string", enum: ["1", "true"] },
+              description:
+                "Include a Finnhub quote (cached 60s, US session only). quoteStatus is live | closed | unsupported | disabled | unavailable.",
             },
           ],
           responses: {
-            "200": { description: "{ asset, signals, quote, disclaimer }" },
+            "200": {
+              description: "{ asset, signals, quote, quoteStatus, disclaimer }",
+            },
             "401": { $ref: "#/components/responses/Unauthorized" },
             "404": { $ref: "#/components/responses/BadRequest" },
           },

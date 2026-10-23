@@ -94,8 +94,10 @@ SIGNAL_HORIZONS=1d,1w,1m,10d,60d make compute-signals
 ```
 
 Hourly horizons are not supported yet (daily bars only). Near-real-time **last price**
-overlay uses Finnhub quote when `FINNHUB_API_KEY` is set, else Yahoo — printed by
-`compute-signals` for context; scores still use daily features.
+overlay uses Finnhub when `FINNHUB_API_KEY` is set. Quotes are shared through a
+60-second server cache, fetched only during the NYSE session, and refreshed in the
+dashboard once a minute while the tab is visible; FX has no live feed on the free
+tier. Scores still use daily features.
 
 `compute-forecasts` compares each stored signal to the realized forward return once
 enough bars exist. Neutral is graded with a small band that widens with horizon length.

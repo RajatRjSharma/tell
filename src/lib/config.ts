@@ -58,7 +58,7 @@ export function otpDevEchoEnabled(): boolean {
   return process.env.TELL_OTP_DEV_ECHO === "1";
 }
 
-/** Live Finnhub/Yahoo quote fetches. Off in CI/e2e so tests use seeded data only. */
+/** Live Finnhub quote fetches. Off in CI/e2e so tests use seeded data only. */
 export function liveMarketQuotesEnabled(): boolean {
   return envFlag("LIVE_MARKET_QUOTES", true);
 }

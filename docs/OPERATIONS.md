@@ -12,7 +12,7 @@ Runbook for setting up, running, and maintaining Tell.
 | FRED API key | Free, needed for US macro ingest |
 | SMTP credentials | Needed for OTP registration and email alerts |
 | Gemini and Groq keys | Optional, only for briefs and chat |
-| Finnhub key | Optional, live quotes fall back to Yahoo |
+| Finnhub key | Optional, enables live quotes (US session, 60s cache) |
 
 ## First run
 
@@ -76,7 +76,7 @@ Data providers:
 | -------- | ------- |
 | `FRED_API_KEY` | US macro ingest |
 | `FINNHUB_API_KEY` | Live quotes, optional |
-| `LIVE_MARKET_QUOTES` | Finnhub/Yahoo fetches (default true; set false in e2e) |
+| `LIVE_MARKET_QUOTES` | Finnhub quote fetches (default true; set false in e2e) |
 
 AI, local use only:
 
@@ -244,7 +244,7 @@ Deep mode adds Yahoo and Finnhub reachability; those failures are degraded, not 
 | Alert never fires | Rule needs a baseline first | The first evaluation records `baselined`; changes fire afterward |
 | Playwright registration fails | Dev echo disabled | Ensure the test server sets `TELL_OTP_DEV_ECHO=1` |
 | Retrieval hits missing in chat | `research_fts` absent | Rerun `make db-migrate`, then reingest events or regenerate briefs |
-| Live quote missing | Finnhub key absent or provider down | Expected; Yahoo fallback or `quote: null` |
+| Live quote missing | Market closed, FX, Finnhub key absent, or provider down | Expected; `quoteStatus` says which and the UI explains it |
 
 ## Maintenance
 

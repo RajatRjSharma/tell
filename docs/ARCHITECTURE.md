@@ -123,7 +123,7 @@ const [signals, watchlist, macroStrip, nearTermBias] = await Promise.all([
 ]);
 ```
 
-Interactive panels then call the API for detail: charts, event impact, forecast quality, alerts, briefs, and chat. Live quotes are fetched only when explicitly requested with `?live=1`, and a quote failure never fails the outlook response.
+Interactive panels then call the API for detail: charts, event impact, forecast quality, alerts, briefs, and chat. Live quotes are fetched only when explicitly requested with `?live=1`, only during the NYSE session, and through a shared 60-second cache (at most one Finnhub call per symbol per minute). A quote failure never fails the outlook response.
 
 ## Offline pipeline
 
@@ -219,7 +219,7 @@ Seeded countries: `US`, `IN`, `DE`, `JP`, `GB`, `CN`.
 | Cross-country macro | IMF DataMapper, World Bank fallback | No key |
 | Local monthly macro | IMF SDMX 3.0 CPI, BIS central bank policy rates | No key |
 | Market bars | Yahoo Finance; ECB reference rates (Frankfurter) when Yahoo FX is empty | No key |
-| Live quotes | Finnhub with `FINNHUB_API_KEY` | Optional |
+| Live quotes | Finnhub with `FINNHUB_API_KEY` (US-listed ETFs; no FX on free tier) | Optional |
 | Policy events | Fed, ECB, BoE, BoJ, RBI RSS | No key |
 | Briefs and chat | `GEMINI_API_KEY`, `GROQ_API_KEY` | Optional |
 | Email | SMTP through Nodemailer | Needed for OTP registration |

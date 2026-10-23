@@ -189,7 +189,7 @@ Returns `{ asOf, modelVersion, count, bySymbol, signals, disclaimer }`, where ea
 
 Path `symbol` is decoded, uppercased, and must match `/^[A-Z0-9.=_-]{1,20}$/`. Query: optional `asOf`, and `live=1` or `live=true` to attempt a quote.
 
-Returns `{ asset, modelVersion, asOf, signals, quote, disclaimer }`. The quote is null unless a live fetch succeeds:
+Returns `{ asset, modelVersion, asOf, signals, quote, quoteStatus, disclaimer }`. Quotes come from Finnhub only, are shared across users through a 60-second server cache, and are fetched only during the NYSE regular session (09:30–16:00 ET, Mon–Fri). `quoteStatus` explains a null quote: `closed` (outside the session, no provider call), `unsupported` (FX — Finnhub's free tier has no FX quotes), `disabled` (`LIVE_MARKET_QUOTES=false` or no `FINNHUB_API_KEY`), or `unavailable` (provider failed). It is `null` when `live` was not requested. The quote is null unless a live fetch succeeds:
 
 ```json
 {
@@ -203,7 +203,7 @@ Returns `{ asset, modelVersion, asOf, signals, quote, disclaimer }`. The quote i
 }
 ```
 
-Source is `finnhub` or `yahoo`; every field except `symbol`, `price`, and `source` may be null. A quote failure is deliberately swallowed.
+Source is always `finnhub`; every field except `symbol`, `price`, and `source` may be null. A quote failure is deliberately swallowed.
 
 Errors: 400 `Invalid symbol`, 400 `asOf must be YYYY-MM-DD`, 404 `Unknown symbol: X`, 500 `Failed to load outlook`.
 
