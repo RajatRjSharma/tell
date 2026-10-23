@@ -21,6 +21,19 @@ test.describe("chart hover readouts", () => {
     await expect(page.getByTestId("macro-scrub-VIXCLS")).toHaveCount(0);
   });
 
+  test("score track explains the selected signal", async ({ page }) => {
+    await page.goto("/");
+    const track = page.getByTestId("score-track");
+    await expect(track).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByTestId("score-meaning")).toContainText(
+      /neutral zone|lean/,
+    );
+    await expect(track.getByRole("img")).toHaveAttribute(
+      "aria-label",
+      /on a scale from −1 bearish to \+1 bullish/,
+    );
+  });
+
   test("price chart tooltip follows the pointer and the keyboard", async ({
     page,
   }) => {

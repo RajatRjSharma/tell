@@ -4,7 +4,14 @@ import {
   nearestIndex,
   tooltipAlign,
 } from "@/lib/charts/scrub";
-import { explainMacroValue, formatSignedPct } from "@/lib/charts/explain";
+import {
+  explainConfidence,
+  explainImpactCell,
+  explainMacroValue,
+  explainScore,
+  formatSignedPct,
+  impactIntensity,
+} from "@/lib/charts/explain";
 
 describe("nearestIndex", () => {
   it("finds the closest x, preferring the earlier point on ties", () => {
@@ -56,5 +63,53 @@ describe("explainMacroValue", () => {
   it("formats signed percents", () => {
     expect(formatSignedPct(0.0342)).toBe("+3.42%");
     expect(formatSignedPct(-0.01)).toBe("−1.00%");
+  });
+});
+
+describe("explainScore", () => {
+  it("names the zone and strength", () => {
+    expect(explainScore(0.05)).toMatch(/neutral zone/);
+    expect(explainScore(-0.14)).toMatch(/neutral zone/);
+    expect(explainScore(0.2)).toMatch(/Mild bullish/);
+    expect(explainScore(-0.5)).toMatch(/Clear bearish/);
+    expect(explainScore(0.9)).toMatch(/Strong bullish/);
+  });
+
+  it("reads evidence levels", () => {
+    expect(explainConfidence(null)).toBe("");
+    expect(explainConfidence(0.3)).toMatch(/Thin/);
+    expect(explainConfidence(0.8)).toMatch(/Broad/);
+  });
+});
+
+describe("explainImpactCell", () => {
+  const base = { symbol: "SPY", horizon: "1w", source: "Fed" };
+
+  it("describes typical move and direction", () => {
+    const text = explainImpactCell({
+      ...base,
+      n: 20,
+      median: 0.0042,
+      hitRateUp: 0.65,
+    });
+    expect(text).toContain("SPY, 1 week after Fed releases");
+    expect(text).toContain("+0.42%");
+    expect(text).toContain("usually rose");
+    expect(text).not.toContain("Small sample");
+  });
+
+  it("flags thin and empty samples", () => {
+    expect(
+      explainImpactCell({ ...base, n: 3, median: -0.01, hitRateUp: 0.5 }),
+    ).toMatch(/coin flip.*Small sample/);
+    expect(
+      explainImpactCell({ ...base, n: 0, median: null, hitRateUp: null }),
+    ).toMatch(/no usable price data/);
+  });
+
+  it("scales tint to the column's largest move", () => {
+    expect(impactIntensity(0.01, 0.02)).toBeCloseTo(0.5);
+    expect(impactIntensity(-0.04, 0.02)).toBe(1);
+    expect(impactIntensity(null, 0.02)).toBe(0);
   });
 });

@@ -35,6 +35,11 @@ test.describe("event impact", () => {
     );
     await expect(page.getByTestId("impact-row-INDA")).toBeVisible();
 
+    await page.getByTestId("impact-cell-INDA-1w").hover();
+    await expect(page.getByTestId("impact-readout")).toContainText(
+      "INDA, 1 week after Fed releases: typical move +0.80%, up 58% of 12 times",
+    );
+
     await page.getByTestId("impact-source").selectOption("ECB");
     await expect(page.getByTestId("event-impact-panel")).toContainText(
       /ECB · \d+ matching historical releases/,

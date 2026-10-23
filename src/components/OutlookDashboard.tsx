@@ -8,6 +8,7 @@ import { EconomicTerm, type EconomicTermKey } from "@/components/EconomicTerm";
 import { ResearchBrief } from "@/components/ResearchBrief";
 import { ResearchChat } from "@/components/ResearchChat";
 import { PriceChart } from "@/components/PriceChart";
+import { ScoreTrack } from "@/components/charts/ScoreTrack";
 import { SignalQuality } from "@/components/SignalQuality";
 import { AlertsPanel } from "@/components/AlertsPanel";
 import { EventsPanel } from "@/components/EventsPanel";
@@ -911,6 +912,11 @@ export function OutlookDashboard({
                     </strong>
                   </div>
                 </div>
+
+                <ScoreTrack
+                  score={selectedSignal.score}
+                  confidence={selectedSignal.confidence}
+                />
 
                 <div className="mt-6">
                   <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">

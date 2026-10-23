@@ -38,9 +38,12 @@ function clamp(n: number, lo: number, hi: number): number {
   return Math.max(lo, Math.min(hi, n));
 }
 
+/** |score| at or above this makes a directional call. */
+export const DIRECTION_THRESHOLD = 0.15;
+
 function directionFromScore(score: number): SignalDirection {
-  if (score >= 0.15) return "bullish";
-  if (score <= -0.15) return "bearish";
+  if (score >= DIRECTION_THRESHOLD) return "bullish";
+  if (score <= -DIRECTION_THRESHOLD) return "bearish";
   return "neutral";
 }
 

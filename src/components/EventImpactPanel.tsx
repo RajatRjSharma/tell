@@ -2,6 +2,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { EconomicTerm } from "@/components/EconomicTerm";
+import {
+  SMALL_SAMPLE,
+  explainImpactCell,
+  impactIntensity,
+} from "@/lib/charts/explain";
 import { POLICY_SOURCES } from "@/lib/events/feeds";
 
 type ImpactStats = {
@@ -61,6 +66,7 @@ export function EventImpactPanel({
     "any",
   );
   const [result, setResult] = useState<ImpactState | null>(null);
+  const [focusCell, setFocusCell] = useState<string | null>(null);
   const symbolKey = [...new Set(symbols)].sort().join(",");
   const requestKey = `${source}:${symbolKey}:${sentiment}`;
   const active = result?.key === requestKey ? result : null;
@@ -122,6 +128,32 @@ export function EventImpactPanel({
       }),
     }));
   }, [report]);
+
+  const columnMax = useMemo(() => {
+    const max: Record<string, number> = {};
+    for (const row of report?.rows ?? []) {
+      const size = Math.abs(row.stats.median ?? 0);
+      max[row.horizon] = Math.max(max[row.horizon] ?? 0, size);
+    }
+    return max;
+  }, [report]);
+
+  const focused = useMemo(() => {
+    if (!report || !focusCell) return null;
+    const [symbol, horizon] = focusCell.split("|");
+    const row = report.rows.find(
+      (item) => item.symbol === symbol && item.horizon === horizon,
+    );
+    if (!report.assets.includes(symbol!)) return null;
+    return explainImpactCell({
+      symbol: symbol!,
+      horizon: horizon!,
+      source: report.source,
+      n: row?.stats.n ?? 0,
+      median: row?.stats.median ?? null,
+      hitRateUp: row?.stats.hitRateUp ?? null,
+    });
+  }, [focusCell, report]);
 
   return (
     <section
@@ -240,30 +272,63 @@ export function EventImpactPanel({
                       <td className="py-3 pr-3 font-mono text-xs font-semibold">
                         {row.symbol}
                       </td>
-                      {row.cells.map((cell) => (
-                        <td key={cell.horizon} className="px-2 py-3 align-top">
-                          <div
-                            className={`font-mono text-xs ${
-                              (cell.stats?.median ?? 0) > 0
-                                ? "text-[var(--positive)]"
-                                : (cell.stats?.median ?? 0) < 0
-                                  ? "text-[var(--negative)]"
-                                  : ""
-                            }`}
-                          >
-                            {pct(cell.stats?.median ?? null)}
-                          </div>
-                          <div className="mt-1 font-mono text-[10px] text-[var(--muted)]">
-                            up {hitPct(cell.stats?.hitRateUp ?? null)} · n=
-                            {cell.stats?.n ?? 0}
-                          </div>
-                        </td>
-                      ))}
+                      {row.cells.map((cell) => {
+                        const key = `${row.symbol}|${cell.horizon}`;
+                        const median = cell.stats?.median ?? null;
+                        const n = cell.stats?.n ?? 0;
+                        const strength = impactIntensity(
+                          median,
+                          columnMax[cell.horizon] ?? 0,
+                        );
+                        const tint =
+                          median == null || median === 0
+                            ? "transparent"
+                            : `color-mix(in srgb, var(${median > 0 ? "--positive" : "--negative"}) ${Math.round(strength * 22)}%, transparent)`;
+                        return (
+                          <td key={cell.horizon} className="p-1 align-top">
+                            <button
+                              type="button"
+                              className={`impact-cell${n > 0 && n < SMALL_SAMPLE ? " impact-cell-thin" : ""}`}
+                              style={{ background: tint }}
+                              aria-pressed={focusCell === key}
+                              data-testid={`impact-cell-${row.symbol}-${cell.horizon}`}
+                              onPointerEnter={() => setFocusCell(key)}
+                              onFocus={() => setFocusCell(key)}
+                              onClick={() => setFocusCell(key)}
+                            >
+                              <span
+                                className={`block font-mono text-xs ${
+                                  (median ?? 0) > 0
+                                    ? "text-[var(--positive)]"
+                                    : (median ?? 0) < 0
+                                      ? "text-[var(--negative)]"
+                                      : ""
+                                }`}
+                              >
+                                {pct(median)}
+                              </span>
+                              <span className="mt-1 block font-mono text-[10px] text-[var(--muted)]">
+                                up {hitPct(cell.stats?.hitRateUp ?? null)} · n=
+                                {n}
+                              </span>
+                            </button>
+                          </td>
+                        );
+                      })}
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
+
+            <p
+              className="impact-readout"
+              aria-live="polite"
+              data-testid="impact-readout"
+            >
+              {focused ??
+                `Hover or tap a cell to read it in plain words. Stronger colour means a bigger typical move for that horizon; faded cells have fewer than ${SMALL_SAMPLE} releases.`}
+            </p>
 
             <p className="mt-4 text-[11px] leading-relaxed text-[var(--muted)]">
               {report.disclaimer}

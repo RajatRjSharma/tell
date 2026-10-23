@@ -548,6 +548,128 @@ button:disabled {
   font-variant-numeric: tabular-nums;
 }
 
+.impact-cell {
+  display: block;
+  width: 100%;
+  padding: 0.45rem 0.5rem;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 120ms ease,
+    opacity 120ms ease;
+}
+
+.impact-cell:hover,
+.impact-cell[aria-pressed="true"] {
+  border-color: var(--line-strong);
+}
+
+.impact-cell:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+.impact-cell-thin {
+  opacity: 0.55;
+}
+
+.impact-cell-thin:hover,
+.impact-cell-thin[aria-pressed="true"] {
+  opacity: 1;
+}
+
+.impact-readout {
+  min-height: 2.6rem;
+  margin-top: 0.75rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: 10px;
+  background: var(--surface-raised);
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--muted-strong);
+}
+
+.score-track-wrap {
+  margin-top: 0.9rem;
+}
+
+.score-track {
+  position: relative;
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--negative) 28%, var(--surface)) 0%,
+    var(--surface) 50%,
+    color-mix(in srgb, var(--positive) 28%, var(--surface)) 100%
+  );
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.score-track-neutral {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: color-mix(in srgb, var(--line-strong) 45%, transparent);
+}
+
+.score-track-mid {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  left: 50%;
+  width: 1px;
+  background: var(--line-strong);
+}
+
+.score-track-marker {
+  position: absolute;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--surface-raised);
+  border-radius: 999px;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 0 1px var(--line-strong);
+  transition: left 240ms ease;
+}
+
+.score-track-marker-positive {
+  background: var(--positive);
+}
+
+.score-track-marker-negative {
+  background: var(--negative);
+}
+
+.score-track-marker-neutral {
+  background: var(--muted);
+}
+
+.score-track-scale {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.4rem;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 9px;
+  color: var(--muted);
+}
+
+.score-track-note {
+  margin-top: 0.45rem;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--muted-strong);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .score-track-marker {
+    transition: none;
+  }
+}
+
 .horizon-tile {
   display: flex;
   min-height: 4rem;
