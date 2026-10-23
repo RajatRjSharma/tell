@@ -4,6 +4,7 @@ import { createClient } from "@libsql/client";
 import { indicators } from "../src/data/seed";
 import { fetchCrossCountryReadings } from "../src/lib/cross-country";
 import { IMF_COUNTRY_CODES } from "../src/lib/imf";
+import { assertFailureBudget, runIsolated } from "../src/lib/ingest/run";
 import { toReadingUpserts, upsertReadings } from "../src/lib/readings";
 
 config({ path: resolve(process.cwd(), ".env") });
@@ -30,16 +31,14 @@ async function ingestImf() {
       : "  (IMF preferred; World Bank fallback if blocked)",
   );
 
-  let total = 0;
   const sourcesUsed = new Set<string>();
 
-  for (const indicator of imfIndicators) {
-    const code = indicator.source_series_id;
-    process.stdout.write(`  ${indicator.id} (${code})... `);
-
-    try {
+  const run = await runIsolated(
+    imfIndicators,
+    (indicator) => `${indicator.id} (${indicator.source_series_id})`,
+    async (indicator) => {
       const { source, byCountry } = await fetchCrossCountryReadings(
-        code,
+        indicator.source_series_id,
         [...IMF_COUNTRY_CODES],
         { minYear },
       );
@@ -48,25 +47,16 @@ async function ingestImf() {
       let seriesTotal = 0;
       for (const countryCode of IMF_COUNTRY_CODES) {
         const parsed = byCountry[countryCode] ?? [];
-        const rows = toReadingUpserts(
-          countryCode,
-          indicator.id,
-          source,
-          parsed,
+        seriesTotal += await upsertReadings(
+          db,
+          toReadingUpserts(countryCode, indicator.id, source, parsed),
         );
-        seriesTotal += await upsertReadings(db, rows);
       }
-
-      total += seriesTotal;
-      console.log(`${seriesTotal} rows via ${source}`);
-    } catch (err) {
-      console.log("FAILED");
-      console.error(err);
-      throw err;
-    }
-
-    await new Promise((r) => setTimeout(r, 300));
-  }
+      return seriesTotal;
+    },
+    { pauseMs: 300 },
+  );
+  const total = run.written;
 
   const count = await db.execute({
     sql: `SELECT COUNT(*) AS n FROM readings
@@ -77,6 +67,7 @@ async function ingestImf() {
   console.log(`Done. Wrote ${total} upserts.`);
   console.log(`Providers used: ${[...sourcesUsed].join(", ") || "none"}`);
   console.log(`Cross-country readings in DB: ${count.rows[0]?.n ?? 0}`);
+  assertFailureBudget("ingest:imf", run);
 }
 
 ingestImf().catch((err) => {

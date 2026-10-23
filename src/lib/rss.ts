@@ -1,3 +1,5 @@
+import { resilientFetch } from "@/lib/http/fetch-retry";
+
 export type RssItem = {
   title: string;
   link: string | null;
@@ -103,7 +105,7 @@ export async function fetchRssFeed(
   url: string,
   options?: { fetchImpl?: typeof fetch; userAgent?: string },
 ): Promise<string> {
-  const fetchImpl = options?.fetchImpl ?? fetch;
+  const fetchImpl = options?.fetchImpl ?? resilientFetch;
   const response = await fetchImpl(url, {
     headers: {
       Accept:

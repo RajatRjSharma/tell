@@ -41,27 +41,37 @@ jobs:
         run: npm ci
 
       - name: Apply schema migrations
+        id: migrate
         run: npm run db:migrate
 
+      # Each source is independent: one provider outage should not block the
+      # others or the compute steps. The job still reports failure.
       - name: Ingest FRED
+        if: ${{ !cancelled() && steps.migrate.outcome == 'success' }}
         run: npm run ingest:fred
         env:
           FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
 
       - name: Ingest cross-country (World Bank fallback on Actions)
+        if: ${{ !cancelled() && steps.migrate.outcome == 'success' }}
         run: npm run ingest:imf
 
       - name: Ingest markets (Yahoo)
+        if: ${{ !cancelled() && steps.migrate.outcome == 'success' }}
         run: npm run ingest:markets
 
-      - name: Ingest policy events (Fed/ECB/BoE RSS)
+      - name: Ingest policy events (central bank RSS)
+        if: ${{ !cancelled() && steps.migrate.outcome == 'success' }}
         run: npm run ingest:events
 
       - name: Compute signals
+        if: ${{ !cancelled() && steps.migrate.outcome == 'success' }}
         run: npm run compute:signals
 
       - name: Evaluate forecast hit rates
+        if: ${{ !cancelled() && steps.migrate.outcome == 'success' }}
         run: npm run compute:forecasts
 
       - name: Evaluate alert rules
+        if: ${{ !cancelled() && steps.migrate.outcome == 'success' }}
         run: npm run compute:alerts

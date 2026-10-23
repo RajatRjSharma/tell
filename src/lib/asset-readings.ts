@@ -26,6 +26,19 @@ export function toAssetReadingUpserts(
   }));
 }
 
+/** Latest stored daily bar date for a symbol, or null. */
+export async function latestAssetBarDate(
+  db: Client,
+  symbol: string,
+): Promise<string | null> {
+  const result = await db.execute({
+    sql: `SELECT MAX(date) AS d FROM asset_readings WHERE symbol = ?`,
+    args: [symbol],
+  });
+  const value = result.rows[0]?.d;
+  return value == null ? null : String(value);
+}
+
 export async function upsertAssetReadings(
   db: Client,
   rows: AssetReadingUpsert[],

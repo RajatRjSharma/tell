@@ -1,3 +1,5 @@
+import { resilientFetch } from "@/lib/http/fetch-retry";
+
 export type AssetBar = {
   date: string;
   open: number | null;
@@ -93,7 +95,7 @@ export async function fetchYahooDailyBars(
     fetchImpl?: typeof fetch;
   },
 ): Promise<AssetBar[]> {
-  const fetchImpl = options?.fetchImpl ?? fetch;
+  const fetchImpl = options?.fetchImpl ?? resilientFetch;
   const yahooSymbol = toYahooSymbol(sourceSymbol);
   const url = new URL(`${YAHOO_CHART_BASE}/${encodeURIComponent(yahooSymbol)}`);
   url.searchParams.set("interval", "1d");

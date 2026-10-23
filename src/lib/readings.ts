@@ -40,6 +40,21 @@ export function toReadingUpserts(
   }));
 }
 
+/** Latest current-vintage observation date for one series, or null. */
+export async function latestReadingDate(
+  db: Client,
+  countryCode: string,
+  indicatorId: string,
+): Promise<string | null> {
+  const result = await db.execute({
+    sql: `SELECT MAX(observed_for) AS d FROM readings
+          WHERE country_code = ? AND indicator_id = ? AND vintage = ?`,
+    args: [countryCode, indicatorId, CURRENT_VINTAGE],
+  });
+  const value = result.rows[0]?.d;
+  return value == null ? null : String(value);
+}
+
 /** Batch upsert readings; returns rows written. */
 export async function upsertReadings(
   db: Client,

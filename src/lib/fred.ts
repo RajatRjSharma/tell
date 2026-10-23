@@ -1,3 +1,5 @@
+import { resilientFetch } from "@/lib/http/fetch-retry";
+
 export type FredObservation = {
   date: string;
   value: string;
@@ -65,7 +67,7 @@ export async function fetchFredSeriesObservations(
   },
 ): Promise<ParsedReading[]> {
   const apiKey = options?.apiKey ?? getFredApiKey();
-  const fetchImpl = options?.fetchImpl ?? fetch;
+  const fetchImpl = options?.fetchImpl ?? resilientFetch;
 
   const url = new URL(`${FRED_BASE}/series/observations`);
   url.searchParams.set("series_id", seriesId);

@@ -1,4 +1,5 @@
 import type { ParsedReading } from "@/lib/fred";
+import { resilientFetch } from "@/lib/http/fetch-retry";
 
 export type ImfDatamapperResponse = {
   values?: Record<string, Record<string, Record<string, number | null>>>;
@@ -65,7 +66,7 @@ export async function fetchImfIndicator(
   indicatorCode: string,
   options?: { fetchImpl?: typeof fetch },
 ): Promise<ImfDatamapperResponse> {
-  const fetchImpl = options?.fetchImpl ?? fetch;
+  const fetchImpl = options?.fetchImpl ?? resilientFetch;
   const url = `${IMF_BASE}/${encodeURIComponent(indicatorCode)}`;
 
   const res = await fetchImpl(url, {

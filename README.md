@@ -60,6 +60,12 @@ forward returns at 1d / 1w / 1m after similar Fed/ECB/BoE releases. Optional
 
 Optional: set `FRED_OBSERVATION_START`, `IMF_MIN_YEAR`, or `MARKET_OBSERVATION_START=2023-01-01` in `.env`.
 
+FRED and market ingests are incremental: each series re-reads a short overlap before
+its latest stored date (400 days for FRED revisions, 14 days for daily bars). Set
+`INGEST_FULL_REFRESH=1` to re-pull full history. Requests time out and retry on
+429/5xx, and one failing series no longer aborts the run — a job exits non-zero only
+when more than half of its series fail.
+
 ## Features / regimes
 
 ```bash

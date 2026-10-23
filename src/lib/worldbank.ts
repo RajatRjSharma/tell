@@ -1,4 +1,5 @@
 import type { ParsedReading } from "@/lib/fred";
+import { resilientFetch } from "@/lib/http/fetch-retry";
 import { yearToObservedFor } from "@/lib/imf";
 
 /** IMF WEO DataMapper codes → World Bank open API indicator ids (close substitutes). */
@@ -69,7 +70,7 @@ export async function fetchWorldBankIndicator(
     maxYear?: number;
   },
 ): Promise<Record<string, ParsedReading[]>> {
-  const fetchImpl = options?.fetchImpl ?? fetch;
+  const fetchImpl = options?.fetchImpl ?? resilientFetch;
   const minYear = options?.minYear ?? 2015;
   const maxYear = options?.maxYear ?? new Date().getUTCFullYear() + 1;
 
