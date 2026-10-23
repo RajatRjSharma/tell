@@ -1,14 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   buildSparklinePath,
+  sparklinePoints,
   formatSparkDelta,
   formatSparkValue,
   type MacroSparkSeries,
   type MacroStrip,
 } from "@/lib/macro/sparklines";
 import { EconomicTerm, type EconomicTermKey } from "@/components/EconomicTerm";
+import { useScrub } from "@/components/charts/useScrub";
+import { explainMacroValue } from "@/lib/charts/explain";
+import { formatChartDate } from "@/lib/charts/scrub";
 
 type StripState = {
   status: "ready" | "error";
@@ -44,37 +48,167 @@ function unitHelp(series: MacroSparkSeries): string {
   return "Expected US equity volatility. Change is vs the prior session.";
 }
 
-function Sparkline({ series }: { series: MacroSparkSeries }) {
-  const values = series.points.map((point) => point.value);
+function MacroStripItem({ series }: { series: MacroSparkSeries }) {
+  const values = useMemo(
+    () => series.points.map((point) => point.value),
+    [series.points],
+  );
   const path = buildSparklinePath(values, WIDTH, HEIGHT);
+  const coords = useMemo(
+    () => sparklinePoints(values, WIDTH, HEIGHT),
+    [values],
+  );
+  const xs = useMemo(() => coords.map((point) => point.x), [coords]);
+  const scrub = useScrub(xs, WIDTH);
   const up = (series.rangeChange ?? 0) > 0;
   const down = (series.rangeChange ?? 0) < 0;
 
+  const i = scrub.index;
+  const shown = i != null ? series.points[i] : null;
+  const prev = i != null && i > 0 ? series.points[i - 1] : null;
+  const value = shown ? shown.value : series.latest;
+  const delta = shown
+    ? prev
+      ? shown.value - prev.value
+      : null
+    : series.change;
+  const asOf = shown ? shown.date : series.asOf;
+  const previousValue = shown
+    ? (prev?.value ?? null)
+    : (series.points[series.points.length - 2]?.value ?? null);
+  const meaning =
+    value != null ? explainMacroValue(series.id, value, previousValue) : "";
+  const granularity =
+    series.periodKind === "monthly_readings" ? "month" : "day";
+
   return (
-    <svg
-      viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
-      width={WIDTH}
-      height={HEIGHT}
-      className="overflow-visible"
-      aria-hidden="true"
-    >
-      {path ? (
-        <path
-          d={path}
-          fill="none"
-          stroke={
-            up
-              ? "var(--positive)"
-              : down
-                ? "var(--negative)"
-                : "var(--muted-strong)"
-          }
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
+    <div className="macro-strip-item" data-testid={`macro-item-${series.id}`}>
+      <div className="macro-strip-label">
+        {macroTerm(series.id) ? (
+          <EconomicTerm term={macroTerm(series.id)!}>
+            {series.label}
+          </EconomicTerm>
+        ) : (
+          series.label
+        )}
+      </div>
+
+      <div className="macro-strip-reading">
+        <div className="min-w-0">
+          <div className="flex items-baseline gap-2">
+            <strong className="font-mono text-lg font-medium tracking-[-0.035em]">
+              {formatSparkValue(value, series.unit)}
+            </strong>
+            <span
+              className={`font-mono text-[10px] ${
+                (delta ?? 0) > 0
+                  ? "text-[var(--positive)]"
+                  : (delta ?? 0) < 0
+                    ? "text-[var(--negative)]"
+                    : "text-[var(--muted)]"
+              }`}
+            >
+              {formatSparkDelta(delta, series.unit)}
+            </span>
+          </div>
+          {shown ? (
+            <span
+              className="font-mono text-[10px] text-[var(--accent)]"
+              data-testid={`macro-scrub-${series.id}`}
+            >
+              {formatChartDate(shown.date, granularity)}
+            </span>
+          ) : null}
+        </div>
+        <svg
+          viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
+          width={WIDTH}
+          height={HEIGHT}
+          className="chart-scrub overflow-visible"
+          role="img"
+          aria-label={`${series.label} history. Use arrow keys to read each point.`}
+          data-testid={`macro-spark-${series.id}`}
+          {...scrub.svgProps}
+        >
+          <rect width={WIDTH} height={HEIGHT} fill="transparent" />
+          {path ? (
+            <path
+              d={path}
+              fill="none"
+              stroke={
+                up
+                  ? "var(--positive)"
+                  : down
+                    ? "var(--negative)"
+                    : "var(--muted-strong)"
+              }
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          ) : null}
+          {i != null && coords[i] ? (
+            <g pointerEvents="none">
+              <line
+                x1={coords[i]!.x}
+                x2={coords[i]!.x}
+                y1={0}
+                y2={HEIGHT}
+                className="chart-crosshair"
+              />
+              <circle
+                cx={coords[i]!.x}
+                cy={coords[i]!.y}
+                r="3"
+                className="chart-focus-dot"
+              />
+            </g>
+          ) : null}
+        </svg>
+      </div>
+
+      {meaning ? (
+        <p
+          className="text-[11px] leading-4 text-[var(--muted-strong)]"
+          data-testid={`macro-meaning-${series.id}`}
+          aria-live="polite"
+        >
+          {meaning}
+        </p>
       ) : null}
-    </svg>
+
+      {series.context ? (
+        <p
+          className="font-mono text-[11px] text-[var(--muted-strong)]"
+          data-testid={`macro-context-${series.id}`}
+        >
+          {series.context.label}: {series.context.valueLabel}
+        </p>
+      ) : null}
+
+      <div className="macro-strip-footer">
+        <p className="font-mono text-[10px] text-[var(--muted)]">
+          {asOf ?? "no data"} · US · {periodLabel(series)}
+        </p>
+        <p className="mt-1 text-[10px] leading-4 text-[var(--muted)]">
+          Hover or tap the line to read past values. {unitHelp(series)}
+          {series.periodKind === "market_sessions" ? (
+            <>
+              {" "}
+              <EconomicTerm term="sessions">Market sessions</EconomicTerm> skip
+              weekends and holidays.
+            </>
+          ) : (
+            <> Monthly readings are published roughly once a month.</>
+          )}
+        </p>
+        {series.context ? (
+          <p className="mt-1 text-[10px] leading-4 text-[var(--muted)]">
+            {series.context.note}
+          </p>
+        ) : null}
+      </div>
+    </div>
   );
 }
 
@@ -145,71 +279,7 @@ export function MacroSparklineStrip({
       aria-label="US macro sparkline strip"
     >
       {strip.series.map((series) => (
-        <div key={series.id} className="macro-strip-item">
-          <div className="macro-strip-label">
-            {macroTerm(series.id) ? (
-              <EconomicTerm term={macroTerm(series.id)!}>
-                {series.label}
-              </EconomicTerm>
-            ) : (
-              series.label
-            )}
-          </div>
-
-          <div className="macro-strip-reading">
-            <div className="flex items-baseline gap-2">
-              <strong className="font-mono text-lg font-medium tracking-[-0.035em]">
-                {formatSparkValue(series.latest, series.unit)}
-              </strong>
-              <span
-                className={`font-mono text-[10px] ${
-                  (series.change ?? 0) > 0
-                    ? "text-[var(--positive)]"
-                    : (series.change ?? 0) < 0
-                      ? "text-[var(--negative)]"
-                      : "text-[var(--muted)]"
-                }`}
-              >
-                {formatSparkDelta(series.change, series.unit)}
-              </span>
-            </div>
-            <Sparkline series={series} />
-          </div>
-
-          {series.context ? (
-            <p
-              className="font-mono text-[11px] text-[var(--muted-strong)]"
-              data-testid={`macro-context-${series.id}`}
-            >
-              {series.context.label}: {series.context.valueLabel}
-            </p>
-          ) : null}
-
-          <div className="macro-strip-footer">
-            <p className="font-mono text-[10px] text-[var(--muted)]">
-              {series.asOf ?? "no data"} · US · {periodLabel(series)}
-            </p>
-            <p className="mt-1 text-[10px] leading-4 text-[var(--muted)]">
-              Oldest left, latest right. {unitHelp(series)}
-              {series.periodKind === "market_sessions" ? (
-                <>
-                  {" "}
-                  <EconomicTerm term="sessions">
-                    Market sessions
-                  </EconomicTerm>{" "}
-                  skip weekends and holidays.
-                </>
-              ) : (
-                <> Monthly readings are published roughly once a month.</>
-              )}
-            </p>
-            {series.context ? (
-              <p className="mt-1 text-[10px] leading-4 text-[var(--muted)]">
-                {series.context.note}
-              </p>
-            ) : null}
-          </div>
-        </div>
+        <MacroStripItem key={series.id} series={series} />
       ))}
     </section>
   );

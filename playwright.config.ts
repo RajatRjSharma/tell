@@ -53,6 +53,7 @@ const testEnv = {
 Object.assign(process.env, testEnv);
 
 const signedInSpecs = [
+  /chart-hover\.spec\.ts/,
   /decision\.spec\.ts/,
   /events\.spec\.ts/,
   /impact\.spec\.ts/,

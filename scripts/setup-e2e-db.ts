@@ -94,7 +94,7 @@ async function setup() {
       await db.execute({
         sql: `INSERT INTO readings
                 (country_code, indicator_id, observed_for, value, vintage, source)
-              VALUES ('US', ?, ?, ?, 'e2e', 'fixture')`,
+              VALUES ('US', ?, ?, ?, 'current', 'fixture')`,
         args: [indicatorId, dates[index]!, value],
       });
     }

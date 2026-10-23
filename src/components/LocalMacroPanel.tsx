@@ -1,4 +1,10 @@
+"use client";
+
+import { useMemo } from "react";
+import { useScrub } from "@/components/charts/useScrub";
+import { explainMacroValue } from "@/lib/charts/explain";
 import type { LocalMacroPoint, LocalMacroRow } from "@/lib/macro/local";
+import { buildSparklinePath, sparklinePoints } from "@/lib/macro/sparklines";
 
 const MONTHS = [
   "Jan",
@@ -25,33 +31,102 @@ function formatPp(value: number): string {
   return `${value >= 0 ? "+" : "−"}${Math.abs(value).toFixed(2)} pp`;
 }
 
+const SPARK_W = 96;
+const SPARK_H = 24;
+
 function Metric({
   label,
+  indicatorId,
   point,
   testId,
 }: {
   label: string;
+  indicatorId: "CPI_YOY_M" | "POLICY_RATE";
   point: LocalMacroPoint | null;
   testId: string;
 }) {
+  const history = useMemo(() => point?.history ?? [], [point]);
+  const values = useMemo(() => history.map((row) => row.value), [history]);
+  const coords = useMemo(
+    () => sparklinePoints(values, SPARK_W, SPARK_H),
+    [values],
+  );
+  const xs = useMemo(() => coords.map((c) => c.x), [coords]);
+  const scrub = useScrub(xs, SPARK_W);
+
+  if (!point) {
+    return (
+      <div className="min-w-0" data-testid={testId}>
+        <dt className="text-[11px] text-[var(--muted)]">{label}</dt>
+        <dd className="font-mono text-sm text-[var(--muted)]">n/a</dd>
+      </div>
+    );
+  }
+
+  const i = scrub.index;
+  const shown = i != null ? history[i] : null;
+  const value = shown?.value ?? point.value;
+  const asOf = shown?.date ?? point.asOf;
+  const previous =
+    i != null
+      ? (history[i - 1]?.value ?? null)
+      : (history[history.length - 2]?.value ?? null);
+  const meaning = explainMacroValue(indicatorId, value, previous);
+  const path = buildSparklinePath(values, SPARK_W, SPARK_H);
+
   return (
     <div className="min-w-0" data-testid={testId}>
       <dt className="text-[11px] text-[var(--muted)]">{label}</dt>
-      {point ? (
-        <dd>
-          <span className="font-mono text-lg tracking-[-0.03em]">
-            {point.value.toFixed(2)}%
+      <dd>
+        <span className="font-mono text-lg tracking-[-0.03em]">
+          {value.toFixed(2)}%
+        </span>
+        <span className="mt-0.5 block font-mono text-[10px] text-[var(--muted)]">
+          <span className={shown ? "text-[var(--accent)]" : undefined}>
+            {monthLabel(asOf)}
           </span>
-          <span className="mt-0.5 block font-mono text-[10px] text-[var(--muted)]">
-            {monthLabel(point.asOf)}
-            {point.change12m !== null
-              ? ` · ${formatPp(point.change12m)} y/y`
-              : ""}
+          {!shown && point.change12m !== null
+            ? ` · ${formatPp(point.change12m)} y/y`
+            : ""}
+        </span>
+        {values.length > 1 ? (
+          <svg
+            viewBox={`0 0 ${SPARK_W} ${SPARK_H}`}
+            className="chart-scrub mt-1.5 block h-6 w-full max-w-[6rem] overflow-visible"
+            role="img"
+            aria-label={`${label}, last ${values.length} months. Use arrow keys to read each month.`}
+            data-testid={`${testId}-spark`}
+            {...scrub.svgProps}
+          >
+            <rect width={SPARK_W} height={SPARK_H} fill="transparent" />
+            <path
+              d={path}
+              fill="none"
+              stroke="var(--accent)"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            {i != null && coords[i] ? (
+              <circle
+                cx={coords[i]!.x}
+                cy={coords[i]!.y}
+                r="2.5"
+                className="chart-focus-dot"
+                pointerEvents="none"
+              />
+            ) : null}
+          </svg>
+        ) : null}
+        {meaning ? (
+          <span
+            className="mt-1 block text-[10px] leading-4 text-[var(--muted-strong)]"
+            aria-live="polite"
+          >
+            {meaning}
           </span>
-        </dd>
-      ) : (
-        <dd className="font-mono text-sm text-[var(--muted)]">n/a</dd>
-      )}
+        ) : null}
+      </dd>
     </div>
   );
 }
@@ -107,11 +182,13 @@ export function LocalMacroPanel({
               <dl className="mt-3 grid grid-cols-2 gap-3">
                 <Metric
                   label="Inflation (YoY)"
+                  indicatorId="CPI_YOY_M"
                   point={row.inflation}
                   testId={`local-inflation-${row.countryCode}`}
                 />
                 <Metric
                   label={row.countryCode === "DE" ? "ECB rate" : "Policy rate"}
+                  indicatorId="POLICY_RATE"
                   point={row.policyRate}
                   testId={`local-policy-${row.countryCode}`}
                 />

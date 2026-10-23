@@ -761,6 +761,77 @@ button:disabled {
   fill: var(--muted-strong);
 }
 
+.chart-scrub {
+  cursor: crosshair;
+  outline: none;
+  border-radius: 6px;
+}
+
+.chart-scrub:focus-visible {
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+.chart-crosshair {
+  stroke: var(--line-strong);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+
+.chart-focus-dot {
+  fill: var(--surface-raised);
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+
+.chart-tooltip {
+  position: absolute;
+  top: 0.25rem;
+  z-index: 2;
+  display: grid;
+  gap: 0.1rem;
+  min-width: 8.5rem;
+  max-width: min(15rem, 70%);
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--surface-raised) 94%, transparent);
+  box-shadow: var(--shadow);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 10px;
+  line-height: 1.35;
+  color: var(--muted-strong);
+  pointer-events: none;
+}
+
+.chart-tooltip-start {
+  transform: translateX(0.5rem);
+}
+
+.chart-tooltip-center {
+  transform: translateX(-50%);
+}
+
+.chart-tooltip-end {
+  transform: translateX(calc(-100% - 0.5rem));
+}
+
+.chart-tooltip-date {
+  color: var(--muted);
+}
+
+.chart-tooltip-value {
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+
+.chart-tooltip-note {
+  margin-top: 0.15rem;
+  padding-top: 0.2rem;
+  border-top: 1px solid var(--line);
+}
+
 .chart-legend {
   display: inline-block;
   width: 0.45rem;

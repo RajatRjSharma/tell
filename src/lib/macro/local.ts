@@ -8,6 +8,8 @@ export type LocalMacroPoint = {
   asOf: string;
   /** Change vs ~12 months earlier, in percentage points. */
   change12m: number | null;
+  /** Up to the last 13 monthly readings, oldest first. */
+  history: Array<{ date: string; value: number }>;
 };
 
 export type LocalMacroRow = {
@@ -42,6 +44,9 @@ function latestPoint(series: LocalMacroReading[]): LocalMacroPoint | null {
     value: latest.value,
     asOf: latest.observedFor,
     change12m: prior ? latest.value - prior.value : null,
+    history: series
+      .slice(-13)
+      .map((row) => ({ date: row.observedFor, value: row.value })),
   };
 }
 

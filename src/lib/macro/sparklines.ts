@@ -28,6 +28,28 @@ export type MacroStrip = {
   series: MacroSparkSeries[];
 };
 
+/** Sparkline point positions in viewBox units (values ascending in time). */
+export function sparklinePoints(
+  values: number[],
+  width: number,
+  height: number,
+  padding = 2,
+): Array<{ x: number; y: number }> {
+  if (values.length === 0) return [];
+  if (values.length === 1) return [{ x: width / 2, y: height / 2 }];
+
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const span = max - min || 1;
+  const innerW = Math.max(width - padding * 2, 1);
+  const innerH = Math.max(height - padding * 2, 1);
+
+  return values.map((value, index) => ({
+    x: padding + (index / (values.length - 1)) * innerW,
+    y: padding + (1 - (value - min) / span) * innerH,
+  }));
+}
+
 /** Sparkline SVG path (values ascending in time). */
 export function buildSparklinePath(
   values: number[],
@@ -41,18 +63,11 @@ export function buildSparklinePath(
     return `M ${padding} ${y} L ${width - padding} ${y}`;
   }
 
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const span = max - min || 1;
-  const innerW = Math.max(width - padding * 2, 1);
-  const innerH = Math.max(height - padding * 2, 1);
-
-  return values
-    .map((value, index) => {
-      const x = padding + (index / (values.length - 1)) * innerW;
-      const y = padding + (1 - (value - min) / span) * innerH;
-      return `${index === 0 ? "M" : "L"} ${x.toFixed(2)} ${y.toFixed(2)}`;
-    })
+  return sparklinePoints(values, width, height, padding)
+    .map(
+      (point, index) =>
+        `${index === 0 ? "M" : "L"} ${point.x.toFixed(2)} ${point.y.toFixed(2)}`,
+    )
     .join(" ");
 }
 

@@ -31,11 +31,16 @@ describe("summarizeLocalMacro", () => {
       value: 4.4,
       asOf: "2026-09-01",
       change12m: expect.closeTo(-1, 6),
+      history: [
+        { date: "2025-09-01", value: 5.4 },
+        { date: "2026-09-01", value: 4.4 },
+      ],
     });
     expect(rows[0]?.policyRate).toEqual({
       value: 5.5,
       asOf: "2026-08-01",
       change12m: null,
+      history: [{ date: "2026-08-01", value: 5.5 }],
     });
     expect(rows[0]?.realRate).toBeCloseTo(1.1, 6);
     expect(rows[1]).toEqual({
