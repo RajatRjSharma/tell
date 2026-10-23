@@ -4,6 +4,7 @@ import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { BrandWordmark } from "@/components/BrandMark";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 type Mode = "login" | "register";
 type RegisterStep = "email" | "verify";
@@ -193,7 +194,8 @@ export function AuthForm({ mode }: { mode: Mode }) {
         </p>
       </section>
 
-      <section className="flex items-center justify-center px-5 py-12 sm:px-10">
+      <section className="relative flex items-center justify-center px-5 py-12 sm:px-10">
+        <ThemeToggle className="absolute right-5 top-5 sm:right-10" />
         <div className="w-full max-w-md">
           <Link
             href="/"

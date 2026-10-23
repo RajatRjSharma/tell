@@ -70,6 +70,7 @@ const anonymousSpecs = [
   /docs\.spec\.ts/,
   /gate\.spec\.ts/,
   /home\.spec\.ts/,
+  /theme\.spec\.ts/,
   /watchlist\.spec\.ts/,
 ];
 

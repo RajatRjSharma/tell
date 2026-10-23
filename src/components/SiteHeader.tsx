@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { BrandWordmark } from "@/components/BrandMark";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export type SiteHeaderUser = {
   email: string;
@@ -82,6 +83,7 @@ export function SiteHeader({
           className="site-header-nav flex items-center gap-2 text-sm"
         >
           {leadingActions}
+          <ThemeToggle />
           <div className="site-header-menu" data-open={menuOpen}>
             <button
               type="button"
