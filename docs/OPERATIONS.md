@@ -104,6 +104,7 @@ Job tuning, all optional:
 | `FEATURE_SYMBOLS` | `SPY,TLT,GLD,EURUSD` | Feature snapshot symbols |
 | `LIVE_QUOTE_SYMBOLS` | `SPY,GLD,TLT` | Quote context in logs |
 | `FORECAST_SYMBOLS` | all | Restrict evaluation |
+| `FORECAST_REGRADE` | unset | `1` re-grades already graded signals (after a grading rule change) |
 | `BACKFILL_DAYS` | 90 | Trading days to rebuild, capped at 2000 |
 | `BACKFILL_FROM`, `BACKFILL_TO` | unset | Explicit range, overrides day count |
 | `BACKFILL_SKIP_FORECASTS` | unset | `1` skips grading |

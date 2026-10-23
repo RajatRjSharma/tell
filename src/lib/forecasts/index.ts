@@ -21,6 +21,8 @@ export async function loadUnevaluatedSignals(
     symbols?: string[] | null;
     horizons?: string[] | null;
     limit?: number;
+    /** Include already-graded signals so a grading rule change applies to history. */
+    regrade?: boolean;
   },
 ): Promise<UnevaluatedSignal[]> {
   const modelVersion = options?.modelVersion ?? SIGNAL_MODEL_VERSION;
@@ -51,7 +53,7 @@ export async function loadUnevaluatedSignals(
            AND f.as_of_date = s.as_of_date
            AND f.model_version = ?
           WHERE ${filters.join(" AND ")}
-            AND f.id IS NULL
+            ${options?.regrade ? "" : "AND f.id IS NULL"}
           ORDER BY s.as_of_date ASC, s.symbol ASC
           LIMIT ?`,
     args,
@@ -93,6 +95,7 @@ export async function computeAndStoreForecasts(
     symbols?: string[] | null;
     horizons?: string[] | null;
     limit?: number;
+    regrade?: boolean;
   },
 ): Promise<{ considered: number; written: number; skipped: number }> {
   const pending = await loadUnevaluatedSignals(db, options);

@@ -21,14 +21,17 @@ async function main() {
         .filter(Boolean)
     : null;
 
+  const regrade = process.env.FORECAST_REGRADE === "1";
   const db = createClient({ url, authToken });
   console.log(
-    `Evaluating signals → forecast_log (horizons=${horizons.join(",")}${symbols ? ` symbols=${symbols.join(",")}` : ""})...`,
+    `Evaluating signals → forecast_log (horizons=${horizons.join(",")}${symbols ? ` symbols=${symbols.join(",")}` : ""}${regrade ? " regrade=all" : ""})...`,
   );
 
   const result = await computeAndStoreForecasts(db, {
     horizons,
     symbols,
+    regrade,
+    limit: regrade ? 20_000 : undefined,
   });
 
   console.log(

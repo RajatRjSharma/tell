@@ -179,17 +179,18 @@ actualReturn = (close[end] - close[start]) / abs(close[start])
 
 The return is null when the horizon is not positive, no starting close exists, the future close has not printed yet, or the starting close is zero or non-finite.
 
-Neutral tolerance widens with horizon length:
+Neutral tolerance is half a typical move for that instrument over that horizon:
 
 ```text
-neutralBand = 0.002 * sqrt(max(bars, 1))
+dailyVol    = stdev of daily returns over the 60 closes up to the signal date
+neutralBand = 0.5 * dailyVol * sqrt(max(bars, 1))
 ```
 
-| Horizon | Band |
-| ------- | ---- |
-| 1 bar | 0.20% |
-| 5 bars | about 0.45% |
-| 21 bars | about 0.92% |
+Only closes at or before the signal date feed `dailyVol`, so grading never looks ahead. A quiet pair such as USDCNY (about 0.15% a day) gets a 1-day band near 0.08%, while a 2%-a-day commodity gets about 1%. Without this, a fixed band let neutral calls on quiet instruments pass almost every time.
+
+With fewer than 20 usable daily returns, the band falls back to `0.002 * sqrt(max(bars, 1))` (0.20% at 1 bar, about 0.45% at 5, about 0.92% at 21).
+
+After changing grading rules, re-grade existing rows with `FORECAST_REGRADE=1 npm run compute:forecasts`.
 
 Grading:
 
@@ -261,7 +262,7 @@ The point limit defaults to 24 and is clamped between 6 and 120, so very small r
 | ------ | --------- |
 | `compute-features` | `FEATURE_SYMBOLS` default `SPY,TLT,GLD,EURUSD`; `FEATURE_AS_OF` defaults to the latest date for the first symbol, then today in UTC |
 | `compute-signals` | `SIGNAL_HORIZONS` default `1d,1w,1m`; `SIGNAL_AS_OF` defaults to the latest market date; `LIVE_QUOTE_SYMBOLS` default `SPY,GLD,TLT`; optional `FINNHUB_API_KEY` |
-| `compute-forecasts` | `SIGNAL_HORIZONS` default `1d,1w,1m`; `FORECAST_SYMBOLS` unset means all symbols |
+| `compute-forecasts` | `SIGNAL_HORIZONS` default `1d,1w,1m`; `FORECAST_SYMBOLS` unset means all symbols; `FORECAST_REGRADE=1` re-grades graded rows |
 | `backfill-signals` | `BACKFILL_DAYS` default 90, capped at 2000; `BACKFILL_FROM`, `BACKFILL_TO`; `FORECAST_SYMBOLS`; `BACKFILL_SKIP_FORECASTS=1` |
 
 Live quotes printed by `compute-signals` are context only and never enter a score.
