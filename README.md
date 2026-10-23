@@ -38,8 +38,9 @@ Never commit `.env`.
 make ingest-fred       # US macro from FRED → Turso readings
 make ingest-markets    # Asset OHLC from Yahoo Finance → Turso asset_readings
 make ingest-events     # Fed / ECB / BoE RSS → Turso events
+make ingest-global-macro  # Monthly inflation (IMF SDMX) + policy rates (BIS) → Turso
 make ingest-manual     # IMF DataMapper cross-country (run on your machine)
-make ingest-all        # FRED + IMF (manual) + markets + events locally
+make ingest-all        # FRED + IMF (manual) + global macro + markets + events locally
 
 # Push provider data into the Turso DB from .env (usually cloud):
 make sync-turso-like-actions   # same pipeline as GitHub Actions

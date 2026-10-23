@@ -149,6 +149,25 @@ export const indicators = [
     source_series_id: "BCA_NGDPD",
     description: "Current account % of GDP (IMF WEO)",
   },
+  {
+    id: "CPI_YOY_M",
+    name: "Inflation (CPI YoY, monthly)",
+    unit: "percent",
+    frequency: "monthly",
+    source: "IMF_SDMX",
+    source_series_id: "CPI._T.YOY_PCH_PA_PT.M",
+    description: "Monthly headline CPI year-over-year by country (IMF CPI)",
+  },
+  {
+    id: "POLICY_RATE",
+    name: "Central bank policy rate",
+    unit: "percent",
+    frequency: "monthly",
+    source: "BIS",
+    source_series_id: "WS_CBPOL",
+    description:
+      "End-of-month policy rate (BIS); Germany uses the euro area ECB rate",
+  },
 ] as const;
 
 /** Seed assets; `source_symbol` is the Yahoo ticker. */

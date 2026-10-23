@@ -100,6 +100,26 @@ async function setup() {
     }
   }
 
+  // Local macro is read with a rolling window, so anchor fixtures to today.
+  const lastMonth = new Date();
+  lastMonth.setUTCDate(1);
+  lastMonth.setUTCMonth(lastMonth.getUTCMonth() - 1);
+  const localMacroMonth = lastMonth.toISOString().slice(0, 10);
+  const localMacro: Array<[string, string, number]> = [
+    ["IN", "CPI_YOY_M", 4.4],
+    ["IN", "POLICY_RATE", 5.5],
+    ["DE", "CPI_YOY_M", 2.1],
+    ["DE", "POLICY_RATE", 2],
+  ];
+  for (const [countryCode, indicatorId, value] of localMacro) {
+    await db.execute({
+      sql: `INSERT INTO readings
+              (country_code, indicator_id, observed_for, value, vintage, source)
+            VALUES (?, ?, ?, ?, 'current', 'fixture')`,
+      args: [countryCode, indicatorId, localMacroMonth, value],
+    });
+  }
+
   const asOf = "2026-08-14";
   const horizons = ["1d", "1w", "1m"];
   for (const [assetIndex, asset] of assets.entries()) {

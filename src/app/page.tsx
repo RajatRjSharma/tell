@@ -3,6 +3,7 @@ import { getSession } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { assets, countries } from "@/data/seed";
 import { listLatestOutlook } from "@/lib/api/outlook";
+import { getLocalMacro } from "@/lib/macro/local";
 import { getMacroStrip } from "@/lib/macro/strip";
 import { getNearTermRiskBias } from "@/lib/risk/near-term";
 import { getRegimeExplainer } from "@/lib/features/regime-snapshot";
@@ -18,17 +19,30 @@ export default async function Home() {
   }
 
   const db = getDb();
-  const [signals, watchlist, macroStrip, nearTermBias, regimeExplainer] =
-    await Promise.all([
-      listLatestOutlook(db),
-      listWatchlist(db, session.sub),
-      getMacroStrip(db, { limit: 24 }),
-      getNearTermRiskBias(db),
-      getRegimeExplainer(db).catch((err) => {
-        console.error("regime explainer load failed", err);
-        return null;
-      }),
-    ]);
+  const [
+    signals,
+    watchlist,
+    macroStrip,
+    nearTermBias,
+    regimeExplainer,
+    localMacro,
+  ] = await Promise.all([
+    listLatestOutlook(db),
+    listWatchlist(db, session.sub),
+    getMacroStrip(db, { limit: 24 }),
+    getNearTermRiskBias(db),
+    getRegimeExplainer(db).catch((err) => {
+      console.error("regime explainer load failed", err);
+      return null;
+    }),
+    getLocalMacro(
+      db,
+      countries.map((country) => country.code),
+    ).catch((err) => {
+      console.error("local macro load failed", err);
+      return [];
+    }),
+  ]);
 
   return (
     <OutlookDashboard
@@ -54,6 +68,7 @@ export default async function Home() {
       initialMacroStrip={macroStrip}
       initialNearTermBias={nearTermBias}
       initialRegimeExplainer={regimeExplainer}
+      initialLocalMacro={localMacro}
     />
   );
 }

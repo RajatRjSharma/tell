@@ -37,8 +37,13 @@ test.describe("beginner decision UX", () => {
     await expect(page.getByTestId("market-scope-control")).toContainText(
       "Everything below this control",
     );
+    await expect(page.getByTestId("local-inflation-IN")).toContainText("4.40%");
+    await expect(page.getByTestId("local-policy-IN")).toContainText("5.50%");
+    await expect(page.getByTestId("local-macro-DE")).toHaveCount(0);
 
     await scope.selectOption("region:Europe");
+    await expect(page.getByTestId("local-macro-DE")).toContainText("ECB rate");
+    await expect(page.getByTestId("local-macro-IN")).toHaveCount(0);
     await expect(page.getByTestId("market-scope-control")).toContainText(
       "Viewing Europe",
     );

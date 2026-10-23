@@ -128,11 +128,12 @@ Interactive panels then call the API for detail: charts, event impact, forecast 
 | ---- | ------- | ------ |
 | 1 | `npm run ingest:fred` | `readings` (current vintage plus ALFRED vintages for priority series) |
 | 2 | `npm run ingest:imf` | `readings` for cross-country indicators |
-| 3 | `npm run ingest:markets` | `asset_readings` |
-| 4 | `npm run ingest:events` | `events`, `research_fts` |
-| 5 | `npm run compute:signals` | `signals` |
-| 6 | `npm run compute:forecasts` | `forecast_log` |
-| 7 | `npm run compute:alerts` | `alert_events`, alert email |
+| 3 | `npm run ingest:global-macro` | `readings` for `CPI_YOY_M` (IMF SDMX) and `POLICY_RATE` (BIS) |
+| 4 | `npm run ingest:markets` | `asset_readings` |
+| 5 | `npm run ingest:events` | `events`, `research_fts` |
+| 6 | `npm run compute:signals` | `signals` |
+| 7 | `npm run compute:forecasts` | `forecast_log` |
+| 8 | `npm run compute:alerts` | `alert_events`, alert email |
 
 Manual, key-dependent extras:
 
@@ -159,7 +160,8 @@ tell/
 ├── e2e/                              # Playwright specs
 ├── scripts/                          # CLI pipeline entry points
 │   ├── migrate.ts  seed.ts
-│   ├── ingest-fred.ts  ingest-imf.ts  ingest-markets.ts  ingest-events.ts
+│   ├── ingest-fred.ts  ingest-imf.ts  ingest-global-macro.ts
+│   ├── ingest-markets.ts  ingest-events.ts
 │   ├── compute-features.ts  compute-signals.ts  compute-forecasts.ts
 │   ├── compute-alerts.ts  compute-briefs.ts  compute-watchlist-briefs.ts
 │   ├── backfill-signals.ts  eval-ai.ts

@@ -142,7 +142,8 @@ Never commit `.env`. If a credential is exposed, revoke it at the provider befor
 | `make ingest-manual` | – | Force IMF DataMapper locally |
 | `make ingest-markets` | `npm run ingest:markets` | Daily bars from Yahoo |
 | `make ingest-events` | `npm run ingest:events` | Fed, ECB, BoE RSS |
-| `make ingest-all` | – | All four ingest jobs |
+| `make ingest-global-macro` | `npm run ingest:global-macro` | Monthly CPI YoY (IMF SDMX) and policy rates (BIS) for all six countries |
+| `make ingest-all` | – | All five ingest jobs |
 | `make sync-turso-like-actions` | – | Mirror Actions: migrate → ingest → signals → forecasts → alerts into Turso |
 | `make sync-turso-local-extras` | – | Jobs Actions skips: IMF DataMapper, features, backfill, Gemini briefs |
 | `make sync-turso-everything` | – | Actions pipeline + local extras → Turso from `.env` |
@@ -180,11 +181,14 @@ parallel browser workers; set `PLAYWRIGHT_WORKERS=1` if you need serial runs.
 1. `db:migrate`
 2. `ingest:fred` with `FRED_API_KEY`
 3. `ingest:imf` (World Bank fallback on Actions; local `make ingest-manual` for true IMF)
-4. `ingest:markets`
-5. `ingest:events`
-6. `compute:signals`
-7. `compute:forecasts`
-8. `compute:alerts`
+4. `ingest:global-macro`
+5. `ingest:markets`
+6. `ingest:events`
+7. `compute:signals`
+8. `compute:forecasts`
+9. `compute:alerts`
+
+Each step after `db:migrate` runs even if an earlier ingest fails, so one provider outage does not block the others or the compute steps; the run is still marked failed. Inside a job, a single bad series is logged and skipped, and the job exits non-zero only when more than half of its series fail.
 
 Frequency is four runs/day (~every 6 hours): enough for session refreshes without going hourly against free Yahoo/World Bank limits.
 

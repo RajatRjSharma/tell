@@ -14,9 +14,11 @@ import { EventsPanel } from "@/components/EventsPanel";
 import { EventImpactPanel } from "@/components/EventImpactPanel";
 import { MacroSparklineStrip } from "@/components/MacroSparklineStrip";
 import { NearTermBiasPanel } from "@/components/NearTermBiasPanel";
+import { LocalMacroPanel } from "@/components/LocalMacroPanel";
 import { DecisionSummaryPanel } from "@/components/DecisionSummaryPanel";
 import { RegimeExplainerPanel } from "@/components/RegimeExplainerPanel";
 import { SiteHeader } from "@/components/SiteHeader";
+import type { LocalMacroRow } from "@/lib/macro/local";
 import type { MacroStrip } from "@/lib/macro/sparklines";
 import type { NearTermBias } from "@/lib/risk/near-term";
 import type { RegimeExplainer } from "@/lib/features/regime-explain";
@@ -133,6 +135,7 @@ export function OutlookDashboard({
   initialMacroStrip = null,
   initialNearTermBias = null,
   initialRegimeExplainer = null,
+  initialLocalMacro = [],
 }: {
   user: User | null;
   assets: Asset[];
@@ -142,6 +145,7 @@ export function OutlookDashboard({
   initialMacroStrip?: MacroStrip | null;
   initialNearTermBias?: NearTermBias | null;
   initialRegimeExplainer?: RegimeExplainer | null;
+  initialLocalMacro?: LocalMacroRow[];
 }) {
   const router = useRouter();
   const sessionUser = user;
@@ -301,6 +305,12 @@ export function OutlookDashboard({
     )
     .map((country) => country.code);
   const scopedSymbols = visibleAssets.map((asset) => asset.symbol);
+  const scopedLocalMacro = initialLocalMacro.filter((row) =>
+    scopeCountryCodes.includes(row.countryCode),
+  );
+  const countryNames = Object.fromEntries(
+    countries.map((country) => [country.code, country.name]),
+  );
   const assetClassLabel =
     ASSET_CLASSES.find((option) => option.value === assetClass)?.label ??
     "All markets";
@@ -453,13 +463,14 @@ export function OutlookDashboard({
             </h2>
             <p className="mt-1 text-sm leading-6 text-[var(--muted-strong)]">
               {activeScope.description}. Everything below this control follows
-              the selected geography: decision summary, next-session bias,
-              bullish/neutral/bearish counts, signal quality, policy events,
-              event-impact study, and market rows.
+              the selected geography: local inflation and policy rates, decision
+              summary, next-session bias, bullish/neutral/bearish counts, signal
+              quality, policy events, event-impact study, and market rows.
             </p>
             <p className="mt-1 text-xs leading-5 text-[var(--muted)]">
               Everything above stays a US macro backdrop (strip + regime). Tell
-              does not yet ship local country regimes.
+              shows local inflation and policy rates but does not yet score
+              local country regimes.
             </p>
           </div>
           <label className="min-w-0 text-xs text-[var(--muted)] sm:w-64">
@@ -492,6 +503,12 @@ export function OutlookDashboard({
             </select>
           </label>
         </section>
+
+        <LocalMacroPanel
+          rows={scopedLocalMacro}
+          countryNames={countryNames}
+          scopeLabel={activeScope.label}
+        />
 
         <DecisionSummaryPanel summary={decisionSummary} />
 

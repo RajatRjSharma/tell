@@ -56,6 +56,10 @@ jobs:
         if: ${{ !cancelled() && steps.migrate.outcome == 'success' }}
         run: npm run ingest:imf
 
+      - name: Ingest monthly inflation (IMF SDMX) + policy rates (BIS)
+        if: ${{ !cancelled() && steps.migrate.outcome == 'success' }}
+        run: npm run ingest:global-macro
+
       - name: Ingest markets (Yahoo)
         if: ${{ !cancelled() && steps.migrate.outcome == 'success' }}
         run: npm run ingest:markets
