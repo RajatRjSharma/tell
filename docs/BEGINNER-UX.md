@@ -30,7 +30,7 @@ Longer horizons (`3m` / `6m` / `1y`) exist in the scoring library but are not pr
 - One page-wide selector moves from World to region to country.
 - Below the control, these follow geography: decision summary, next-session bias, bullish/neutral/bearish counts, signal quality, policy events, event-impact study, and market rows.
 - The asset-class and watchlist filters narrow the selected geography further.
-- Event studies let users choose Fed, ECB, or BoE and compare historical post-release returns for every market in the current page scope.
+- Event studies let users choose Fed, ECB, BoE, BoJ, or RBI and compare historical post-release returns for every market in the current page scope.
 - Each policy-event card explains typical tone sensitivity without presenting it as a forecast of the actual reaction.
 - Regime explanation and the macro strip remain explicitly US-backed in rules-v1; non-US views use that as context until country-local regimes ship.
 - Alerts stay personal (watchlist/rules) and are not geography-scoped.

@@ -109,7 +109,7 @@ export function EventsPanel({
             Policy events
           </h2>
           <p className="mt-1 text-xs text-[var(--muted)]">
-            Fed, ECB, and BoE releases from free RSS feeds.
+            Fed, ECB, BoE, BoJ, and RBI releases from free RSS feeds.
             {` Scoped to ${scopeLabel}.`} Tone tags are keyword-based, not
             asset-specific forecasts.
           </p>

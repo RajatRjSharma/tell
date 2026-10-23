@@ -151,7 +151,7 @@ Unique key: `(symbol, horizon, as_of_date, model_version)`. Index: `idx_forecast
 | `url` | TEXT | Source link |
 | `sentiment` | REAL | Keyword tone, positive means hawkish |
 | `assets_impact_json` | TEXT | JSON array of affected symbols |
-| `source` | TEXT | `Fed`, `ECB`, `BoE` |
+| `source` | TEXT | `Fed`, `ECB`, `BoE`, `BoJ`, `RBI` |
 | `created_at` | TEXT | Default timestamp |
 
 Index: `idx_events_date (date DESC)`. Upserts refresh every mutable column and then index the event for retrieval.

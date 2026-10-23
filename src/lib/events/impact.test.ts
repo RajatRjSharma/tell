@@ -49,6 +49,8 @@ describe("impact helpers", () => {
     expect(typicalEventImpact(0.35, "Fed")).toContain("US dollar");
     expect(typicalEventImpact(-0.35, "ECB")).toContain("may weaken");
     expect(typicalEventImpact(null, "BoE")).toContain("depends");
+    expect(typicalEventImpact(0.35, "BoJ")).toContain("the yen");
+    expect(typicalEventImpact(-0.35, "RBI")).toContain("the rupee");
   });
 
   it("summarizes return samples", () => {

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { EconomicTerm } from "@/components/EconomicTerm";
+import { POLICY_SOURCES } from "@/lib/events/feeds";
 
 type ImpactStats = {
   n: number;
@@ -55,7 +56,7 @@ export function EventImpactPanel({
   scopeLabel: string;
   enabled?: boolean;
 }) {
-  const [source, setSource] = useState<"Fed" | "ECB" | "BoE">("Fed");
+  const [source, setSource] = useState<string>("Fed");
   const [sentiment, setSentiment] = useState<"any" | "hawkish" | "dovish">(
     "any",
   );
@@ -152,14 +153,14 @@ export function EventImpactPanel({
               className="select-control ml-2 text-xs"
               value={source}
               disabled={!enabled}
-              onChange={(event) =>
-                setSource(event.target.value as "Fed" | "ECB" | "BoE")
-              }
+              onChange={(event) => setSource(event.target.value)}
               data-testid="impact-source"
             >
-              <option value="Fed">US Federal Reserve</option>
-              <option value="ECB">European Central Bank</option>
-              <option value="BoE">Bank of England</option>
+              {POLICY_SOURCES.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
             </select>
           </label>
           <label

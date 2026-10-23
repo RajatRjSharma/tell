@@ -1,15 +1,12 @@
+import { POLICY_SOURCES } from "@/lib/events/feeds";
+
 export function typicalEventImpact(
   sentiment: number | null,
   source: string | null,
 ): string {
   const currency =
-    source === "ECB"
-      ? "the euro"
-      : source === "BoE"
-        ? "sterling"
-        : source === "Fed"
-          ? "the US dollar"
-          : "the local currency";
+    POLICY_SOURCES.find((item) => item.id === source)?.currency ??
+    "the local currency";
 
   if (sentiment != null && sentiment > 0.1) {
     return `Typical sensitivity: a tighter-rate tone can pressure bonds and rate-sensitive equities, while ${currency} may strengthen.`;

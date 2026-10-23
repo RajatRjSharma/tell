@@ -102,8 +102,8 @@ export default async function MethodologyPage() {
               </li>
               <li>
                 <strong className="text-[var(--text)]">Policy events</strong> -
-                Fed, ECB, and BoE RSS releases, tagged with light hawkish /
-                dovish keywords.
+                Fed, ECB, BoE, BoJ, and RBI RSS releases, tagged with light
+                hawkish / dovish keywords.
               </li>
             </ul>
             <p className="mt-4 text-sm leading-7 text-[var(--muted-strong)]">
@@ -246,8 +246,8 @@ export default async function MethodologyPage() {
             <p className="mt-3 text-sm leading-7 text-[var(--muted-strong)]">
               Policy RSS items are stored with source, date, and optional tone
               tags. The impact study measures median forward returns (and % of
-              up moves) for related assets after similar Fed / ECB / BoE
-              releases at 1d / 1w / 1m. You can filter hawkish vs dovish
+              up moves) for related assets after similar Fed / ECB / BoE / BoJ /
+              RBI releases at 1d / 1w / 1m. You can filter hawkish vs dovish
               analogues.
             </p>
             <p className="mt-4 text-sm leading-7 text-[var(--muted-strong)]">

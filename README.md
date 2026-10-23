@@ -37,7 +37,7 @@ Never commit `.env`.
 ```bash
 make ingest-fred       # US macro from FRED → Turso readings
 make ingest-markets    # Asset OHLC from Yahoo Finance → Turso asset_readings
-make ingest-events     # Fed / ECB / BoE RSS → Turso events
+make ingest-events     # Fed / ECB / BoE / BoJ / RBI RSS → Turso events
 make ingest-global-macro  # Monthly inflation (IMF SDMX) + policy rates (BIS) → Turso
 make ingest-manual     # IMF DataMapper cross-country (run on your machine)
 make ingest-all        # FRED + IMF (manual) + global macro + markets + events locally
@@ -56,7 +56,7 @@ Requires `.env` with Turso credentials (no IMF API key).
 hawkish/dovish tilt and likely asset relevance for the dashboard + AI context.
 
 `GET /api/events/impact` (and the dashboard **Event impact study** panel) measures median
-forward returns at 1d / 1w / 1m after similar Fed/ECB/BoE releases. Optional
+forward returns at 1d / 1w / 1m after similar Fed/ECB/BoE/BoJ/RBI releases. Optional
 `sentiment=hawkish|dovish`. Historical analogues only — not predictions.
 
 Optional: set `FRED_OBSERVATION_START`, `IMF_MIN_YEAR`, or `MARKET_OBSERVATION_START=2023-01-01` in `.env`.

@@ -28,6 +28,34 @@ describe("enrichEvent", () => {
     });
     expect(cut.sentiment).toBeLessThan(0);
   });
+
+  it("does not read RBI auction cut-offs as easing", () => {
+    const rbi = POLICY_FEEDS.find((feed) => feed.source === "RBI")!;
+    const auction = enrichEvent(rbi, {
+      title: "Government Stock - Auction Results: Cut-off",
+      link: null,
+      guid: "3",
+      summary: null,
+      pubDate: null,
+      categories: [],
+    });
+    expect(auction.sentiment).toBeNull();
+    expect(auction.assetsImpact).toContain("INDA");
+  });
+
+  it("maps every feed to a known source with assets", () => {
+    for (const feed of POLICY_FEEDS) {
+      const result = enrichEvent(feed, {
+        title: "Press release",
+        link: null,
+        guid: feed.id,
+        summary: null,
+        pubDate: null,
+        categories: [],
+      });
+      expect(result.assetsImpact.length).toBeGreaterThan(0);
+    }
+  });
 });
 
 describe("buildEventId / rssItemToEventUpsert", () => {

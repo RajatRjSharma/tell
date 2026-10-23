@@ -141,7 +141,7 @@ Never commit `.env`. If a credential is exposed, revoke it at the provider befor
 | `make ingest-imf` | `npm run ingest:imf` | Cross-country macro with World Bank fallback |
 | `make ingest-manual` | – | Force IMF DataMapper locally |
 | `make ingest-markets` | `npm run ingest:markets` | Daily bars from Yahoo |
-| `make ingest-events` | `npm run ingest:events` | Fed, ECB, BoE RSS |
+| `make ingest-events` | `npm run ingest:events` | Fed, ECB, BoE, BoJ, RBI RSS |
 | `make ingest-global-macro` | `npm run ingest:global-macro` | Monthly CPI YoY (IMF SDMX) and policy rates (BIS) for all six countries |
 | `make ingest-all` | – | All five ingest jobs |
 | `make sync-turso-like-actions` | – | Mirror Actions: migrate → ingest → signals → forecasts → alerts into Turso |

@@ -10,10 +10,11 @@ export type EventEnrichment = {
 
 const HAWKISH =
   /\b(hike|hiking|tighten|tightening|restrictive|higher rates|rate increase|hawkish)\b/i;
+// "cut-off" is auction jargon (RBI), not easing.
 const DOVISH =
-  /\b(cut|cutting|ease|easing|accommodative|lower rates|rate reduction|dovish|stimulus)\b/i;
+  /\b(cut(?!-?off)|cuts|cutting|ease|easing|accommodative|lower rates|rate reduction|dovish|stimulus)\b/i;
 const POLICY =
-  /\b(fomc|monetary policy|interest rate|bank rate|policy rate|qe|qt|balance sheet|inflation target)\b/i;
+  /\b(fomc|monetary policy|interest rate|bank rate|policy rate|repo rate|qe|qt|balance sheet|inflation target)\b/i;
 const SPEECH = /\b(speech|remarks|testimony|hearing|interview|panel)\b/i;
 const DATA = /\b(survey|statistics|data|report|minutes|accounts)\b/i;
 
@@ -21,6 +22,8 @@ const SOURCE_ASSETS: Record<string, string[]> = {
   Fed: ["SPY", "TLT", "GLD", "USO", "USDJPY", "MCHI", "INDA", "USDCNH"],
   ECB: ["EWG", "EURUSD", "TLT", "GLD", "SPY"],
   BoE: ["EWU", "GBPUSD", "TLT", "GLD", "SPY"],
+  BoJ: ["EWJ", "USDJPY", "TLT", "GLD", "SPY"],
+  RBI: ["INDA", "GLD", "USO", "SPY"],
 };
 
 export { SOURCE_ASSETS };

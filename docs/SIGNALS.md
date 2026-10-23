@@ -235,9 +235,11 @@ Default asset mapping per source:
 
 | Source | Assets |
 | ------ | ------ |
-| `Fed` | `SPY`, `TLT`, `GLD`, `USDJPY`, `MCHI` |
-| `ECB` | `EWG`, `EURUSD`, `TLT`, `GLD` |
-| `BoE` | `EWU`, `GBPUSD`, `TLT`, `GLD` |
+| `Fed` | `SPY`, `TLT`, `GLD`, `USO`, `USDJPY`, `MCHI`, `INDA`, `USDCNH` |
+| `ECB` | `EWG`, `EURUSD`, `TLT`, `GLD`, `SPY` |
+| `BoE` | `EWU`, `GBPUSD`, `TLT`, `GLD`, `SPY` |
+| `BoJ` | `EWJ`, `USDJPY`, `TLT`, `GLD`, `SPY` |
+| `RBI` | `INDA`, `GLD`, `USO`, `SPY` |
 
 Defaults: source falls back to the symbol's first mapped source, otherwise `Fed`; horizons default to `1d,1w,1m`; sentiment defaults to `any`; the event sample defaults to 120 and is clamped between 1 and 300. No event-type restriction is applied.
 

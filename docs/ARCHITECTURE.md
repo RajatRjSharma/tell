@@ -36,7 +36,7 @@ flowchart TB
     FRED[FRED and ALFRED]
     CROSS[IMF or World Bank]
     YF[Yahoo Finance]
-    RSS[Fed, ECB, BoE RSS]
+    RSS[Fed, ECB, BoE, BoJ, RBI RSS]
     FH[Finnhub quotes]
   end
 
@@ -216,7 +216,7 @@ Seeded countries: `US`, `IN`, `DE`, `JP`, `GB`, `CN`.
 | Cross-country macro | IMF DataMapper, World Bank fallback | No key |
 | Market bars | Yahoo Finance | No key |
 | Live quotes | Finnhub with `FINNHUB_API_KEY` | Optional |
-| Policy events | Fed, ECB, BoE RSS | No key |
+| Policy events | Fed, ECB, BoE, BoJ, RBI RSS | No key |
 | Briefs and chat | `GEMINI_API_KEY`, `GROQ_API_KEY` | Optional |
 | Email | SMTP through Nodemailer | Needed for OTP registration |
 | CI | Node 22, Playwright Chromium | Yes |

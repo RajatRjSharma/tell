@@ -69,7 +69,7 @@ ingest-imf: ## Fetch cross-country macro from IMF into Turso
 ingest-markets: ## Fetch daily asset prices from Yahoo Finance into Turso
 	npm run ingest:markets
 
-ingest-events: ## Fetch Fed/ECB/BoE RSS policy events into Turso
+ingest-events: ## Fetch Fed/ECB/BoE/BoJ/RBI RSS policy events into Turso
 	npm run ingest:events
 
 ingest-global-macro: ## Fetch monthly inflation (IMF SDMX) + policy rates (BIS) into Turso

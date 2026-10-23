@@ -13,7 +13,9 @@ async function main() {
   }
 
   const db = createClient({ url, authToken });
-  console.log("Ingesting Fed / ECB / BoE RSS → events...");
+  console.log(
+    "Ingesting central bank RSS (Fed, ECB, BoE, BoJ, RBI) → events...",
+  );
 
   const result = await ingestPolicyEvents(db);
   console.log(
