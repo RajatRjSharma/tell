@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
 import { generateBrief } from "@/lib/ai/brief";
-import { AiConfigError, AiProviderError } from "@/lib/ai/gemini";
+import { AiConfigError, AiProviderError } from "@/lib/ai/provider";
 import { isSession, requireApiSession } from "@/lib/api/auth-guard";
 import { jsonError, jsonOk } from "@/lib/api/http";
 import { getDb } from "@/lib/db";

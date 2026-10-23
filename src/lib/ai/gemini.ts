@@ -1,26 +1,36 @@
+import {
+  AiConfigError,
+  AiProviderError,
+  providerError,
+  runModelChain,
+  uniqueModels,
+} from "@/lib/ai/provider";
+
 export type GeminiGenerateOptions = {
   apiKey?: string;
   model?: string;
   fetchImpl?: typeof fetch;
   temperature?: number;
   maxOutputTokens?: number;
+  /** Ask for a JSON response body instead of free text. */
+  json?: boolean;
+  timeoutMs?: number;
 };
 
-export class AiConfigError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "AiConfigError";
-  }
-}
+export const GEMINI_FALLBACK_MODELS = [
+  "gemini-3.1-flash-lite",
+  "gemini-2.5-flash",
+];
 
-export class AiProviderError extends Error {
-  status: number;
-
-  constructor(message: string, status = 502) {
-    super(message);
-    this.name = "AiProviderError";
-    this.status = status;
-  }
+/**
+ * Thinking tokens count against maxOutputTokens, so an unbounded budget can
+ * leave no room for the answer. Gemini 2.x only accepts a token budget and
+ * rejects `thinkingLevel`; 3.x takes a level.
+ */
+export function thinkingConfigFor(model: string): Record<string, unknown> {
+  return /^gemini-2\./.test(model)
+    ? { thinkingBudget: 0 }
+    : { thinkingLevel: "minimal" };
 }
 
 function extractText(payload: unknown): string {
@@ -34,7 +44,8 @@ function extractText(payload: unknown): string {
     .map((part) =>
       part &&
       typeof part === "object" &&
-      typeof (part as { text?: unknown }).text === "string"
+      typeof (part as { text?: unknown }).text === "string" &&
+      !(part as { thought?: unknown }).thought
         ? (part as { text: string }).text
         : "",
     )
@@ -46,56 +57,52 @@ export async function generateGeminiText(
   prompt: string,
   options?: GeminiGenerateOptions,
 ): Promise<{ text: string; model: string }> {
-  const apiKey = options?.apiKey ?? process.env.GEMINI_API_KEY;
-  if (!apiKey?.trim()) {
+  const apiKey = (options?.apiKey ?? process.env.GEMINI_API_KEY)?.trim();
+  if (!apiKey) {
     throw new AiConfigError("GEMINI_API_KEY is not configured");
   }
 
-  const preferred =
-    options?.model ?? process.env.GEMINI_MODEL ?? "gemini-3.1-flash-lite";
-  const models = [
-    preferred,
-    "gemini-3.1-flash-lite",
-    "gemini-2.5-flash",
-    "gemini-flash-latest",
-  ].filter((model, index, all) => all.indexOf(model) === index);
-
+  const models = uniqueModels([
+    options?.model ?? process.env.GEMINI_MODEL,
+    ...GEMINI_FALLBACK_MODELS,
+  ]);
   const fetchImpl = options?.fetchImpl ?? fetch;
-  let lastError: AiProviderError | null = null;
 
-  for (const model of models) {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`;
-
-    const response = await fetchImpl(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [{ role: "user", parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: options?.temperature ?? 0.35,
-          maxOutputTokens: options?.maxOutputTokens ?? 700,
+  return runModelChain(
+    "Gemini",
+    models,
+    async (model, signal) => {
+      const response = await fetchImpl(
+        `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
+        {
+          method: "POST",
+          signal,
+          headers: {
+            "Content-Type": "application/json",
+            "x-goog-api-key": apiKey,
+          },
+          body: JSON.stringify({
+            contents: [{ role: "user", parts: [{ text: prompt }] }],
+            generationConfig: {
+              temperature: options?.temperature ?? 0.35,
+              maxOutputTokens: options?.maxOutputTokens ?? 1024,
+              thinkingConfig: thinkingConfigFor(model),
+              ...(options?.json
+                ? { responseMimeType: "application/json" }
+                : {}),
+            },
+          }),
         },
-      }),
-    });
-
-    if (!response.ok) {
-      const body = await response.text().catch(() => "");
-      lastError = new AiProviderError(
-        `Gemini request failed (${response.status})${body ? `: ${body.slice(0, 180)}` : ""}`,
-        response.status >= 400 && response.status < 600 ? response.status : 502,
       );
-      if (response.status === 404) continue;
-      throw lastError;
-    }
 
-    const payload = (await response.json()) as unknown;
-    const text = extractText(payload);
-    if (!text) {
-      throw new AiProviderError("Gemini returned an empty brief", 502);
-    }
+      if (!response.ok) throw await providerError("Gemini", model, response);
 
-    return { text, model };
-  }
-
-  throw lastError ?? new AiProviderError("Gemini models unavailable", 502);
+      const text = extractText((await response.json()) as unknown);
+      if (!text) {
+        throw new AiProviderError(`Gemini ${model} returned no text`, 502);
+      }
+      return { text, model };
+    },
+    options?.timeoutMs,
+  );
 }

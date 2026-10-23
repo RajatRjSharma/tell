@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
 import { answerResearchQuestion } from "@/lib/ai/chat";
-import { AiConfigError, AiProviderError } from "@/lib/ai/gemini";
+import { AiConfigError, AiProviderError } from "@/lib/ai/provider";
 import type { ChatMessage } from "@/lib/ai/types";
 import { isSession, requireApiSession } from "@/lib/api/auth-guard";
 import { jsonError, jsonOk } from "@/lib/api/http";

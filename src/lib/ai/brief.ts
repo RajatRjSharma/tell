@@ -186,7 +186,9 @@ export async function generateBrief(
 
   const context = await buildResearchContext(db, { symbol, horizon });
   const generate = options?.generate ?? generateGeminiText;
-  const { text, model } = await generate(buildBriefPrompt(context));
+  const { text, model } = await generate(buildBriefPrompt(context), {
+    json: true,
+  });
   const brief = parseBriefJson(text, {
     model,
     asOf: context.asOf,

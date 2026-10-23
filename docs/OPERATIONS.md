@@ -84,7 +84,10 @@ AI, local use only:
 | -------- | ------- |
 | `GEMINI_API_KEY` | Research briefs |
 | `GROQ_API_KEY` | Research chat |
-| `GEMINI_MODEL` | Defaults to `gemini-3.1-flash-lite` |
+| `GEMINI_MODEL` | Preferred model; falls back to `gemini-3.1-flash-lite`, `gemini-2.5-flash` |
+| `GROQ_MODEL` | Preferred model; falls back to `openai/gpt-oss-20b`, `openai/gpt-oss-120b`, `qwen/qwen3.8-27b` |
+
+Each model gets 12 seconds and the whole request at most 30 seconds. A retired model (404), quota hit (429), outage (5xx), or timeout moves on to the next model; a bad key (401/403) or malformed request (400) fails immediately. When a provider retires a model, update the fallback list in `src/lib/ai/gemini.ts` or `src/lib/ai/groq.ts`.
 
 Email:
 

@@ -226,7 +226,7 @@ make compute-briefs   # Persist Gemini briefs for the asset universe
 
 Optional: `BRIEF_SYMBOLS=SPY,TLT`, `BRIEF_HORIZONS=1d,1w`, `BRIEF_DELAY_MS=500`.
 
-Set `GEMINI_API_KEY` and `GROQ_API_KEY` in `.env`. Optional: `GEMINI_MODEL` (default `gemini-3.1-flash-lite`, with fallbacks), `GROQ_MODEL`.
+Set `GEMINI_API_KEY` and `GROQ_API_KEY` in `.env`. Optional: `GEMINI_MODEL` (default `gemini-3.1-flash-lite`) and `GROQ_MODEL` (default `openai/gpt-oss-20b`); both fall back to other models on outages, quota limits, or retirement.
 Without keys, endpoints return `503` and the UI shows a soft unavailable state.
 
 Dashboard: evidence panel includes a **Gemini brief** with vs-prior delta; header **Ask Tell** opens Groq chat.
