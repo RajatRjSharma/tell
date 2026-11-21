@@ -7,7 +7,7 @@ Tell’s home page is optimized for non-economists. Technical detail remains ava
 | Concept | Meaning in Tell |
 | ------- | ---------------- |
 | Current condition | US regime label from CPI YoY, industrial production, curve, VIX, Fed funds |
-| Research lean | Directional score from rules-v1 for a horizon |
+| Research lean | Directional score from the rules model for a horizon |
 | Evidence strength | Completeness / decisiveness heuristic (not P(correct)) |
 | Next session bias | Average of latest 1d scores across the loaded universe |
 | Softer follow-on | 65% carry of that average — not an independent tomorrow model |
@@ -32,7 +32,7 @@ Longer horizons (`3m` / `6m` / `1y`) exist in the scoring library but are not pr
 - The asset-class and watchlist filters narrow the selected geography further.
 - Event studies let users choose Fed, ECB, BoE, BoJ, or RBI and compare historical post-release returns for every market in the current page scope.
 - Each policy-event card explains typical tone sensitivity without presenting it as a forecast of the actual reaction.
-- Regime explanation and the macro strip remain explicitly US-backed in rules-v1; non-US views use that as context until country-local regimes ship.
+- Regime explanation and the macro strip remain explicitly US-backed in the rules model; non-US views use that as context until country-local regimes ship.
 - Alerts stay personal (watchlist/rules) and are not geography-scoped.
 
 ## Key modules

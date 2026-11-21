@@ -1,6 +1,6 @@
 # Signal methodology
 
-Every outlook is produced by deterministic rules stamped with model version `rules-v1`. The same inputs always yield the same score, and each score carries the drivers that produced it.
+Every outlook is produced by deterministic rules stamped with model version `rules-v2` (see `SIGNAL_MODEL_VERSION`). `rules-v2` added the multi-asset universe: credit, crypto, commodity futures, and FX regime effects that follow which way the pair is quoted. The same inputs always yield the same score, and each score carries the drivers that produced it.
 
 ## Pipeline
 
@@ -20,7 +20,9 @@ Macro series used for features and regime detection: `CPI`, `INDPRO`, `FEDFUNDS`
 
 Volatility input tries `VIXCLS` first, then `VIX`; if neither has data, the cache stores an empty `VIX` series.
 
-Default market symbols for a feature snapshot: `SPY`, `TLT`, `GLD`.
+Default market symbols for a feature snapshot: `SPY`, `TLT`, `GOLD`.
+
+Cash (`SHV`, T-bills) is ingested for context and later flow views but never scored: its return is the short rate, so a lean would only restate the Fed. Scoring and backfill skip every class in `UNSCORED_CLASSES`.
 
 All feature loading filters `vintage = 'current'`, so ALFRED revision history never leaks into live scoring.
 
@@ -99,13 +101,15 @@ score = clamp(raw, -1, 1)   // stored with 4 decimals
 
 ### Regime bias by asset class
 
-| Regime | equity | rates | commodity | fx | other |
-| ------ | ------ | ----- | --------- | -- | ----- |
-| `risk_off` | -0.55 | 0.35 | 0.15 | -0.15 | -0.20 |
-| `inflationary` | -0.10 | -0.45 | 0.30 | 0.10 | 0 |
-| `slowdown` | -0.35 | 0.25 | -0.20 | -0.10 | -0.10 |
-| `expansion` | 0.40 | -0.15 | 0.15 | 0.10 | 0.10 |
-| `neutral` | 0 | 0 | 0 | 0 | 0 |
+| Regime | equity | rates | commodity | credit | crypto | USD | other |
+| ------ | ------ | ----- | --------- | ------ | ------ | --- | ----- |
+| `risk_off` | -0.55 | 0.35 | 0.15 | -0.30 | -0.60 | 0.20 | -0.20 |
+| `inflationary` | -0.10 | -0.45 | 0.30 | -0.25 | -0.10 | 0.10 | 0 |
+| `slowdown` | -0.35 | 0.25 | -0.20 | -0.20 | -0.35 | 0.10 | -0.10 |
+| `expansion` | 0.40 | -0.15 | 0.15 | 0.20 | 0.35 | -0.15 | 0.10 |
+| `neutral` | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+
+FX is scored as a view on the US dollar, flipped by how the pair is quoted: `DXY` and `USDxxx` pairs take the USD column as is, `xxxUSD` pairs (`EURUSD`, `GBPUSD`, `AUDUSD`) take its negative, and a pair without USD gets 0. In `risk_off`, the safe-haven pairs `USDJPY` and `USDCHF` get -0.30 instead, because the yen and franc usually beat the dollar in a scare.
 
 The regime driver is always recorded with weight 0.40, even when the bias is zero.
 
@@ -134,9 +138,9 @@ These drivers are recorded only when nonzero.
 
 | Symbol | Regime | Bias | Driver |
 | ------ | ------ | ---- | ------ |
-| `GLD` | `inflationary` or `risk_off` | +0.15 | `gold_hedge`, displayed weight 0.10 |
+| `GOLD` | `inflationary` or `risk_off` | +0.15 | `gold_hedge`, displayed weight 0.10 |
 | `TLT` | `inflationary` | -0.10 | none |
-| `USO` | `slowdown` | -0.10 | none |
+| `WTI`, `BRENT` | `slowdown` | -0.10 | none |
 
 Symbol bias is added directly to the raw score without a further multiplier.
 
@@ -236,11 +240,11 @@ Default asset mapping per source:
 
 | Source | Assets |
 | ------ | ------ |
-| `Fed` | `SPY`, `TLT`, `GLD`, `USO`, `USDJPY`, `MCHI`, `INDA`, `USDCNY` |
-| `ECB` | `EWG`, `EURUSD`, `TLT`, `GLD`, `SPY` |
-| `BoE` | `EWU`, `GBPUSD`, `TLT`, `GLD`, `SPY` |
-| `BoJ` | `EWJ`, `USDJPY`, `TLT`, `GLD`, `SPY` |
-| `RBI` | `INDA`, `GLD`, `USO`, `SPY` |
+| `Fed` | `SPY`, `TLT`, `DXY`, `GOLD`, `WTI`, `USDJPY`, `MCHI`, `INDA` |
+| `ECB` | `EWG`, `EWQ`, `EURUSD`, `TLT`, `GOLD`, `SPY` |
+| `BoE` | `EWU`, `GBPUSD`, `TLT`, `GOLD`, `SPY` |
+| `BoJ` | `EWJ`, `USDJPY`, `TLT`, `GOLD`, `SPY` |
+| `RBI` | `INDA`, `USDINR`, `GOLD`, `WTI`, `SPY` |
 
 Defaults: source falls back to the symbol's first mapped source, otherwise `Fed`; horizons default to `1d,1w,1m`; sentiment defaults to `any`; the event sample defaults to 120 and is clamped between 1 and 300. No event-type restriction is applied.
 
@@ -260,8 +264,8 @@ The point limit defaults to 24 and is clamped between 6 and 120, so very small r
 
 | Script | Variables |
 | ------ | --------- |
-| `compute-features` | `FEATURE_SYMBOLS` default `SPY,TLT,GLD,EURUSD`; `FEATURE_AS_OF` defaults to the latest date for the first symbol, then today in UTC |
-| `compute-signals` | `SIGNAL_HORIZONS` default `1d,1w,1m`; `SIGNAL_AS_OF` defaults to the latest market date; `LIVE_QUOTE_SYMBOLS` default `SPY,GLD,TLT`; optional `FINNHUB_API_KEY` |
+| `compute-features` | `FEATURE_SYMBOLS` default `SPY,TLT,GOLD,EURUSD`; `FEATURE_AS_OF` defaults to the latest date for the first symbol, then today in UTC |
+| `compute-signals` | `SIGNAL_HORIZONS` default `1d,1w,1m`; `SIGNAL_AS_OF` defaults to the latest market date; `LIVE_QUOTE_SYMBOLS` default `SPY,TLT,XLK`; optional `FINNHUB_API_KEY` |
 | `compute-forecasts` | `SIGNAL_HORIZONS` default `1d,1w,1m`; `FORECAST_SYMBOLS` unset means all symbols; `FORECAST_REGRADE=1` re-grades graded rows |
 | `backfill-signals` | `BACKFILL_DAYS` default 90, capped at 2000; `BACKFILL_FROM`, `BACKFILL_TO`; `FORECAST_SYMBOLS`; `BACKFILL_SKIP_FORECASTS=1` |
 

@@ -37,6 +37,8 @@ async function migrate() {
     await db.execute(statement);
   }
 
+  await softUpgradeAssets(db);
+  await pruneWeekendBars(db);
   await softUpgradeForecastLog(db);
   await softUpgradeUsers(db);
   await softUpgradeAuthOtps(db);
@@ -57,6 +59,27 @@ async function migrate() {
   }
 
   console.log("Migration complete.");
+}
+
+async function softUpgradeAssets(db: ReturnType<typeof createClient>) {
+  const info = await db.execute("PRAGMA table_info(assets)");
+  const columns = new Set(info.rows.map((row) => String(row.name)));
+  if (!columns.has("asset_group")) {
+    console.log("Upgrading assets: add asset_group");
+    await db.execute("ALTER TABLE assets ADD COLUMN asset_group TEXT");
+  }
+}
+
+/** Keeps stored history on the Monday–Friday calendar `parseYahooChart` enforces. */
+async function pruneWeekendBars(db: ReturnType<typeof createClient>) {
+  const result = await db.execute(
+    "DELETE FROM asset_readings WHERE strftime('%w', date) IN ('0', '6')",
+  );
+  if (result.rowsAffected > 0) {
+    console.log(
+      `Pruned ${result.rowsAffected} weekend bars from asset_readings`,
+    );
+  }
 }
 
 async function softUpgradeForecastLog(db: ReturnType<typeof createClient>) {

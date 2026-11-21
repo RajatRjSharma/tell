@@ -12,7 +12,7 @@ export async function getRegimeExplainer(
 ): Promise<RegimeExplainer> {
   const snapshot = await buildFeatureSnapshot(db, {
     asOf: options?.asOf,
-    symbols: options?.symbols ?? ["SPY", "TLT", "GLD"],
+    symbols: options?.symbols ?? ["SPY", "TLT", "GOLD"],
   });
   return explainUsRegime(snapshot.regime, {
     scopeLabel: "United States macro backdrop",

@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
   try {
     const db = getDb();
     const result = await db.execute(
-      `SELECT symbol, name, asset_class, country_code, currency, source_symbol
+      `SELECT symbol, name, asset_class, asset_group, country_code, currency, source_symbol
        FROM assets
        ORDER BY symbol ASC`,
     );
@@ -21,6 +21,7 @@ export async function GET(request: NextRequest) {
       symbol: String(row.symbol),
       name: String(row.name),
       assetClass: String(row.asset_class),
+      assetGroup: row.asset_group == null ? null : String(row.asset_group),
       countryCode: row.country_code == null ? null : String(row.country_code),
       currency: row.currency == null ? null : String(row.currency),
       sourceSymbol:

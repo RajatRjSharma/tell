@@ -5,6 +5,9 @@ import { assets, countries, indicators } from "@/data/seed";
 export const RETIRED_SYMBOLS: Record<string, string> = {
   // Yahoo's offshore CNH history is effectively empty; onshore CNY is complete.
   USDCNH: "USDCNY",
+  // ETF proxies replaced by the commodity price itself (front-month futures).
+  GLD: "GOLD",
+  USO: "WTI",
 };
 
 /** Upsert countries, indicators and assets from `src/data/seed.ts`. */
@@ -46,11 +49,12 @@ export async function syncCatalog(db: Client): Promise<void> {
 
   for (const a of assets) {
     await db.execute({
-      sql: `INSERT INTO assets (symbol, name, asset_class, country_code, currency, source_symbol)
-            VALUES (?, ?, ?, ?, ?, ?)
+      sql: `INSERT INTO assets (symbol, name, asset_class, asset_group, country_code, currency, source_symbol)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(symbol) DO UPDATE SET
               name = excluded.name,
               asset_class = excluded.asset_class,
+              asset_group = excluded.asset_group,
               country_code = excluded.country_code,
               currency = excluded.currency,
               source_symbol = excluded.source_symbol`,
@@ -58,6 +62,7 @@ export async function syncCatalog(db: Client): Promise<void> {
         a.symbol,
         a.name,
         a.asset_class,
+        a.asset_group,
         a.country_code,
         a.currency,
         a.source_symbol,

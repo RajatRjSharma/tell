@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { EconomicTerm } from "@/components/EconomicTerm";
+import { SIGNAL_MODEL_VERSION } from "@/lib/signals/score";
 
 type QualityStats = {
   n: number;
@@ -114,7 +115,7 @@ export function SignalQuality({
             {scopeLabel}
           </span>
           <span className="font-mono text-[10px] text-[var(--muted)]">
-            rules-v1 · {horizon}
+            {SIGNAL_MODEL_VERSION} · {horizon}
           </span>
         </div>
       </div>

@@ -44,7 +44,7 @@ export function RegimeExplainerPanel({
           <p className="mt-2 text-xs leading-5 text-[var(--muted)]">
             Always US macro conditions — it does not change with World / region
             / country. Use the scope control below to filter markets while
-            viewing {viewScopeLabel}. Country-local regimes are not in rules-v1
+            viewing {viewScopeLabel}. Country-local regimes are not modelled
             yet.
           </p>
         </div>

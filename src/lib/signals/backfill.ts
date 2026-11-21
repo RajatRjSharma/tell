@@ -1,5 +1,6 @@
 import type { Client } from "@libsql/client";
 import { assets } from "@/data/seed";
+import { isScoredClass } from "@/lib/assets/classes";
 import {
   buildFeatureSnapshotFromCache,
   listTradingDates,
@@ -27,9 +28,11 @@ export async function backfillHistoricalSignals(
     calendarSymbol?: string;
   },
 ): Promise<BackfillSignalsResult> {
-  const universe = options?.symbols?.length
-    ? assets.filter((asset) => options.symbols!.includes(asset.symbol))
-    : [...assets];
+  const universe = (
+    options?.symbols?.length
+      ? assets.filter((asset) => options.symbols!.includes(asset.symbol))
+      : [...assets]
+  ).filter((asset) => isScoredClass(asset.asset_class));
 
   if (universe.length === 0) {
     throw new Error("No assets selected for signal backfill");

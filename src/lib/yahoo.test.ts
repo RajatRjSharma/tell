@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
   dateFromUnixSeconds,
   fetchYahooDailyBars,
+  isWeekday,
   parseYahooChart,
   toYahooSymbol,
 } from "@/lib/yahoo";
@@ -53,6 +54,43 @@ describe("parseYahooChart", () => {
         volume: 1000,
       },
     ]);
+  });
+
+  it("drops weekend bars so every instrument shares a weekday calendar", () => {
+    // Fri 2024-01-05, Sat 2024-01-06, Sun 2024-01-07, Mon 2024-01-08
+    const bars = parseYahooChart({
+      chart: {
+        result: [
+          {
+            timestamp: [1704412800, 1704499200, 1704585600, 1704672000],
+            indicators: {
+              quote: [
+                {
+                  open: [1, 2, 3, 4],
+                  high: [1, 2, 3, 4],
+                  low: [1, 2, 3, 4],
+                  close: [1, 2, 3, 4],
+                  volume: [null, null, null, null],
+                },
+              ],
+            },
+          },
+        ],
+      },
+    });
+
+    expect(bars.map((bar) => [bar.date, bar.close])).toEqual([
+      ["2024-01-05", 1],
+      ["2024-01-08", 4],
+    ]);
+  });
+});
+
+describe("isWeekday", () => {
+  it("treats Saturday and Sunday as closed", () => {
+    expect(isWeekday("2024-01-05")).toBe(true);
+    expect(isWeekday("2024-01-06")).toBe(false);
+    expect(isWeekday("2024-01-07")).toBe(false);
   });
 });
 

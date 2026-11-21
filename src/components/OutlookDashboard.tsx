@@ -8,6 +8,12 @@ import { EconomicTerm, type EconomicTermKey } from "@/components/EconomicTerm";
 import { ResearchBrief } from "@/components/ResearchBrief";
 import { ResearchChat } from "@/components/ResearchChat";
 import { PriceChart } from "@/components/PriceChart";
+import { SIGNAL_MODEL_VERSION } from "@/lib/signals/score";
+import {
+  ASSET_CLASSES as CLASS_LIST,
+  isScoredClass,
+  type AssetClassId,
+} from "@/lib/assets/classes";
 import { ScoreTrack } from "@/components/charts/ScoreTrack";
 import { SignalQuality } from "@/components/SignalQuality";
 import { AlertsPanel } from "@/components/AlertsPanel";
@@ -81,16 +87,16 @@ function formatQuoteTime(unix: number | null): string | null {
   }).format(new Date(unix * 1000));
 }
 
-type AssetClass = "watchlist" | "all" | "equity" | "fx" | "commodity" | "rates";
+type AssetClass = "watchlist" | "all" | AssetClassId;
 
 const HORIZONS = ["1d", "1w", "1m"] as const;
-const ASSET_CLASSES: { value: AssetClass; label: string }[] = [
+const ASSET_CLASS_FILTERS: { value: AssetClass; label: string }[] = [
   { value: "watchlist", label: "Watchlist" },
   { value: "all", label: "All markets" },
-  { value: "equity", label: "Equity" },
-  { value: "fx", label: "FX" },
-  { value: "commodity", label: "Commodity" },
-  { value: "rates", label: "Rates" },
+  ...CLASS_LIST.filter((item) => isScoredClass(item.id)).map((item) => ({
+    value: item.id,
+    label: item.label,
+  })),
 ];
 
 function formatDate(date: string | null): string {
@@ -341,7 +347,7 @@ export function OutlookDashboard({
     countries.map((country) => [country.code, country.name]),
   );
   const assetClassLabel =
-    ASSET_CLASSES.find((option) => option.value === assetClass)?.label ??
+    ASSET_CLASS_FILTERS.find((option) => option.value === assetClass)?.label ??
     "All markets";
   const pageScopeLabel =
     assetClass === "all"
@@ -599,7 +605,7 @@ export function OutlookDashboard({
             <strong className="metric-value text-[var(--negative)]">
               {counts.bearish}
             </strong>
-            <span className="metric-note">rules-v1 model</span>
+            <span className="metric-note">{SIGNAL_MODEL_VERSION} model</span>
           </div>
         </section>
 
@@ -687,7 +693,7 @@ export function OutlookDashboard({
               className="select-control"
               data-testid="asset-filter"
             >
-              {ASSET_CLASSES.map((option) => (
+              {ASSET_CLASS_FILTERS.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
                   {option.value === "watchlist" && watchlist.length > 0

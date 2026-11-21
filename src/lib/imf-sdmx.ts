@@ -11,6 +11,12 @@ export const SDMX_ISO2_TO_ISO3: Record<string, string> = {
   JP: "JPN",
   GB: "GBR",
   CN: "CHN",
+  FR: "FRA",
+  CH: "CHE",
+  CA: "CAN",
+  BR: "BRA",
+  KR: "KOR",
+  AU: "AUS",
 };
 
 /** Headline CPI, all items, year-over-year % change, monthly. */

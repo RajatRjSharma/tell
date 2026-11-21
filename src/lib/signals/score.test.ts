@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { regimeBias, scoreSignal } from "@/lib/signals/score";
+import {
+  regimeBias,
+  scoreSignal,
+  SIGNAL_MODEL_VERSION,
+} from "@/lib/signals/score";
 import type { MarketFeatures } from "@/lib/features/market";
 
 const baseMarket: MarketFeatures = {
@@ -18,6 +22,27 @@ describe("regimeBias", () => {
     expect(regimeBias("risk_off", "equity").bias).toBeLessThan(0);
     expect(regimeBias("risk_off", "rates").bias).toBeGreaterThan(0);
   });
+
+  it("flips the dollar view by quote direction", () => {
+    const dollar = regimeBias("expansion", "fx", "DXY").bias;
+    expect(dollar).toBeLessThan(0);
+    expect(regimeBias("expansion", "fx", "USDCAD").bias).toBe(dollar);
+    expect(regimeBias("expansion", "fx", "EURUSD").bias).toBe(-dollar);
+  });
+
+  it("treats yen and franc as safe havens in risk_off", () => {
+    // USDJPY falling = yen strengthening.
+    expect(regimeBias("risk_off", "fx", "USDJPY").bias).toBeLessThan(0);
+    expect(regimeBias("risk_off", "fx", "USDCHF").bias).toBeLessThan(0);
+    expect(regimeBias("risk_off", "fx", "USDINR").bias).toBeGreaterThan(0);
+  });
+
+  it("covers the new classes and stays flat in a neutral regime", () => {
+    expect(regimeBias("risk_off", "crypto").bias).toBeLessThan(0);
+    expect(regimeBias("risk_off", "credit").bias).toBeLessThan(0);
+    expect(regimeBias("inflationary", "commodity").bias).toBeGreaterThan(0);
+    expect(regimeBias("neutral", "crypto").bias).toBe(0);
+  });
 });
 
 describe("scoreSignal", () => {
@@ -33,7 +58,7 @@ describe("scoreSignal", () => {
     expect(s.direction).toBe("bullish");
     expect(s.score).toBeGreaterThan(0);
     expect(s.drivers.length).toBeGreaterThan(0);
-    expect(s.modelVersion).toBe("rules-v1");
+    expect(s.modelVersion).toBe(SIGNAL_MODEL_VERSION);
   });
 
   it("scores risk_off equities as bearish", () => {

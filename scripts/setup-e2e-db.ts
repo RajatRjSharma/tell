@@ -1,7 +1,10 @@
 import { createClient } from "@libsql/client";
 import { readFileSync, mkdirSync, rmSync } from "node:fs";
 import { dirname, resolve } from "node:path";
-import { assets, countries, indicators } from "../src/data/seed";
+import { assets } from "../src/data/seed";
+import { isScoredClass } from "../src/lib/assets/classes";
+import { syncCatalog } from "../src/lib/catalog";
+import { SIGNAL_MODEL_VERSION } from "../src/lib/signals/score";
 
 const databasePath = resolve(
   process.cwd(),
@@ -34,46 +37,7 @@ async function setup() {
     await db.execute(statement);
   }
 
-  for (const country of countries) {
-    await db.execute({
-      sql: `INSERT INTO countries (code, name, region, currency)
-            VALUES (?, ?, ?, ?)`,
-      args: [country.code, country.name, country.region, country.currency],
-    });
-  }
-
-  for (const indicator of indicators) {
-    await db.execute({
-      sql: `INSERT INTO indicators
-              (id, name, unit, frequency, source, source_series_id, description)
-            VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      args: [
-        indicator.id,
-        indicator.name,
-        indicator.unit,
-        indicator.frequency,
-        indicator.source,
-        indicator.source_series_id,
-        indicator.description,
-      ],
-    });
-  }
-
-  for (const asset of assets) {
-    await db.execute({
-      sql: `INSERT INTO assets
-              (symbol, name, asset_class, country_code, currency, source_symbol)
-            VALUES (?, ?, ?, ?, ?, ?)`,
-      args: [
-        asset.symbol,
-        asset.name,
-        asset.asset_class,
-        asset.country_code,
-        asset.currency,
-        asset.source_symbol,
-      ],
-    });
-  }
+  await syncCatalog(db);
 
   const dates = [
     "2026-03-01",
@@ -122,7 +86,10 @@ async function setup() {
 
   const asOf = "2026-08-14";
   const horizons = ["1d", "1w", "1m"];
-  for (const [assetIndex, asset] of assets.entries()) {
+  const scoredAssets = assets.filter((asset) =>
+    isScoredClass(asset.asset_class),
+  );
+  for (const [assetIndex, asset] of scoredAssets.entries()) {
     for (const [horizonIndex, horizon] of horizons.entries()) {
       const score = ((assetIndex % 3) - 1) * 0.2;
       const direction =
@@ -131,7 +98,7 @@ async function setup() {
         sql: `INSERT INTO signals
                 (symbol, horizon, as_of_date, score, direction, confidence,
                  drivers_json, regime, model_version)
-              VALUES (?, ?, ?, ?, ?, ?, ?, 'neutral', 'rules-v1')`,
+              VALUES (?, ?, ?, ?, ?, ?, ?, 'neutral', ?)`,
         args: [
           asset.symbol,
           horizon,
@@ -146,6 +113,7 @@ async function setup() {
               contribution: score,
             },
           ]),
+          SIGNAL_MODEL_VERSION,
         ],
       });
 
@@ -203,7 +171,8 @@ async function setup() {
             (symbol, horizon, as_of_date, direction, score, confidence,
              actual_return, correct, model_version, evaluated_at)
           VALUES ('SPY', '1d', '2026-08-13', 'neutral', 0, 0.6,
-                  0.001, 1, 'rules-v1', '2026-08-14')`,
+                  0.001, 1, ?, '2026-08-14')`,
+    args: [SIGNAL_MODEL_VERSION],
   });
 
   db.close();

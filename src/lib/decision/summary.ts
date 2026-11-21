@@ -1,3 +1,4 @@
+import { SIGNAL_MODEL_VERSION } from "@/lib/signals/score";
 import { describeHorizon } from "@/lib/decision/horizons";
 import type { OutlookSignalDto } from "@/lib/api/outlook";
 
@@ -144,7 +145,7 @@ export function buildDecisionSummary(input: {
       (latest, s) => (!latest || s.asOfDate > latest ? s.asOfDate : latest),
       null,
     );
-  const modelVersion = signals[0]?.modelVersion ?? "rules-v1";
+  const modelVersion = signals[0]?.modelVersion ?? SIGNAL_MODEL_VERSION;
 
   return {
     lean,

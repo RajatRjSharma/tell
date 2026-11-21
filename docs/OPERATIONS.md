@@ -104,8 +104,8 @@ Job tuning, all optional:
 | -------- | ------- | ------ |
 | `SIGNAL_HORIZONS` | `1d,1w,1m` | Horizons to score |
 | `SIGNAL_AS_OF` | latest market date | Scoring date override |
-| `FEATURE_SYMBOLS` | `SPY,TLT,GLD,EURUSD` | Feature snapshot symbols |
-| `LIVE_QUOTE_SYMBOLS` | `SPY,GLD,TLT` | Quote context in logs |
+| `FEATURE_SYMBOLS` | `SPY,TLT,GOLD,EURUSD` | Feature snapshot symbols |
+| `LIVE_QUOTE_SYMBOLS` | `SPY,TLT,XLK` | Quote context in logs |
 | `FORECAST_SYMBOLS` | all | Restrict evaluation |
 | `FORECAST_REGRADE` | unset | `1` re-grades already graded signals (after a grading rule change) |
 | `BACKFILL_DAYS` | 90 | Trading days to rebuild, capped at 2000 |
@@ -146,7 +146,7 @@ Never commit `.env`. If a credential is exposed, revoke it at the provider befor
 | `make ingest-manual` | – | Force IMF DataMapper locally |
 | `make ingest-markets` | `npm run ingest:markets` | Daily bars from Yahoo; ECB reference FX if Yahoo is empty |
 | `make ingest-events` | `npm run ingest:events` | Fed, ECB, BoE, BoJ, RBI RSS |
-| `make ingest-global-macro` | `npm run ingest:global-macro` | Monthly CPI YoY (IMF SDMX) and policy rates (BIS) for all six countries |
+| `make ingest-global-macro` | `npm run ingest:global-macro` | Monthly CPI YoY (IMF SDMX) and policy rates (BIS) for every seeded country with coverage (Taiwan has none) |
 | `make ingest-all` | – | All five ingest jobs |
 | `make sync-turso-like-actions` | – | Mirror Actions: migrate → ingest → signals → forecasts → alerts into Turso |
 | `make sync-turso-local-extras` | – | Jobs Actions skips: IMF DataMapper, features, backfill, Gemini briefs |

@@ -222,6 +222,6 @@ export function explainUsRegime(
       },
     ],
     disclaimer:
-      "This is a current-condition label from US macro series, not a future price prediction. Non-US assets still inherit this US backdrop in rules-v1.",
+      "This is a current-condition label from US macro series, not a future price prediction. Non-US assets still inherit this US backdrop in the current rules model.",
   };
 }

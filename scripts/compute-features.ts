@@ -24,7 +24,7 @@ async function main() {
   }
 
   const db = createClient({ url, authToken });
-  const symbols = (process.env.FEATURE_SYMBOLS ?? "SPY,TLT,GLD,EURUSD")
+  const symbols = (process.env.FEATURE_SYMBOLS ?? "SPY,TLT,GOLD,EURUSD")
     .split(",")
     .map((s) => s.trim())
     .filter(Boolean);

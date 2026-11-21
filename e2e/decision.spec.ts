@@ -53,4 +53,25 @@ test.describe("beginner decision UX", () => {
     await expect(page.getByTestId("outlook-row-GBPUSD")).toBeVisible();
     await expect(page.getByTestId("outlook-row-INDA")).toHaveCount(0);
   });
+
+  test("asset class filter covers commodities, crypto, and credit", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    const filter = page.getByTestId("asset-filter");
+    await expect(filter).toBeVisible({ timeout: 20_000 });
+    await expect(filter.locator("option[value='cash']")).toHaveCount(0);
+
+    await filter.selectOption("crypto");
+    await expect(page.getByTestId("outlook-row-BTCUSD")).toBeVisible();
+    await expect(page.getByTestId("outlook-row-SPY")).toHaveCount(0);
+
+    await filter.selectOption("commodity");
+    await expect(page.getByTestId("outlook-row-GOLD")).toBeVisible();
+    await expect(page.getByTestId("outlook-row-WTI")).toBeVisible();
+
+    await filter.selectOption("credit");
+    await expect(page.getByTestId("outlook-row-HYG")).toBeVisible();
+    await expect(page.getByTestId("outlook-row-SHV")).toHaveCount(0);
+  });
 });

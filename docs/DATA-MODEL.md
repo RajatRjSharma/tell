@@ -54,7 +54,8 @@ Schema source: `db/schema.sql`. Every statement is idempotent (`CREATE TABLE IF 
 | ------ | ---- | ----- |
 | `symbol` | TEXT | Primary key, internal symbol |
 | `name` | TEXT | Display name |
-| `asset_class` | TEXT | `equity`, `fx`, `commodity`, `rates` |
+| `asset_class` | TEXT | `equity`, `fx`, `commodity`, `rates`, `credit`, `cash`, `crypto` |
+| `asset_group` | TEXT | Sub-group within the class (`country`, `us_sector`, `precious`, `energy`, …), labels in `src/lib/assets/classes.ts` |
 | `country_code` | TEXT | References `countries(code)` |
 | `currency` | TEXT | Quote currency |
 | `source_symbol` | TEXT | Yahoo ticker, FX uses `=X` pairs |
@@ -116,7 +117,7 @@ Trading dates come from this table, so horizons count observations rather than c
 | `confidence` | REAL | Range 0.2 to 0.9 |
 | `drivers_json` | TEXT | Serialized driver list with codes, details, weights |
 | `regime` | TEXT | Regime label at scoring time |
-| `model_version` | TEXT | `rules-v1` |
+| `model_version` | TEXT | `rules-v2` (older rows keep `rules-v1`) |
 | `created_at` | TEXT | Default timestamp |
 
 Unique key: `(symbol, horizon, as_of_date, model_version)`. Index: `idx_signals_lookup (symbol, horizon, as_of_date DESC)`.

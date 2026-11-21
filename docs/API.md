@@ -148,7 +148,7 @@ Errors: 400 `Unsupported purpose`, 400 validation (email, username, password pol
 
 ### `GET /api/assets`
 
-No parameters. Returns `{ assets: [{ symbol, name, assetClass, countryCode, currency, sourceSymbol }], count }`, where `countryCode`, `currency`, and `sourceSymbol` may be null. Error: 500 `Failed to load assets`.
+No parameters. Returns `{ assets: [{ symbol, name, assetClass, assetGroup, countryCode, currency, sourceSymbol }], count }`, where `assetClass` is one of `equity`, `fx`, `commodity`, `rates`, `credit`, `cash`, `crypto`, and `assetGroup`, `countryCode`, `currency`, and `sourceSymbol` may be null. Error: 500 `Failed to load assets`.
 
 ### `GET /api/readings`
 
@@ -179,7 +179,7 @@ Returns `{ asOf, modelVersion, count, bySymbol, signals, disclaimer }`, where ea
   "confidence": 0.7053,
   "drivers": [{ "code": "regime_expansion", "detail": "...", "weight": 0.4 }],
   "regime": "expansion",
-  "modelVersion": "rules-v1"
+  "modelVersion": "rules-v2"
 }
 ```
 

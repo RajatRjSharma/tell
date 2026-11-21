@@ -2,9 +2,16 @@
 
 import { useMemo } from "react";
 import { useScrub } from "@/components/charts/useScrub";
+import { countries } from "@/data/seed";
 import { explainMacroValue } from "@/lib/charts/explain";
 import type { LocalMacroPoint, LocalMacroRow } from "@/lib/macro/local";
 import { buildSparklinePath, sparklinePoints } from "@/lib/macro/sparklines";
+
+const EURO_AREA = new Set<string>(
+  countries
+    .filter((country) => country.currency === "EUR")
+    .map((country) => country.code),
+);
 
 const MONTHS = [
   "Jan",
@@ -187,7 +194,9 @@ export function LocalMacroPanel({
                   testId={`local-inflation-${row.countryCode}`}
                 />
                 <Metric
-                  label={row.countryCode === "DE" ? "ECB rate" : "Policy rate"}
+                  label={
+                    EURO_AREA.has(row.countryCode) ? "ECB rate" : "Policy rate"
+                  }
                   indicatorId="POLICY_RATE"
                   point={row.policyRate}
                   testId={`local-policy-${row.countryCode}`}
@@ -206,8 +215,8 @@ export function LocalMacroPanel({
 
       <p className="mt-4 text-[11px] leading-5 text-[var(--muted)]">
         Sources: IMF Consumer Price Index (monthly) and BIS central bank policy
-        rates. Germany shows the euro area ECB rate. Months can lag by one to
-        three releases per country.
+        rates. Euro area members show the shared ECB rate; Taiwan has no IMF or
+        BIS coverage. Months can lag by one to three releases per country.
       </p>
     </section>
   );

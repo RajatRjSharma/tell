@@ -139,7 +139,7 @@ export async function buildFeatureSnapshot(
     cache?: FeatureSeriesCache;
   },
 ): Promise<FeatureSnapshot> {
-  const symbols = options?.symbols ?? ["SPY", "TLT", "GLD"];
+  const symbols = options?.symbols ?? ["SPY", "TLT", "GOLD"];
   const asOf =
     options?.asOf ??
     (await latestAssetDate(db, symbols[0] ?? "SPY")) ??

@@ -7,7 +7,7 @@ Tell separates three concerns: data collection, offline scoring, and request-tim
 ## Design principles
 
 1. **Turso holds the truth.** Every number shown in the UI is traceable to a stored row.
-2. **Scoring is deterministic.** Outlooks come from transparent rules (`rules-v1`), not opaque models.
+2. **Scoring is deterministic.** Outlooks come from transparent rules (`rules-v2`), not opaque models.
 3. **Language models explain, they do not predict.** Briefs and chat are grounded in retrieved evidence.
 4. **The daily job stays cheap.** Only free data sources run on schedule; paid or key-limited AI work is manual.
 5. **Every claim is measured.** Signals are graded against realized returns in `forecast_log`.
@@ -199,14 +199,22 @@ tell/
 
 ## Asset universe
 
-Seeded countries: `US`, `IN`, `DE`, `JP`, `GB`, `CN`.
+Seeded countries: `US`, `CA`, `BR`, `GB`, `DE`, `FR`, `CH`, `IN`, `CN`, `JP`, `KR`, `TW`, `AU`. `src/data/seed.ts` is the source of truth; `syncCatalog` upserts it on every migrate and e2e setup.
 
-| Class | Symbols |
-| ----- | ------- |
-| Equity | `SPY`, `INDA`, `EWG`, `EWJ`, `EWU`, `MCHI` |
-| FX | `EURUSD`, `GBPUSD`, `USDJPY`, `USDCNY` |
-| Commodity | `GLD`, `USO` |
-| Rates | `TLT` |
+| Class | Group | Symbols |
+| ----- | ----- | ------- |
+| Equity | Country markets | `SPY`, `EWC`, `EWZ`, `EWU`, `EWG`, `EWQ`, `INDA`, `MCHI`, `EWJ`, `EWY`, `EWT`, `EWA` |
+| Equity | US sectors | `XLK`, `XLC`, `XLY`, `XLP`, `XLV`, `XLF`, `XLI`, `XLE`, `XLB`, `XLU`, `XLRE` |
+| Currency | Dollar index, majors, emerging | `DXY`, `EURUSD`, `GBPUSD`, `USDJPY`, `USDCHF`, `AUDUSD`, `USDCAD`, `USDCNY`, `USDINR` |
+| Commodity | Precious, industrial, energy, agriculture | `GOLD`, `SILVER`, `PLATINUM`, `COPPER`, `WTI`, `BRENT`, `NATGAS`, `WHEAT`, `CORN`, `SOYBEAN` |
+| Crypto | | `BTCUSD`, `ETHUSD` |
+| Rates | Treasuries | `IEF`, `TLT` |
+| Credit | IG, high yield, EM debt | `LQD`, `HYG`, `EMB` |
+| Cash | T-bills (not scored) | `SHV` |
+
+Commodities are continuous front-month futures from Yahoo (`GC=F`, `CL=F`, …), so the price is the commodity itself, not an ETF that drifts from roll costs. Grains are quoted in US cents per bushel. Every instrument runs on a Monday–Friday calendar: weekend crypto and FX bars are dropped at parse time, and their weekend move lands in Monday's return. Taiwan has no IMF or BIS macro coverage, so its local inflation and policy-rate strip stays empty.
+
+`GLD` and `USO` were retired in favour of `GOLD` and `WTI`; `RETIRED_SYMBOLS` in `src/lib/catalog.ts` moves watchlists and drops their history.
 
 ## Runtime dependencies
 

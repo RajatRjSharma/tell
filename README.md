@@ -75,7 +75,7 @@ when more than half of its series fail.
 make compute-features   # US macro + market features + regime snapshot from Turso
 ```
 
-Optional: `FEATURE_AS_OF=2024-06-01` or `FEATURE_SYMBOLS=SPY,TLT,GLD` in the environment.
+Optional: `FEATURE_AS_OF=2024-06-01` or `FEATURE_SYMBOLS=SPY,TLT,GOLD` in the environment.
 Pure TypeScript transforms (no ML). Used as inputs for the signal engine.
 
 ## Signals
@@ -251,4 +251,4 @@ make db-migrate
 
 Not financial advice. Research tool only.
 
-See live product copy on [`/methodology`](https://tell-gamma.vercel.app/methodology) — how regimes, `rules-v1` signals, hit rates, events, and AI grounding work.
+See live product copy on [`/methodology`](https://tell-gamma.vercel.app/methodology) — how regimes, `rules-v2` signals, hit rates, events, and AI grounding work.

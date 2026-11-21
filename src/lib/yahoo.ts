@@ -50,6 +50,16 @@ export function toYahooSymbol(sourceSymbol: string): string {
   return map[sourceSymbol] ?? sourceSymbol;
 }
 
+/**
+ * Tell runs every instrument on a Monday–Friday calendar so horizons ("1w" =
+ * 5 bars) and cross-asset comparisons line up. Crypto weekend moves still
+ * land in the Friday→Monday return; Yahoo's in-progress weekend FX bars drop.
+ */
+export function isWeekday(date: string): boolean {
+  const day = new Date(`${date}T00:00:00Z`).getUTCDay();
+  return day !== 0 && day !== 6;
+}
+
 export function parseYahooChart(payload: YahooChartResponse): AssetBar[] {
   const result = payload.chart?.result?.[0];
   if (!result?.timestamp?.length) return [];
@@ -74,8 +84,11 @@ export function parseYahooChart(payload: YahooChartResponse): AssetBar[] {
     const low = lows[i];
     const volume = volumes[i];
 
+    const date = dateFromUnixSeconds(ts);
+    if (!isWeekday(date)) continue;
+
     bars.push({
-      date: dateFromUnixSeconds(ts),
+      date,
       open: Number.isFinite(open) ? (open as number) : null,
       high: Number.isFinite(high) ? (high as number) : null,
       low: Number.isFinite(low) ? (low as number) : null,

@@ -1,8 +1,9 @@
 import type { MarketFeatures } from "@/lib/features/market";
 import type { UsRegime } from "@/lib/features/regime";
+import { SAFE_HAVEN_PAIRS, usdOrientation } from "@/lib/assets/classes";
 import { horizonToBars, momentumFieldForBars } from "./horizons";
 
-export const SIGNAL_MODEL_VERSION = "rules-v1";
+export const SIGNAL_MODEL_VERSION = "rules-v2";
 
 export type SignalDirection = "bullish" | "neutral" | "bearish";
 
@@ -47,56 +48,78 @@ function directionFromScore(score: number): SignalDirection {
   return "neutral";
 }
 
-/** Regime bias by asset class (−1…+1 contribution before weights). */
+type RegimeRow = Record<string, { bias: number; detail: string }>;
+
+/**
+ * Bias by asset class per regime (−1…+1 before weights). `usd` is the effect
+ * on the US dollar; currency pairs get it signed by quote direction.
+ */
+const REGIME_TABLE: Record<Exclude<UsRegime, "neutral">, RegimeRow> = {
+  risk_off: {
+    equity: { bias: -0.55, detail: "risk_off pressures equities" },
+    rates: { bias: 0.35, detail: "flight-to-quality supports duration" },
+    commodity: { bias: 0.15, detail: "stress mixed for commodities" },
+    credit: { bias: -0.3, detail: "risk_off widens credit spreads" },
+    crypto: { bias: -0.6, detail: "risk_off hits speculative assets hardest" },
+    usd: { bias: 0.2, detail: "risk_off tends to firm the US dollar" },
+    other: { bias: -0.2, detail: "risk_off cautious bias" },
+  },
+  inflationary: {
+    equity: { bias: -0.1, detail: "inflation is mixed for equities" },
+    rates: { bias: -0.45, detail: "hot inflation pressures bonds" },
+    commodity: {
+      bias: 0.3,
+      detail: "inflation regime can support commodities",
+    },
+    credit: { bias: -0.25, detail: "rising yields pressure corporate bonds" },
+    crypto: { bias: -0.1, detail: "tighter policy is a headwind for crypto" },
+    usd: { bias: 0.1, detail: "rate path can support the US dollar" },
+    other: { bias: 0, detail: "inflation regime mixed" },
+  },
+  slowdown: {
+    equity: { bias: -0.35, detail: "slowdown weighs on equities" },
+    rates: { bias: 0.25, detail: "slowdown can support bonds" },
+    commodity: { bias: -0.2, detail: "slowdown can soften commodities" },
+    credit: { bias: -0.2, detail: "slowdown raises default worries" },
+    crypto: { bias: -0.35, detail: "slowdown weighs on speculative assets" },
+    usd: { bias: 0.1, detail: "slowdown can firm the US dollar" },
+    other: { bias: -0.1, detail: "slowdown cautious bias" },
+  },
+  expansion: {
+    equity: { bias: 0.4, detail: "expansion supports equities" },
+    rates: { bias: -0.15, detail: "expansion can pressure duration" },
+    commodity: { bias: 0.15, detail: "expansion supports demand assets" },
+    credit: { bias: 0.2, detail: "expansion tightens credit spreads" },
+    crypto: { bias: 0.35, detail: "risk appetite supports crypto" },
+    usd: { bias: -0.15, detail: "risk-on tends to soften the US dollar" },
+    other: { bias: 0.1, detail: "expansion mild risk-on" },
+  },
+};
+
+/** Regime bias for one instrument (−1…+1 contribution before weights). */
 export function regimeBias(
   regime: UsRegime,
   assetClass: string,
+  symbol = "",
 ): { bias: number; detail: string } {
+  if (regime === "neutral") return { bias: 0, detail: "neutral regime" };
+  const row = REGIME_TABLE[regime];
   const cls = assetClass.toLowerCase();
 
-  if (regime === "risk_off") {
-    if (cls === "equity")
-      return { bias: -0.55, detail: "risk_off pressures equities" };
-    if (cls === "rates")
-      return { bias: 0.35, detail: "flight-to-quality supports duration" };
-    if (cls === "commodity")
-      return { bias: 0.15, detail: "stress mixed for commodities" };
-    if (cls === "fx") return { bias: -0.15, detail: "risk_off can firm USD" };
-    return { bias: -0.2, detail: "risk_off cautious bias" };
+  if (cls === "fx") {
+    if (regime === "risk_off" && SAFE_HAVEN_PAIRS.has(symbol)) {
+      return {
+        bias: -0.3,
+        detail: `risk_off favours the safe-haven ${symbol.slice(3)} over USD`,
+      };
+    }
+    const orientation = usdOrientation(symbol);
+    const usd = row.usd!;
+    if (orientation === 0) return { bias: 0, detail: "non-USD pair" };
+    return { bias: usd.bias * orientation, detail: usd.detail };
   }
 
-  if (regime === "inflationary") {
-    if (cls === "rates")
-      return { bias: -0.45, detail: "hot inflation pressures bonds" };
-    if (cls === "commodity")
-      return { bias: 0.3, detail: "inflation regime can support commodities" };
-    if (cls === "equity")
-      return { bias: -0.1, detail: "inflation is mixed for equities" };
-    if (cls === "fx") return { bias: 0.1, detail: "rate path can support USD" };
-    return { bias: 0, detail: "inflation regime mixed" };
-  }
-
-  if (regime === "slowdown") {
-    if (cls === "equity")
-      return { bias: -0.35, detail: "slowdown weighs on equities" };
-    if (cls === "rates")
-      return { bias: 0.25, detail: "slowdown can support bonds" };
-    if (cls === "commodity")
-      return { bias: -0.2, detail: "slowdown can soften commodities" };
-    return { bias: -0.1, detail: "slowdown cautious bias" };
-  }
-
-  if (regime === "expansion") {
-    if (cls === "equity")
-      return { bias: 0.4, detail: "expansion supports equities" };
-    if (cls === "rates")
-      return { bias: -0.15, detail: "expansion can pressure duration" };
-    if (cls === "commodity")
-      return { bias: 0.15, detail: "expansion supports demand assets" };
-    return { bias: 0.1, detail: "expansion mild risk-on" };
-  }
-
-  return { bias: 0, detail: "neutral regime" };
+  return row[cls] ?? row.other!;
 }
 
 function momentumContribution(
@@ -162,7 +185,7 @@ export function scoreSignal(input: ScoreSignalInput): ScoredSignal {
   const bars = horizonToBars(input.horizon);
   const drivers: SignalDriver[] = [];
 
-  const regime = regimeBias(input.regime, input.assetClass);
+  const regime = regimeBias(input.regime, input.assetClass, input.symbol);
   drivers.push({
     code: "regime",
     detail: `${input.regime}: ${regime.detail}`,
@@ -190,7 +213,7 @@ export function scoreSignal(input: ScoreSignalInput): ScoredSignal {
 
   // Gold tweak for inflation / risk_off
   let symbolBias = 0;
-  if (input.symbol === "GLD") {
+  if (input.symbol === "GOLD") {
     if (input.regime === "inflationary" || input.regime === "risk_off") {
       symbolBias = 0.15;
       drivers.push({
@@ -203,7 +226,10 @@ export function scoreSignal(input: ScoreSignalInput): ScoredSignal {
   if (input.symbol === "TLT" && input.regime === "inflationary") {
     symbolBias = -0.1;
   }
-  if (input.symbol === "USO" && input.regime === "slowdown") {
+  if (
+    (input.symbol === "WTI" || input.symbol === "BRENT") &&
+    input.regime === "slowdown"
+  ) {
     symbolBias = -0.1;
   }
 

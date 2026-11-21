@@ -113,7 +113,7 @@ export default async function MethodologyPage() {
             <p className="mt-4 text-sm leading-7 text-[var(--muted-strong)]">
               The page-wide World, region, or country selector filters market
               rows, the decision summary, near-term bias, signal quality, and
-              tagged policy events. The macro strip and rules-v1 regime remain
+              tagged policy events. The macro strip and the regime remain
               US-only context; they are not presented as local regimes for other
               countries.
             </p>
@@ -164,9 +164,12 @@ export default async function MethodologyPage() {
             <p className="mt-4 text-sm leading-7 text-[var(--muted-strong)]">
               The home page shows a beginner explainer with the live inputs,
               thresholds, and usual asset-class tilts. The same US regime still
-              biases different asset classes differently in rules-v1 (e.g.
-              inflation pressure is typically harder for long duration, mixed
-              for equities, more constructive for commodities).
+              biases different asset classes differently (e.g. inflation
+              pressure is typically harder for long duration, mixed for
+              equities, more constructive for commodities). Currencies are read
+              as a view on the US dollar, flipped by how the pair is quoted,
+              with the yen and franc treated as safe havens in a risk-off
+              regime. Cash (T-bills) is shown for context but never scored.
             </p>
           </section>
 

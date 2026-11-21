@@ -4,14 +4,20 @@ import { sdmxPeriodToObservedFor } from "@/lib/imf-sdmx";
 
 const BIS_BASE = "https://stats.bis.org/api/v2/data/dataflow/BIS";
 
-/** Germany has no national policy rate; it follows the ECB (BIS area XM). */
+/** Euro-area members have no national policy rate; they follow the ECB (BIS area XM). */
 export const BIS_POLICY_AREA: Record<string, string> = {
   US: "US",
   IN: "IN",
   DE: "XM",
+  FR: "XM",
   JP: "JP",
   GB: "GB",
   CN: "CN",
+  CH: "CH",
+  CA: "CA",
+  BR: "BR",
+  KR: "KR",
+  AU: "AU",
 };
 
 /** Parse BIS `format=csv&detail=dataonly` (FREQ,REF_AREA,TIME_PERIOD,OBS_VALUE). */
@@ -27,20 +33,23 @@ export function parseBisPolicyCsv(
   const byCountry: Record<string, ParsedReading[]> = {};
   if (areaCol < 0 || periodCol < 0 || valueCol < 0) return byCountry;
 
-  const areaToCountry = new Map(
-    countryCodes
-      .filter((code) => BIS_POLICY_AREA[code])
-      .map((code) => [BIS_POLICY_AREA[code]!, code]),
-  );
+  const areaToCountries = new Map<string, string[]>();
+  for (const code of countryCodes) {
+    const area = BIS_POLICY_AREA[code];
+    if (area)
+      areaToCountries.set(area, [...(areaToCountries.get(area) ?? []), code]);
+  }
 
   for (const line of lines) {
     const cells = line.split(",");
-    const country = areaToCountry.get(cells[areaCol]?.trim() ?? "");
+    const targets = areaToCountries.get(cells[areaCol]?.trim() ?? "");
     const observedFor = sdmxPeriodToObservedFor(cells[periodCol]?.trim() ?? "");
     const raw = cells[valueCol]?.trim();
     const value = Number(raw);
-    if (!country || !observedFor || !raw || !Number.isFinite(value)) continue;
-    (byCountry[country] ??= []).push({ observedFor, value });
+    if (!targets || !observedFor || !raw || !Number.isFinite(value)) continue;
+    for (const country of targets) {
+      (byCountry[country] ??= []).push({ observedFor, value });
+    }
   }
 
   for (const readings of Object.values(byCountry)) {
@@ -55,10 +64,11 @@ export async function fetchBisPolicyRates(
   options?: { startPeriod?: string; fetchImpl?: typeof fetch },
 ): Promise<Record<string, ParsedReading[]>> {
   const fetchImpl = options?.fetchImpl ?? resilientFetch;
-  const areas = countryCodes
-    .map((code) => BIS_POLICY_AREA[code])
-    .filter(Boolean)
-    .join("+");
+  const areas = [
+    ...new Set(
+      countryCodes.map((code) => BIS_POLICY_AREA[code]).filter(Boolean),
+    ),
+  ].join("+");
   const params = new URLSearchParams({ format: "csv", detail: "dataonly" });
   if (options?.startPeriod) params.set("startPeriod", options.startPeriod);
   const url = `${BIS_BASE}/WS_CBPOL/1.0/M.${areas}?${params.toString()}`;

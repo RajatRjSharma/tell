@@ -1,5 +1,6 @@
 import type { Client } from "@libsql/client";
 import { assets } from "@/data/seed";
+import { isScoredClass } from "@/lib/assets/classes";
 import { buildFeatureSnapshot } from "@/lib/features";
 import { parseHorizons } from "./horizons";
 import { scoreSignal, type ScoredSignal } from "./score";
@@ -13,9 +14,11 @@ export async function computeAndStoreSignals(
     horizons?: string[];
   },
 ): Promise<{ asOf: string; signals: ScoredSignal[]; written: number }> {
-  const universe = options?.symbols?.length
-    ? assets.filter((a) => options.symbols!.includes(a.symbol))
-    : [...assets];
+  const universe = (
+    options?.symbols?.length
+      ? assets.filter((a) => options.symbols!.includes(a.symbol))
+      : [...assets]
+  ).filter((a) => isScoredClass(a.asset_class));
 
   if (universe.length === 0) {
     throw new Error("No assets selected for signal compute");

@@ -41,6 +41,7 @@ CREATE TABLE IF NOT EXISTS assets (
   symbol TEXT PRIMARY KEY,
   name TEXT NOT NULL,
   asset_class TEXT NOT NULL,
+  asset_group TEXT,
   country_code TEXT REFERENCES countries(code),
   currency TEXT,
   source_symbol TEXT,

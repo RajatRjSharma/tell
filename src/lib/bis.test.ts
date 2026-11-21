@@ -16,6 +16,12 @@ describe("parseBisPolicyCsv", () => {
       { observedFor: "2026-08-01", value: 3.625 },
     ]);
     expect(parsed.DE).toEqual([{ observedFor: "2026-08-01", value: 2 }]);
+  });
+
+  it("gives every euro-area member the shared ECB rate", () => {
+    const parsed = parseBisPolicyCsv(CSV, ["DE", "FR"]);
+    expect(parsed.FR).toEqual(parsed.DE);
+    expect(parsed.FR).toEqual([{ observedFor: "2026-08-01", value: 2 }]);
     expect(parsed).not.toHaveProperty("IN");
     expect(parsed).not.toHaveProperty("BR");
   });

@@ -54,7 +54,7 @@ async function main() {
     console.log("");
   }
 
-  const liveSymbols = (process.env.LIVE_QUOTE_SYMBOLS ?? "SPY,GLD,TLT")
+  const liveSymbols = (process.env.LIVE_QUOTE_SYMBOLS ?? "SPY,TLT,XLK")
     .split(",")
     .map((s) => s.trim())
     .filter(Boolean);

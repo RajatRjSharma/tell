@@ -20,7 +20,7 @@ Tell turns global macro, market, and central-bank data into explainable multi-as
 
 - Live application: `https://tell-gamma.vercel.app`
 - Repository: `https://github.com/RajatRjSharma/tell`
-- Model version stamped on every signal: `rules-v1`
+- Model version stamped on every signal: `rules-v2`
 - Default horizons: `1d`, `1w`, `1m`
 - Daily pipeline: four times UTC (00:00 / 06:00 / 12:00 / 18:00) via GitHub Actions
 

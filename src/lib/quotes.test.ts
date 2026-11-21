@@ -28,6 +28,9 @@ describe("toFinnhubQuoteSymbol", () => {
     expect(toFinnhubQuoteSymbol("SPY", "equity")).toBe("SPY");
     expect(toFinnhubQuoteSymbol("EURUSD", "fx")).toBeNull();
     expect(toFinnhubQuoteSymbol("USDCNY", "fx")).toBeNull();
+    expect(toFinnhubQuoteSymbol("GOLD", "commodity")).toBeNull();
+    expect(toFinnhubQuoteSymbol("BTCUSD", "crypto")).toBeNull();
+    expect(toFinnhubQuoteSymbol("HYG", "credit")).toBe("HYG");
   });
 });
 
@@ -49,6 +52,7 @@ describe("fetchLiveQuote", () => {
     process.env.LIVE_MARKET_QUOTES = "false";
     const fetchImpl = finnhubOk();
     const result = await fetchLiveQuote("SPY", {
+      assetClass: "equity",
       apiKey: "test",
       fetchImpl,
       now: () => OPEN,
@@ -60,11 +64,24 @@ describe("fetchLiveQuote", () => {
   it("does not call the provider outside the US session", async () => {
     const fetchImpl = finnhubOk();
     const result = await fetchLiveQuote("SPY", {
+      assetClass: "equity",
       apiKey: "test",
       fetchImpl,
       now: () => WEEKEND,
     });
     expect(result.status).toBe("closed");
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
+  it("never sends a commodity symbol to the equity feed", async () => {
+    const fetchImpl = finnhubOk();
+    const result = await fetchLiveQuote("GOLD", {
+      assetClass: "commodity",
+      apiKey: "test",
+      fetchImpl,
+      now: () => OPEN,
+    });
+    expect(result.status).toBe("unsupported");
     expect(fetchImpl).not.toHaveBeenCalled();
   });
 
@@ -112,6 +129,7 @@ describe("fetchLiveQuote", () => {
       .fn()
       .mockRejectedValue(new Error("down")) as unknown as typeof fetch;
     const result = await fetchLiveQuote("SPY", {
+      assetClass: "equity",
       apiKey: "test",
       fetchImpl,
       now: () => OPEN,

@@ -15,7 +15,7 @@ export type Quote = {
  * Why a quote is or isn't present:
  * - `live`: fresh provider quote (cached up to `QUOTE_TTL_MS`)
  * - `closed`: US session closed, no provider call made
- * - `unsupported`: instrument has no licensed live feed (FX on Finnhub free)
+ * - `unsupported`: no free live feed (FX, futures, crypto on Finnhub free)
  * - `disabled`: `LIVE_MARKET_QUOTES=false` or no `FINNHUB_API_KEY`
  * - `unavailable`: provider call failed or returned no price
  */
@@ -26,12 +26,23 @@ export type LiveQuoteResult = { quote: Quote | null; status: QuoteStatus };
 
 export const QUOTE_TTL_MS = 60_000;
 
-/** Finnhub free tier serves US-listed stocks/ETFs; FX quotes need a paid plan. */
+/**
+ * Classes whose Tell symbol is a US-listed ETF ticker. Finnhub's free tier
+ * quotes only those; FX, futures and crypto need paid feeds, and some Tell
+ * symbols collide with unrelated stocks (GOLD is Barrick Gold on NYSE).
+ */
+const US_ETF_CLASSES: ReadonlySet<string> = new Set([
+  "equity",
+  "rates",
+  "credit",
+  "cash",
+]);
+
 export function toFinnhubQuoteSymbol(
   symbol: string,
   assetClass?: string | null,
 ): string | null {
-  if (assetClass === "fx") return null;
+  if (!assetClass || !US_ETF_CLASSES.has(assetClass)) return null;
   return symbol;
 }
 
@@ -87,22 +98,22 @@ export function clearQuoteCache(): void {
  */
 export async function fetchLiveQuote(
   tellSymbol: string,
-  options?: {
-    assetClass?: string | null;
+  options: {
+    assetClass: string | null;
     apiKey?: string;
     fetchImpl?: typeof fetch;
     now?: () => number;
   },
 ): Promise<LiveQuoteResult> {
-  const apiKey = options?.apiKey ?? process.env.FINNHUB_API_KEY;
+  const apiKey = options.apiKey ?? process.env.FINNHUB_API_KEY;
   if (!liveMarketQuotesEnabled() || !apiKey) {
     return { quote: null, status: "disabled" };
   }
 
-  const finnhubSymbol = toFinnhubQuoteSymbol(tellSymbol, options?.assetClass);
+  const finnhubSymbol = toFinnhubQuoteSymbol(tellSymbol, options.assetClass);
   if (!finnhubSymbol) return { quote: null, status: "unsupported" };
 
-  const now = options?.now ?? Date.now;
+  const now = options.now ?? Date.now;
   if (!isUsMarketOpen(new Date(now()))) {
     return { quote: null, status: "closed" };
   }
@@ -115,7 +126,7 @@ export async function fetchLiveQuote(
 
   const request = fetchFinnhubQuote(finnhubSymbol, {
     apiKey,
-    fetchImpl: options?.fetchImpl,
+    fetchImpl: options.fetchImpl,
   })
     .then((quote): LiveQuoteResult => {
       const result: LiveQuoteResult = quote
