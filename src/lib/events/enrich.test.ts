@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { buildEventId, enrichEvent } from "@/lib/events/enrich";
+import { assets } from "@/data/seed";
+import { buildEventId, enrichEvent, SOURCE_ASSETS } from "@/lib/events/enrich";
 import { POLICY_FEEDS } from "@/lib/events/feeds";
 import { rssItemToEventUpsert } from "@/lib/events/ingest";
 import { rowToPolicyEvent } from "@/lib/events/store";
@@ -54,6 +55,13 @@ describe("enrichEvent", () => {
         categories: [],
       });
       expect(result.assetsImpact.length).toBeGreaterThan(0);
+    }
+  });
+
+  it("only tags symbols that exist in the catalog", () => {
+    const catalog = new Set<string>(assets.map((asset) => asset.symbol));
+    for (const symbols of Object.values(SOURCE_ASSETS)) {
+      for (const symbol of symbols) expect(catalog).toContain(symbol);
     }
   });
 });

@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { createClient } from "@libsql/client";
 import { describe, expect, it } from "vitest";
+import { assets } from "@/data/seed";
 import { retireSymbols, syncCatalog } from "@/lib/catalog";
 
 async function freshDb() {
@@ -18,7 +19,40 @@ async function freshDb() {
   return db;
 }
 
+describe("syncCatalog", () => {
+  it("stores every seeded asset with its group and is idempotent", async () => {
+    const db = await freshDb();
+    await syncCatalog(db);
+    await syncCatalog(db);
+    const rows = await db.execute(
+      "SELECT symbol, asset_class, asset_group FROM assets",
+    );
+    expect(rows.rows).toHaveLength(assets.length);
+    const gold = rows.rows.find((row) => row.symbol === "GOLD");
+    expect([gold?.asset_class, gold?.asset_group]).toEqual([
+      "commodity",
+      "precious",
+    ]);
+    expect(rows.rows.every((row) => row.asset_group != null)).toBe(true);
+  });
+});
+
 describe("retireSymbols", () => {
+  it("moves GLD and USO watchers onto the commodity prices", async () => {
+    const db = await freshDb();
+    await syncCatalog(db);
+    await db.batch([
+      `INSERT INTO assets (symbol, name, asset_class) VALUES ('GLD', 'Gold ETF', 'commodity'), ('USO', 'Oil ETF', 'commodity')`,
+      `INSERT INTO watchlist_items (user_id, symbol) VALUES ('u1', 'GLD'), ('u1', 'USO')`,
+    ]);
+
+    expect((await retireSymbols(db)).sort()).toEqual(["GLD→GOLD", "USO→WTI"]);
+    const watch = await db.execute(
+      "SELECT symbol FROM watchlist_items ORDER BY symbol",
+    );
+    expect(watch.rows.map((row) => row.symbol)).toEqual(["GOLD", "WTI"]);
+  });
+
   it("moves user rows to the replacement and drops derived data", async () => {
     const db = await freshDb();
     await syncCatalog(db);
