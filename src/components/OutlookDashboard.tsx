@@ -684,13 +684,6 @@ export function OutlookDashboard({
           />
         ) : null}
 
-        <AlertsPanel
-          user={sessionUser}
-          defaultSymbol={effectiveSelectedSymbol || "SPY"}
-          defaultHorizon={horizon}
-          watchlist={watchlist}
-        />
-
         <div className="mt-10 flex flex-col gap-2 border-b border-[var(--line)] pb-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <h2 className="text-xl font-semibold tracking-[-0.035em]">
@@ -1058,6 +1051,13 @@ export function OutlookDashboard({
             )}
           </aside>
         </section>
+
+        <AlertsPanel
+          user={sessionUser}
+          defaultSymbol={effectiveSelectedSymbol || "SPY"}
+          defaultHorizon={horizon}
+          watchlist={watchlist}
+        />
       </main>
 
       <footer className="border-t border-[var(--line)]">

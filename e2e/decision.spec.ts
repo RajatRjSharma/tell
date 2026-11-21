@@ -80,6 +80,17 @@ test.describe("beginner decision UX", () => {
       expect(top, id).toBeGreaterThan(barBottom);
     }
 
+    const rowTop = await page
+      .getByTestId("outlook-row-SPY")
+      .evaluate((node) => node.getBoundingClientRect().top + window.scrollY);
+    const alertsTop = await page
+      .getByTestId("alerts-panel")
+      .evaluate((node) => node.getBoundingClientRect().top + window.scrollY);
+    expect(
+      alertsTop,
+      "alerts follow the rows they are created from",
+    ).toBeGreaterThan(rowTop);
+
     await page.getByTestId("outlook-row-SPY").scrollIntoViewIfNeeded();
     await expect(filters).toBeInViewport();
     await filters.getByRole("button", { name: "~1 week" }).click();
