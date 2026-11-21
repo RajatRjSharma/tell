@@ -87,17 +87,35 @@ function truncate(text: string, w: number, size: number): string {
   return max > 3 ? `${text.slice(0, max - 1)}…` : "";
 }
 
+const VIEW_TABS: Record<MapViewId, string> = {
+  "asset-classes": "Asset classes",
+  countries: "Countries",
+  companies: "Companies",
+  "us-sectors": "US sectors",
+  markets: "All markets",
+};
+
+/** Keeps the selection in the address bar so a view can be shared or reloaded. */
+function syncUrl(view: MapViewId, period: MapPeriod) {
+  const params = new URLSearchParams(window.location.search);
+  params.set("view", view);
+  params.set("period", period);
+  window.history.replaceState(null, "", `?${params.toString()}`);
+}
+
 export function MarketMap({
   views,
-  asOf,
+  initialView,
+  initialPeriod = "1d",
 }: {
   views: MapView[];
-  asOf: string | null;
+  initialView?: MapViewId;
+  initialPeriod?: MapPeriod;
 }) {
   const [viewId, setViewId] = useState<MapViewId>(
-    views[0]?.id ?? "asset-classes",
+    initialView ?? views[0]?.id ?? "asset-classes",
   );
-  const [period, setPeriod] = useState<MapPeriod>("1d");
+  const [period, setPeriod] = useState<MapPeriod>(initialPeriod);
   const [path, setPath] = useState<string[]>([]);
   const [hover, setHover] = useState<Hover | null>(null);
   const frameRef = useRef<HTMLDivElement>(null);
@@ -183,6 +201,12 @@ export function MarketMap({
     setViewId(id);
     setPath([]);
     setHover(null);
+    syncUrl(id, period);
+  }
+
+  function selectPeriod(next: MapPeriod) {
+    setPeriod(next);
+    syncUrl(viewId, next);
   }
 
   const hovered = hover?.node;
@@ -200,58 +224,74 @@ export function MarketMap({
         }
       }}
     >
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div className="max-w-2xl">
-          <h2
-            id="market-map-title"
-            className="text-2xl font-semibold tracking-[-0.04em]"
-          >
-            {view.title}
-          </h2>
-          <p className="mt-2 text-sm leading-6 text-[var(--muted-strong)]">
-            {view.description} Size shows how big; colour shows the{" "}
-            {PERIOD_LABELS[period]} move.
-          </p>
+      <h2 id="market-map-title" className="sr-only">
+        {view.title}
+      </h2>
+      <div
+        className="flex flex-col gap-2 rounded-[14px] border border-[var(--line)] bg-[var(--surface)] p-1.5 md:flex-row md:items-center md:justify-between"
+        data-testid="map-toolbar"
+      >
+        <div
+          role="tablist"
+          aria-label="Map view"
+          className="hidden flex-wrap gap-1 md:flex"
+        >
+          {views.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              role="tab"
+              aria-selected={view.id === item.id}
+              className="map-tab"
+              onClick={() => selectView(item.id)}
+              data-testid={`map-view-${item.id}`}
+            >
+              {VIEW_TABS[item.id]}
+            </button>
+          ))}
         </div>
+        <label className="sr-only" htmlFor="map-view">
+          Map view
+        </label>
+        <select
+          id="map-view"
+          className="select-control w-full md:hidden"
+          value={view.id}
+          onChange={(event) => selectView(event.target.value as MapViewId)}
+          data-testid="map-view-select"
+        >
+          {views.map((item) => (
+            <option key={item.id} value={item.id}>
+              {VIEW_TABS[item.id]}
+            </option>
+          ))}
+        </select>
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <label className="sr-only" htmlFor="map-view">
-            Map view
-          </label>
-          <select
-            id="map-view"
-            className="select-control"
-            value={view.id}
-            onChange={(event) => selectView(event.target.value as MapViewId)}
-            data-testid="map-view-select"
-          >
-            {views.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.title}
-              </option>
-            ))}
-          </select>
-          <div className="segmented-control" aria-label="Select move period">
-            {MAP_PERIODS.map((item) => (
-              <button
-                key={item}
-                type="button"
-                className="segment"
-                aria-pressed={period === item}
-                onClick={() => setPeriod(item)}
-                data-testid={`map-period-${item}`}
-              >
-                {item}
-              </button>
-            ))}
-          </div>
+        <div
+          className="segmented-control map-periods"
+          role="group"
+          aria-label="Move period"
+        >
+          {MAP_PERIODS.map((item) => (
+            <button
+              key={item}
+              type="button"
+              className="segment"
+              aria-pressed={period === item}
+              title={`Colour by ${PERIOD_LABELS[item]} move`}
+              onClick={() => selectPeriod(item)}
+              data-testid={`map-period-${item}`}
+            >
+              {item}
+            </button>
+          ))}
         </div>
       </div>
 
-      <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+      <div className="mt-3 flex h-7 items-center justify-between gap-3">
         <nav
           aria-label="Map zoom"
-          className="flex flex-wrap items-center gap-1 font-mono text-[11px] text-[var(--muted)]"
+          className="flex min-w-0 items-center gap-1 overflow-hidden whitespace-nowrap font-mono text-[11px] text-[var(--muted)]"
           data-testid="map-breadcrumb"
         >
           <button
@@ -276,8 +316,12 @@ export function MarketMap({
             </span>
           ))}
           {trail.length === 0 ? (
-            <span className="ml-2">Click a group heading to zoom in.</span>
-          ) : null}
+            <span className="ml-2 hidden truncate sm:inline">
+              Click a group to zoom in
+            </span>
+          ) : (
+            <span className="ml-2 hidden truncate sm:inline">Esc to go up</span>
+          )}
         </nav>
         <MapLegend period={period} />
       </div>
@@ -470,7 +514,7 @@ export function MarketMap({
         ) : null}
       </div>
 
-      <div className="mt-6 grid gap-4 md:grid-cols-2">
+      <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-[1fr_1fr_1.25fr]">
         <MoverList
           title={`Biggest gains · ${PERIOD_LABELS[period]}`}
           nodes={gainers.slice(0, 5)}
@@ -483,30 +527,44 @@ export function MarketMap({
           period={period}
           testId="map-losers"
         />
+        <aside
+          className="rounded-[14px] border border-[var(--line)] bg-[var(--surface)] p-4 md:col-span-2 xl:col-span-1"
+          aria-label="About this view"
+          data-testid="map-about"
+        >
+          <h3 className="font-mono text-[10px] uppercase tracking-[0.1em] text-[var(--muted)]">
+            About this view
+          </h3>
+          <p className="mt-3 text-sm font-medium text-[var(--text)]">
+            {view.title}
+          </p>
+          <p className="mt-1 text-xs leading-5 text-[var(--muted-strong)]">
+            {view.description} Grey tiles have no price to colour them.
+          </p>
+          {sources.length || view.id === "companies" ? (
+            <ul className="mt-3 space-y-1 text-[11px] leading-5 text-[var(--muted)]">
+              {sources.map((source) => (
+                <li key={source.url}>
+                  <a
+                    className="underline underline-offset-2 hover:text-[var(--text)]"
+                    href={source.url}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    {source.label}
+                  </a>{" "}
+                  <span className="font-mono">({source.asOf})</span>
+                </li>
+              ))}
+              {view.id === "companies" ? (
+                <li>
+                  Market caps from Finnhub, converted to US dollars daily.
+                </li>
+              ) : null}
+            </ul>
+          ) : null}
+        </aside>
       </div>
-
-      <p className="mt-6 text-[11px] leading-5 text-[var(--muted)]">
-        {asOf ? `Prices as of ${asOf}. ` : ""}
-        {sources.length ? "Sizes: " : ""}
-        {sources.map((source, index) => (
-          <span key={source.url}>
-            <a
-              className="underline underline-offset-2"
-              href={source.url}
-              target="_blank"
-              rel="noreferrer"
-            >
-              {source.label}
-            </a>{" "}
-            ({source.asOf}){index < sources.length - 1 ? "; " : ". "}
-          </span>
-        ))}
-        {view.id === "companies"
-          ? "Market caps from Finnhub, converted to US dollars daily. "
-          : ""}
-        Grey tiles have no price to colour them. Research aid only, not
-        financial advice.
-      </p>
     </section>
   );
 }
@@ -515,12 +573,12 @@ function MapLegend({ period }: { period: MapPeriod }) {
   const scale = PERIOD_SCALE[period];
   return (
     <div
-      className="flex items-center gap-2 font-mono text-[10px] text-[var(--muted)]"
+      className="flex shrink-0 items-center gap-2 font-mono text-[10px] text-[var(--muted)]"
       aria-hidden
     >
       <span>{formatChange(-scale)}</span>
       <span
-        className="h-2.5 w-36 rounded-full"
+        className="h-2 w-20 rounded-full sm:w-36"
         style={{
           background:
             "linear-gradient(90deg, var(--map-down), var(--map-flat), var(--map-up))",

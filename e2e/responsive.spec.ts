@@ -30,7 +30,7 @@ async function assertNoOverflow(page: Page, label: string) {
       "[data-testid='home-heading']",
       "[data-testid='macro-strip']",
       "[data-testid='system-page']",
-      "[data-testid='map-view-select']",
+      "[data-testid='map-toolbar']",
       "[data-testid='market-map-svg']",
       "#methodology-content",
     ];

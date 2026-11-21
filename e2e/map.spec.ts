@@ -10,8 +10,9 @@ test.describe("market map", () => {
     await page.getByTestId("nav-map").click();
     await expect(page).toHaveURL(/\/map$/);
     await expect(page.getByTestId("map-page")).toBeVisible();
-    await expect(page.getByTestId("map-view-select")).toHaveValue(
-      "asset-classes",
+    await expect(page.getByTestId("map-view-asset-classes")).toHaveAttribute(
+      "aria-selected",
+      "true",
     );
 
     await expect(page.getByTestId("map-group-equities")).toBeVisible();
@@ -40,11 +41,23 @@ test.describe("market map", () => {
     );
     await expect(page.getByTestId("map-gainers")).toContainText("1 month");
 
-    await page.getByTestId("map-view-select").selectOption("companies");
-    await expect(page.getByRole("heading", { level: 2 })).toContainText(
+    const toolbar = page.getByTestId("map-toolbar");
+    const toolbarBox = await toolbar.boundingBox();
+    const mapTop = (await page.getByTestId("market-map-svg").boundingBox())?.y;
+    await page.getByTestId("map-view-companies").click();
+    await expect(page.getByTestId("map-view-companies")).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    await expect(page).toHaveURL(/view=companies&period=1m/);
+    await expect(page.getByTestId("map-about")).toContainText(
       /largest companies/i,
     );
     await expect(page.getByTestId("map-tile-co-TSM")).toBeVisible();
+    expect(await toolbar.boundingBox()).toEqual(toolbarBox);
+    expect((await page.getByTestId("market-map-svg").boundingBox())?.y).toBe(
+      mapTop,
+    );
 
     await page.getByTestId("map-group-country-US").focus();
     await page.keyboard.press("Enter");
@@ -56,6 +69,19 @@ test.describe("market map", () => {
     await page.keyboard.press("Escape");
     await expect(breadcrumb).not.toContainText("United States");
     await expect(page.getByTestId("map-tile-co-TSM")).toBeVisible();
+  });
+
+  test("opens the view and period named in the URL", async ({ page }) => {
+    await page.goto("/map?view=us-sectors&period=1w");
+    await expect(page.getByTestId("map-view-us-sectors")).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    await expect(page.getByTestId("map-period-1w")).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    await expect(page.getByTestId("map-tile-sector-XLK")).toBeVisible();
   });
 
   test("serves every view from the API", async ({ page }) => {

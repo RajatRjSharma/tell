@@ -5,6 +5,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { getSession } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { getMarketMap } from "@/lib/market-map";
+import { MAP_PERIODS, type MapPeriod } from "@/lib/market-map/changes";
 
 export const metadata: Metadata = {
   title: "Market map",
@@ -14,13 +15,25 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
-export default async function MapPage() {
+function isPeriod(value: string | undefined): value is MapPeriod {
+  return MAP_PERIODS.some((period) => period === value);
+}
+
+export default async function MapPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ view?: string; period?: string }>;
+}) {
   const session = await getSession();
   if (!session) {
     redirect("/login?next=/map");
   }
 
-  const map = await getMarketMap(getDb());
+  const [map, params] = await Promise.all([
+    getMarketMap(getDb()),
+    searchParams,
+  ]);
+  const initialView = map.views.find((view) => view.id === params.view)?.id;
 
   return (
     <div className="min-h-[100dvh] bg-[var(--page)] text-[var(--text)]">
@@ -34,16 +47,33 @@ export default async function MapPage() {
       />
       <main
         id="map-content"
-        className="mx-auto max-w-[1480px] px-4 py-8 sm:px-6 lg:px-8 lg:py-12"
+        className="mx-auto max-w-[1480px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8"
         data-testid="map-page"
       >
-        <p className="font-mono text-xs text-[var(--accent)]">Market map</p>
-        <h1 className="mt-3 text-4xl font-semibold tracking-[-0.055em] sm:text-5xl">
-          Where the money sits, and how it moved.
-        </h1>
-        <div className="mt-8">
-          <MarketMap views={map.views} asOf={map.asOf} />
+        <div className="mb-5 flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-[-0.04em] sm:text-3xl">
+              Market map
+            </h1>
+            <p className="mt-1 text-sm text-[var(--muted-strong)]">
+              Where the world&apos;s money sits and how it moved. Size is market
+              value; colour is the price move.
+            </p>
+          </div>
+          {map.asOf ? (
+            <p
+              className="font-mono text-[11px] text-[var(--muted)]"
+              data-testid="map-as-of"
+            >
+              Prices as of {map.asOf}
+            </p>
+          ) : null}
         </div>
+        <MarketMap
+          views={map.views}
+          initialView={initialView}
+          initialPeriod={isPeriod(params.period) ? params.period : undefined}
+        />
       </main>
     </div>
   );

@@ -392,6 +392,47 @@ button:disabled {
   transform: translateY(1px);
 }
 
+.map-tab {
+  min-height: 2.25rem;
+  border-radius: 9px;
+  padding: 0.4rem 0.85rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--muted-strong);
+  cursor: pointer;
+  transition:
+    background-color 180ms ease,
+    color 180ms ease;
+}
+
+.map-tab:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+.map-tab[aria-selected="true"] {
+  background: var(--text);
+  color: var(--page);
+}
+
+.map-periods {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-color: transparent;
+  background: var(--page);
+}
+
+@media (min-width: 48rem) {
+  .map-periods {
+    display: inline-flex;
+  }
+}
+
+.map-tab:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 .select-control {
   min-height: 2.5rem;
   border: 1px solid var(--line);
