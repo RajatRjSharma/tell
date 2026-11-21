@@ -66,6 +66,7 @@ Exceeded limit response: `429` with `{ error, retryAfterSec, category }` and a `
 | `GET /api/charts/[symbol]` | Yes | Price bars with signal markers |
 | `GET /api/quality` | Yes | Forecast hit rates |
 | `GET /api/macro/strip` | Yes | Macro sparkline series |
+| `GET /api/market-map` | Yes | Treemap views of market size and moves |
 | `GET /api/risk/near-term` | Yes | Today and tomorrow risk bias |
 | `GET /api/events` | Yes | Policy events |
 | `GET /api/events/impact` | Yes | Event study statistics |
@@ -230,6 +231,28 @@ Error: 500 `Failed to load signal quality`.
 Returns `{ strip: { countryCode, series: [{ id, label, unit, latest, asOf, change, rangeChange, points: [{ date, value }] }] } }` with `unit` in `index`, `percent`, `level`.
 
 Error: 500 `Failed to load macro strip`.
+
+### `GET /api/market-map`
+
+No parameters. Returns `{ asOf, views }`, the same data the `/map` page draws. `asOf` is the latest stored daily bar (or null). There are five views, with `id` one of:
+
+- `asset-classes`: world equities, bonds, gold and crypto in US dollars.
+- `countries`: listed equity by country.
+- `companies`: the largest US-listed companies and ADRs, grouped by country, then sector.
+- `us-sectors`: S&P 500 sector weights.
+- `markets`: every tracked instrument at equal size.
+
+Each view is `{ id, title, description, unit, tiles, sources }`:
+
+- `unit` is `usd`, `share` (a fraction of the S&P 500) or `equal`.
+- `sources` are keys of the dated reference sizes.
+- Tiles nest: `{ id, label, name?, value, changes: { 1d, 1w, 1m }, note?, children? }`.
+- A group's `value` is the sum of its children, and its `changes` are weighted by size.
+- Changes are fractions (0.012 = +1.2%) and are null when there is no price history.
+
+Reference sizes (exchange caps, bond stock, gold above ground) are dated figures rolled forward by the price of a proxy ETF or of gold. Company caps come from the `company_snapshots` table that `ingest:companies` fills.
+
+Error: 500 `Failed to load market map`.
 
 ### `GET /api/risk/near-term`
 

@@ -1,4 +1,4 @@
-.PHONY: help install install-browsers dev build start lint lint-fix format format-check typecheck test test-watch test-coverage test-eval test-e2e test-e2e-ui ci db-migrate db-seed ingest-fred ingest-imf ingest-markets ingest-events ingest-global-macro ingest-manual ingest-all compute-features compute-signals compute-forecasts backfill-signals compute-alerts compute-briefs compute-watchlist-briefs sync-turso-like-actions sync-turso-local-extras sync-turso-everything setup
+.PHONY: help install install-browsers dev build start lint lint-fix format format-check typecheck test test-watch test-coverage test-eval test-e2e test-e2e-ui ci db-migrate db-seed ingest-fred ingest-imf ingest-markets ingest-companies ingest-events ingest-global-macro ingest-manual ingest-all compute-features compute-signals compute-forecasts backfill-signals compute-alerts compute-briefs compute-watchlist-briefs sync-turso-like-actions sync-turso-local-extras sync-turso-everything setup
 
 help: ## Show available commands
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-28s\033[0m %s\n", $$1, $$2}'
@@ -69,6 +69,9 @@ ingest-imf: ## Fetch cross-country macro from IMF into Turso
 ingest-markets: ## Fetch daily asset prices from Yahoo Finance into Turso
 	npm run ingest:markets
 
+ingest-companies: ## Fetch market-map company caps (Finnhub) and moves (Yahoo) into Turso
+	npm run ingest:companies
+
 ingest-events: ## Fetch Fed/ECB/BoE/BoJ/RBI RSS policy events into Turso
 	npm run ingest:events
 
@@ -78,11 +81,12 @@ ingest-global-macro: ## Fetch monthly inflation (IMF SDMX) + policy rates (BIS) 
 ingest-manual: ## Local-only: IMF DataMapper (blocked on GitHub Actions) → Turso
 	CROSS_COUNTRY_PROVIDER=imf npm run ingest:imf
 
-ingest-all: ## Run FRED + IMF + global macro + markets + events ingest locally
+ingest-all: ## Run FRED + IMF + global macro + markets + companies + events ingest locally
 	npm run ingest:fred
 	$(MAKE) ingest-manual
 	npm run ingest:global-macro
 	npm run ingest:markets
+	npm run ingest:companies
 	npm run ingest:events
 
 compute-features: ## Compute macro/market features + US regime snapshot
@@ -113,6 +117,7 @@ sync-turso-like-actions: ## Mirror GitHub Actions ingest → Turso (migrate + da
 	npm run ingest:imf
 	npm run ingest:global-macro
 	npm run ingest:markets
+	npm run ingest:companies
 	npm run ingest:events
 	npm run compute:signals
 	npm run compute:forecasts

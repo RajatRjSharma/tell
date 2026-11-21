@@ -64,6 +64,13 @@ jobs:
         if: ${{ !cancelled() && steps.migrate.outcome == 'success' }}
         run: npm run ingest:markets
 
+      # Daily at most (the script skips fresh snapshots); skips without a key.
+      - name: Ingest market-map companies (Finnhub + Yahoo)
+        if: ${{ !cancelled() && steps.migrate.outcome == 'success' }}
+        run: npm run ingest:companies
+        env:
+          FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
+
       - name: Ingest policy events (central bank RSS)
         if: ${{ !cancelled() && steps.migrate.outcome == 'success' }}
         run: npm run ingest:events

@@ -75,7 +75,7 @@ Data providers:
 | Variable | Purpose |
 | -------- | ------- |
 | `FRED_API_KEY` | US macro ingest |
-| `FINNHUB_API_KEY` | Live quotes, optional |
+| `FINNHUB_API_KEY` | Live quotes and market-map company caps; `ingest:companies` skips without it |
 | `LIVE_MARKET_QUOTES` | Finnhub quote fetches (default true; set false in e2e) |
 
 AI, local use only:
@@ -111,6 +111,8 @@ Job tuning, all optional:
 | `BACKFILL_DAYS` | 90 | Trading days to rebuild, capped at 2000 |
 | `BACKFILL_FROM`, `BACKFILL_TO` | unset | Explicit range, overrides day count |
 | `BACKFILL_SKIP_FORECASTS` | unset | `1` skips grading |
+| `COMPANIES_MAX_AGE_HOURS` | 20 | `ingest:companies` skips when snapshots are younger than this |
+| `COMPANIES_FORCE` | unset | `1` refreshes company snapshots regardless of age |
 | `BRIEF_HORIZONS` | `1d,1w,1m` | Brief horizons |
 | `BRIEF_SYMBOLS` | all seeded assets | Brief universe |
 | `BRIEF_DELAY_MS` | 400 | Pause between brief calls |
@@ -128,7 +130,7 @@ Where each value belongs:
 | ------ | --------- |
 | Local `.env` | Everything |
 | Vercel | Turso, `JWT_SECRET`, `FINNHUB_API_KEY`, AI keys, SMTP, OTP policy, `APP_URL` |
-| GitHub Actions secrets | Turso, `FRED_API_KEY`, and SMTP only if the scheduled job should send alert email |
+| GitHub Actions secrets | Turso, `FRED_API_KEY`, `FINNHUB_API_KEY` (company caps for the market map), and SMTP only if the scheduled job should send alert email |
 
 Never commit `.env`. If a credential is exposed, revoke it at the provider before replacing it.
 
@@ -145,9 +147,10 @@ Never commit `.env`. If a credential is exposed, revoke it at the provider befor
 | `make ingest-imf` | `npm run ingest:imf` | Cross-country macro with World Bank fallback |
 | `make ingest-manual` | – | Force IMF DataMapper locally |
 | `make ingest-markets` | `npm run ingest:markets` | Daily bars from Yahoo; ECB reference FX if Yahoo is empty |
+| `make ingest-companies` | `npm run ingest:companies` | Market-map company caps (Finnhub) and moves (Yahoo), at most once per `COMPANIES_MAX_AGE_HOURS` |
 | `make ingest-events` | `npm run ingest:events` | Fed, ECB, BoE, BoJ, RBI RSS |
 | `make ingest-global-macro` | `npm run ingest:global-macro` | Monthly CPI YoY (IMF SDMX) and policy rates (BIS) for every seeded country with coverage (Taiwan has none) |
-| `make ingest-all` | – | All five ingest jobs |
+| `make ingest-all` | – | All six ingest jobs |
 | `make sync-turso-like-actions` | – | Mirror Actions: migrate → ingest → signals → forecasts → alerts into Turso |
 | `make sync-turso-local-extras` | – | Jobs Actions skips: IMF DataMapper, features, backfill, Gemini briefs |
 | `make sync-turso-everything` | – | Actions pipeline + local extras → Turso from `.env` |
@@ -187,10 +190,11 @@ parallel browser workers; set `PLAYWRIGHT_WORKERS=1` if you need serial runs.
 3. `ingest:imf` (World Bank fallback on Actions; local `make ingest-manual` for true IMF)
 4. `ingest:global-macro`
 5. `ingest:markets`
-6. `ingest:events`
-7. `compute:signals`
-8. `compute:forecasts`
-9. `compute:alerts`
+6. `ingest:companies` with `FINNHUB_API_KEY` (skips when the secret is missing or snapshots are under 20 hours old, so it runs about once a day)
+7. `ingest:events`
+8. `compute:signals`
+9. `compute:forecasts`
+10. `compute:alerts`
 
 Each step after `db:migrate` runs even if an earlier ingest fails, so one provider outage does not block the others or the compute steps; the run is still marked failed. Inside a job, a single bad series is logged and skipped, and the job exits non-zero only when more than half of its series fail.
 

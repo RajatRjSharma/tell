@@ -58,6 +58,7 @@ const signedInSpecs = [
   /events\.spec\.ts/,
   /impact\.spec\.ts/,
   /macro-strip\.spec\.ts/,
+  /map\.spec\.ts/,
   /methodology\.spec\.ts/,
   /responsive\.spec\.ts/,
   /system\.spec\.ts/,

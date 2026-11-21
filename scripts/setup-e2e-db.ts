@@ -153,6 +153,33 @@ async function setup() {
     });
   }
 
+  for (let index = 0; index < 30; index += 1) {
+    const day = String(index + 1).padStart(2, "0");
+    const close = 3300 - index * 5;
+    await db.execute({
+      sql: `INSERT INTO asset_readings (symbol, date, close)
+            VALUES ('GOLD', ?, ?)`,
+      args: [`2026-07-${day}`, close],
+    });
+  }
+
+  // symbol, market cap (USD), close, 1d, 1w, 1m change
+  const companySnapshots: Array<
+    [string, number, number, number, number, number]
+  > = [
+    ["AAPL", 3.4e12, 230, 0.012, 0.03, 0.05],
+    ["MSFT", 3.1e12, 440, -0.018, -0.01, 0.02],
+    ["TSM", 1.2e12, 210, 0.025, 0.04, -0.03],
+  ];
+  for (const row of companySnapshots) {
+    await db.execute({
+      sql: `INSERT INTO company_snapshots
+              (symbol, market_cap_usd, close, change_1d, change_1w, change_1m, as_of_date)
+            VALUES (?, ?, ?, ?, ?, ?, '2026-07-30')`,
+      args: row,
+    });
+  }
+
   await db.execute({
     sql: `INSERT INTO events
             (id, date, country_code, type, title, summary, sentiment,

@@ -237,6 +237,15 @@ export const assets = [
     source_symbol: "EWQ",
   },
   {
+    symbol: "EWL",
+    name: "Switzerland (EWL)",
+    asset_class: "equity",
+    asset_group: "country",
+    country_code: "CH",
+    currency: "USD",
+    source_symbol: "EWL",
+  },
+  {
     symbol: "INDA",
     name: "MSCI India (INDA)",
     asset_class: "equity",

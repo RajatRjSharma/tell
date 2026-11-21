@@ -18,6 +18,11 @@
   --negative: light-dark(#a44435, #e39a89);
   --negative-soft: light-dark(#f3e3de, #422a26);
   --neutral-soft: light-dark(#e7e9e6, #29322c);
+  --map-flat: light-dark(#dde2de, #2a332d);
+  --map-up: light-dark(#1d7f51, #2f9b64);
+  --map-down: light-dark(#b8463a, #c24a3e);
+  --map-none: light-dark(#eef0ed, #1c241f);
+  --map-gap: light-dark(#c4cbc6, #0b100d);
   --shadow-color: light-dark(rgba(33, 50, 41, 0.08), rgba(0, 0, 0, 0.22));
   --shadow: 0 20px 64px var(--shadow-color);
 }

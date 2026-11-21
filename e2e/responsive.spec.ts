@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 
 const protectedRoutes = [
   { path: "/", ready: "[data-testid='home-heading']" },
+  { path: "/map", ready: "[data-testid='market-map-svg']" },
   { path: "/methodology", ready: "#methodology-content" },
   { path: "/system", ready: "[data-testid='system-page']" },
   { path: "/docs", ready: ".swagger-wrap" },
@@ -29,6 +30,8 @@ async function assertNoOverflow(page: Page, label: string) {
       "[data-testid='home-heading']",
       "[data-testid='macro-strip']",
       "[data-testid='system-page']",
+      "[data-testid='map-view-select']",
+      "[data-testid='market-map-svg']",
       "#methodology-content",
     ];
 
@@ -85,6 +88,7 @@ test.describe("mobile responsiveness", () => {
     await expect(page.getByTestId("mobile-menu-trigger")).toBeVisible();
     await page.getByTestId("mobile-menu-trigger").click();
     await expect(page.getByTestId("nav-outlook")).toBeVisible();
+    await expect(page.getByTestId("nav-map")).toBeVisible();
     await expect(page.getByTestId("nav-methodology")).toBeVisible();
     await expect(page.getByTestId("nav-system")).toBeVisible();
     await expect(page.getByTestId("logout-button")).toBeVisible();

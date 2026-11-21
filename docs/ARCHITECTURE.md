@@ -133,10 +133,11 @@ Interactive panels then call the API for detail: charts, event impact, forecast 
 | 2 | `npm run ingest:imf` | `readings` for cross-country indicators |
 | 3 | `npm run ingest:global-macro` | `readings` for `CPI_YOY_M` (IMF SDMX) and `POLICY_RATE` (BIS) |
 | 4 | `npm run ingest:markets` | `asset_readings` |
-| 5 | `npm run ingest:events` | `events`, `research_fts` |
-| 6 | `npm run compute:signals` | `signals` |
-| 7 | `npm run compute:forecasts` | `forecast_log` |
-| 8 | `npm run compute:alerts` | `alert_events`, alert email |
+| 5 | `npm run ingest:companies` | `company_snapshots` (market-map caps, needs `FINNHUB_API_KEY`) |
+| 6 | `npm run ingest:events` | `events`, `research_fts` |
+| 7 | `npm run compute:signals` | `signals` |
+| 8 | `npm run compute:forecasts` | `forecast_log` |
+| 9 | `npm run compute:alerts` | `alert_events`, alert email |
 
 Manual, key-dependent extras:
 
@@ -164,7 +165,7 @@ tell/
 ├── scripts/                          # CLI pipeline entry points
 │   ├── migrate.ts  seed.ts
 │   ├── ingest-fred.ts  ingest-imf.ts  ingest-global-macro.ts
-│   ├── ingest-markets.ts  ingest-events.ts
+│   ├── ingest-markets.ts  ingest-companies.ts  ingest-events.ts
 │   ├── compute-features.ts  compute-signals.ts  compute-forecasts.ts
 │   ├── compute-alerts.ts  compute-briefs.ts  compute-watchlist-briefs.ts
 │   ├── backfill-signals.ts  eval-ai.ts
@@ -172,11 +173,14 @@ tell/
 │   ├── proxy.ts                      # rate-limits + JWT auth for every /api/*
 │   ├── app/
 │   │   ├── page.tsx                  # dashboard, server rendered
-│   │   ├── login/  register/  methodology/
+│   │   ├── map/                      # market treemap, server rendered
+│   │   ├── login/  register/  methodology/  system/
 │   │   ├── error.tsx  loading.tsx  layout.tsx  globals.css
-│   │   └── api/                      # 25 route handlers
+│   │   └── api/                      # 29 route handlers
 │   ├── components/                   # dashboard and panels
 │   ├── data/seed.ts                  # countries, indicators, assets
+│   ├── data/companies.ts             # market-map company list
+│   ├── data/market-sizes.ts          # dated market sizes with sources
 │   └── lib/
 │       ├── ai/                       # brief, chat, context, rag, cache, rate limit
 │       ├── alerts/                   # rule evaluation and store
@@ -187,6 +191,7 @@ tell/
 │       ├── features/                 # macro, market, regime, series, stats
 │       ├── forecasts/                # forward return and quality
 │       ├── macro/                    # sparkline strip
+│       ├── market-map/               # treemap views, company snapshots
 │       ├── risk/                     # near-term bias
 │       ├── signals/                  # score, horizons, backfill, store
 │       ├── watchlist/                # user symbol store
@@ -203,7 +208,7 @@ Seeded countries: `US`, `CA`, `BR`, `GB`, `DE`, `FR`, `CH`, `IN`, `CN`, `JP`, `K
 
 | Class | Group | Symbols |
 | ----- | ----- | ------- |
-| Equity | Country markets | `SPY`, `EWC`, `EWZ`, `EWU`, `EWG`, `EWQ`, `INDA`, `MCHI`, `EWJ`, `EWY`, `EWT`, `EWA` |
+| Equity | Country markets | `SPY`, `EWC`, `EWZ`, `EWU`, `EWG`, `EWQ`, `EWL`, `INDA`, `MCHI`, `EWJ`, `EWY`, `EWT`, `EWA` |
 | Equity | US sectors | `XLK`, `XLC`, `XLY`, `XLP`, `XLV`, `XLF`, `XLI`, `XLE`, `XLB`, `XLU`, `XLRE` |
 | Currency | Dollar index, majors, emerging | `DXY`, `EURUSD`, `GBPUSD`, `USDJPY`, `USDCHF`, `AUDUSD`, `USDCAD`, `USDCNY`, `USDINR` |
 | Commodity | Precious, industrial, energy, agriculture | `GOLD`, `SILVER`, `PLATINUM`, `COPPER`, `WTI`, `BRENT`, `NATGAS`, `WHEAT`, `CORN`, `SOYBEAN` |
@@ -213,6 +218,20 @@ Seeded countries: `US`, `CA`, `BR`, `GB`, `DE`, `FR`, `CH`, `IN`, `CN`, `JP`, `K
 | Cash | T-bills (not scored) | `SHV` |
 
 Commodities are continuous front-month futures from Yahoo (`GC=F`, `CL=F`, …), so the price is the commodity itself, not an ETF that drifts from roll costs. Grains are quoted in US cents per bushel. Every instrument runs on a Monday–Friday calendar: weekend crypto and FX bars are dropped at parse time, and their weekend move lands in Monday's return. Taiwan has no IMF or BIS macro coverage, so its local inflation and policy-rate strip stays empty.
+
+## Market map
+
+`/map` draws a treemap of where money sits and how it moved over 1 day, 1 week or 1 month. It has five views: asset classes, country stock markets, the largest companies, US sectors, and every tracked instrument at equal size. `getMarketMap` reads the last 22 bars per symbol plus the company snapshots, and the pure builders in `src/lib/market-map/views.ts` turn those into nested tiles. Group colour is the size-weighted change of its children.
+
+Sizes come from published, dated figures in `src/data/market-sizes.ts`, each with its source and date:
+
+- WFE (with Euronext and World Bank where WFE has gaps) for domestic market capitalisation per country.
+- SIFMA for global equity and bond totals.
+- World Gold Council for above-ground gold.
+- The issuance schedule for Bitcoin supply, and Etherscan for Ether supply.
+- S&P Dow Jones Indices for sector weights.
+
+Country and sector sizes are rolled forward by their proxy ETF's price change since the published date; gold and crypto use the latest price. Bond sizes are not rolled forward. Company market caps come from Finnhub `profile2`, converted to US dollars with Yahoo FX, and stored daily by `ingest:companies`.
 
 `GLD` and `USO` were retired in favour of `GOLD` and `WTI`; `RETIRED_SYMBOLS` in `src/lib/catalog.ts` moves watchlists and drops their history.
 

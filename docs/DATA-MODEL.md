@@ -11,6 +11,7 @@ Schema source: `db/schema.sql`. Every statement is idempotent (`CREATE TABLE IF 
 | `readings` | Country, indicator, observation date, vintage | `ingest:fred`, `ingest:imf` |
 | `assets` | One row per tradable symbol | `db:seed` |
 | `asset_readings` | Symbol and trading date | `ingest:markets` |
+| `company_snapshots` | One row per market-map company | `ingest:companies` |
 | `signals` | Symbol, horizon, as-of date, model version | `compute:signals`, `backfill:signals` |
 | `forecast_log` | Same key as `signals` | `compute:forecasts` |
 | `events` | One row per policy item | `ingest:events` |
@@ -101,6 +102,19 @@ Upsert rules in `src/lib/readings.ts`:
 Unique key: `(symbol, date)`. Index: `idx_asset_readings_lookup (symbol, date DESC)`.
 
 Trading dates come from this table, so horizons count observations rather than calendar days.
+
+### `company_snapshots`
+
+| Column | Type | Notes |
+| ------ | ---- | ----- |
+| `symbol` | TEXT | Primary key, US ticker or ADR from `src/data/companies.ts` |
+| `market_cap_usd` | REAL | Finnhub cap converted to US dollars |
+| `close` | REAL | Last completed daily close |
+| `change_1d`, `change_1w`, `change_1m` | REAL | Simple returns over 1, 5 and 21 bars; null without enough history |
+| `as_of_date` | TEXT | Date of `close` |
+| `updated_at` | TEXT | Last write; drives the ingest freshness gate |
+
+Upserted whole on each run. Companies are not in `assets`, so they are never scored.
 
 ## Outlook and evaluation
 

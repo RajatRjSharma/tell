@@ -64,6 +64,18 @@ CREATE TABLE IF NOT EXISTS asset_readings (
 CREATE INDEX IF NOT EXISTS idx_asset_readings_lookup
   ON asset_readings (symbol, date DESC);
 
+-- Latest size and moves per market-map company (src/data/companies.ts).
+CREATE TABLE IF NOT EXISTS company_snapshots (
+  symbol TEXT PRIMARY KEY,
+  market_cap_usd REAL NOT NULL,
+  close REAL NOT NULL,
+  change_1d REAL,
+  change_1w REAL,
+  change_1m REAL,
+  as_of_date TEXT NOT NULL,
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
 CREATE TABLE IF NOT EXISTS signals (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   symbol TEXT NOT NULL REFERENCES assets(symbol),

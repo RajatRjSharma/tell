@@ -535,6 +535,21 @@ export function buildOpenApiDocument(serverUrl?: string): OpenAPIV3.Document {
           },
         },
       },
+      "/api/market-map": {
+        get: {
+          tags: ["Market"],
+          summary:
+            "Treemap views: asset classes, countries, companies, US sectors, tracked markets",
+          security: sessionSecurity,
+          responses: {
+            "200": {
+              description:
+                "{ asOf, views: [{ id, title, description, unit, tiles, sources }] }",
+            },
+            "401": { $ref: "#/components/responses/Unauthorized" },
+          },
+        },
+      },
       "/api/risk/near-term": {
         get: {
           tags: ["Market"],

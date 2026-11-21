@@ -37,10 +37,11 @@ Never commit `.env`.
 ```bash
 make ingest-fred       # US macro from FRED → Turso readings
 make ingest-markets    # Asset OHLC from Yahoo Finance → Turso asset_readings
+make ingest-companies  # Market-map company caps (Finnhub) + moves (Yahoo) → company_snapshots
 make ingest-events     # Fed / ECB / BoE / BoJ / RBI RSS → Turso events
 make ingest-global-macro  # Monthly inflation (IMF SDMX) + policy rates (BIS) → Turso
 make ingest-manual     # IMF DataMapper cross-country (run on your machine)
-make ingest-all        # FRED + IMF (manual) + global macro + markets + events locally
+make ingest-all        # FRED + IMF (manual) + global macro + markets + companies + events locally
 
 # Push provider data into the Turso DB from .env (usually cloud):
 make sync-turso-like-actions   # same pipeline as GitHub Actions
@@ -123,7 +124,7 @@ watchlist and emails it when SMTP is configured.
 Workflow: `.github/workflows/ingest.yml`
 
 - Runs **four times daily** at **00:00**, **06:00**, **12:00**, and **18:00 UTC**, plus **Actions → Daily ingest → Run workflow**
-- Pipeline: **migrate → FRED → cross-country (World Bank on Actions) → Yahoo markets → policy RSS → signals → forecasts → alerts**
+- Pipeline: **migrate → FRED → cross-country (World Bank on Actions) → Yahoo markets → market-map companies (once a day) → policy RSS → signals → forecasts → alerts**
 - Kept to four runs/day so free Yahoo/FRED/World Bank usage stays polite (hourly would risk Yahoo throttling with little new daily-bar data)
 - If you miss `make ingest-manual`, Actions still fills cross-country via World Bank
 - If you *did* run manual IMF, later World Bank runs **do not overwrite** those WEO rows
@@ -144,6 +145,7 @@ Repo secrets (Settings → Secrets and variables → Actions):
 | `TURSO_DATABASE_URL` | ingest + e2e |
 | `TURSO_AUTH_TOKEN` | ingest + e2e |
 | `FRED_API_KEY` | FRED ingest |
+| `FINNHUB_API_KEY` | Market-map company caps (step skips without it) |
 | `JWT_SECRET` | e2e only |
 
 Optional repo **variables** are not required; scripts use built-in start defaults (`2015` / `2023-01-01`). Override locally via `.env` if needed.
@@ -207,6 +209,7 @@ Public JSON endpoints (Turso-backed):
 | `GET /api/events` | Policy events (`?source=Fed&country=US&symbol=SPY&since=YYYY-MM-DD&limit=30`) |
 | `GET /api/events/impact` | Historical forward returns after similar events (`?symbol=SPY&source=Fed&sentiment=any`) |
 | `GET /api/macro/strip` | US CPI / curve / VIX sparkline strip (`?limit=24`) |
+| `GET /api/market-map` | Treemap views (asset classes, countries, companies, US sectors, all markets). Signed-in UI: `/map` |
 | `GET /api/risk/near-term` | Today / tomorrow risk-on, mixed, or risk-off ensemble bias |
 | `GET /api/readings?country=US&indicator=CPI` | Macro series (`from`/`to`/`limit`) |
 

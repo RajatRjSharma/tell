@@ -11,7 +11,7 @@ export type SiteHeaderUser = {
   username: string;
 };
 
-export type SiteHeaderActive = "outlook" | "methodology" | "system";
+export type SiteHeaderActive = "outlook" | "map" | "methodology" | "system";
 
 type SiteHeaderProps = {
   sectionLabel: string;
@@ -27,6 +27,7 @@ const NAV_ITEMS: {
   testId: string;
 }[] = [
   { id: "outlook", href: "/", label: "Outlook", testId: "nav-outlook" },
+  { id: "map", href: "/map", label: "Map", testId: "nav-map" },
   {
     id: "methodology",
     href: "/methodology",
