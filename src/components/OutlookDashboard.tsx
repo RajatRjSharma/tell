@@ -507,59 +507,106 @@ export function OutlookDashboard({
         />
 
         <section
-          className="mt-8 flex flex-col gap-4 rounded-[16px] border border-[var(--line)] bg-[var(--surface)] p-4 sm:flex-row sm:items-end sm:justify-between sm:p-5"
+          className="mt-8 flex flex-col gap-4 rounded-[16px] border border-[var(--line)] bg-[var(--surface)] p-4 lg:sticky lg:top-16 lg:z-10 lg:shadow-[0_10px_24px_-14px_rgba(0,0,0,0.45)] lg:flex-row lg:items-end lg:justify-between lg:gap-6"
           data-testid="market-scope-control"
-          aria-label="Page market scope"
+          aria-label="Page filters"
         >
-          <div className="max-w-3xl">
+          <div className="min-w-0">
             <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--accent)]">
-              Scope starts here
+              Filters for everything below
             </p>
-            <h2 className="mt-2 text-lg font-semibold tracking-[-0.03em]">
-              Viewing {activeScope.label}
+            <h2 className="mt-1.5 truncate text-lg font-semibold tracking-[-0.03em]">
+              Viewing {pageScopeLabel} · {horizonInfo.shortLabel}
             </h2>
-            <p className="mt-1 text-sm leading-6 text-[var(--muted-strong)]">
+            <p className="mt-0.5 text-xs leading-5 text-[var(--muted-strong)]">
               {activeScope.description}. Everything below this control follows
-              the selected geography: local inflation and policy rates, decision
-              summary, next-session bias, bullish/neutral/bearish counts, signal
-              quality, policy events, event-impact study, and market rows.
-            </p>
-            <p className="mt-1 text-xs leading-5 text-[var(--muted)]">
-              Everything above stays a US macro backdrop (strip + regime). Tell
-              shows local inflation and policy rates but does not yet score
-              local country regimes.
+              these filters.
             </p>
           </div>
-          <label className="min-w-0 text-xs text-[var(--muted)] sm:w-64">
-            World, region, or country
-            <select
-              className="select-control mt-1 w-full"
-              value={scopeValue}
-              onChange={(event) => setScopeValue(event.target.value)}
-              data-testid="market-scope"
-            >
-              <option value="world">World · all loaded markets</option>
-              <optgroup label="Regions">
-                {marketScopes
-                  .filter((scope) => scope.kind === "region")
-                  .map((scope) => (
-                    <option key={scope.value} value={scope.value}>
-                      {scope.label}
-                    </option>
-                  ))}
-              </optgroup>
-              <optgroup label="Countries">
-                {marketScopes
-                  .filter((scope) => scope.kind === "country")
-                  .map((scope) => (
-                    <option key={scope.value} value={scope.value}>
-                      {scope.label}
-                    </option>
-                  ))}
-              </optgroup>
-            </select>
-          </label>
+
+          <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] lg:shrink-0">
+            <label className="min-w-0 text-[11px] font-medium text-[var(--muted)] lg:w-56">
+              Geography
+              <select
+                className="select-control mt-1 w-full"
+                value={scopeValue}
+                onChange={(event) => setScopeValue(event.target.value)}
+                data-testid="market-scope"
+              >
+                <option value="world">World · all loaded markets</option>
+                <optgroup label="Regions">
+                  {marketScopes
+                    .filter((scope) => scope.kind === "region")
+                    .map((scope) => (
+                      <option key={scope.value} value={scope.value}>
+                        {scope.label}
+                      </option>
+                    ))}
+                </optgroup>
+                <optgroup label="Countries">
+                  {marketScopes
+                    .filter((scope) => scope.kind === "country")
+                    .map((scope) => (
+                      <option key={scope.value} value={scope.value}>
+                        {scope.label}
+                      </option>
+                    ))}
+                </optgroup>
+              </select>
+            </label>
+
+            <label className="min-w-0 text-[11px] font-medium text-[var(--muted)] lg:w-44">
+              Asset class
+              <select
+                id="asset-class"
+                value={assetClass}
+                onChange={(event) =>
+                  setAssetClass(event.target.value as AssetClass)
+                }
+                className="select-control mt-1 w-full"
+                data-testid="asset-filter"
+              >
+                {ASSET_CLASS_FILTERS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                    {option.value === "watchlist" && watchlist.length > 0
+                      ? ` (${watchlist.length})`
+                      : ""}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <div className="min-w-0 text-[11px] font-medium text-[var(--muted)] lg:w-[19rem]">
+              <span id="horizon-label">Horizon</span>
+              <div
+                className="segmented-control mt-1 flex w-full"
+                role="group"
+                aria-labelledby="horizon-label"
+                data-testid="horizon-control"
+              >
+                {HORIZONS.map((item) => (
+                  <button
+                    key={item}
+                    type="button"
+                    aria-pressed={horizon === item}
+                    onClick={() => setHorizon(item)}
+                    className="segment flex-1 whitespace-nowrap"
+                    title={describeHorizon(item).longLabel}
+                  >
+                    {describeHorizon(item).shortLabel}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
         </section>
+
+        <p className="mt-2 px-1 text-[11px] leading-5 text-[var(--muted)]">
+          The macro strip and regime above are always the US backdrop. Tell
+          shows local inflation and policy rates but does not yet score local
+          country regimes.
+        </p>
 
         <LocalMacroPanel
           rows={scopedLocalMacro}
@@ -644,7 +691,7 @@ export function OutlookDashboard({
           watchlist={watchlist}
         />
 
-        <div className="mt-10 flex flex-col gap-5 border-b border-[var(--line)] pb-5 lg:flex-row lg:items-end lg:justify-between">
+        <div className="mt-10 flex flex-col gap-2 border-b border-[var(--line)] pb-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <h2 className="text-xl font-semibold tracking-[-0.035em]">
               Market outlook
@@ -654,55 +701,14 @@ export function OutlookDashboard({
               {sessionUser ? "" : " (sign in required)"}. Select a row for
               evidence.
             </p>
-            <p className="mt-2 text-xs text-[var(--muted)]">
-              <EconomicTerm term="horizon">
-                Forecast periods use trading sessions
-              </EconomicTerm>
-              : {horizonInfo.longLabel}.
-            </p>
           </div>
-
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <div
-              className="segmented-control"
-              aria-label="Select signal horizon"
-            >
-              {HORIZONS.map((item) => (
-                <button
-                  key={item}
-                  type="button"
-                  aria-pressed={horizon === item}
-                  onClick={() => setHorizon(item)}
-                  className="segment"
-                  title={describeHorizon(item).longLabel}
-                >
-                  {describeHorizon(item).shortLabel}
-                </button>
-              ))}
-            </div>
-
-            <label className="sr-only" htmlFor="asset-class">
-              Asset class
-            </label>
-            <select
-              id="asset-class"
-              value={assetClass}
-              onChange={(event) =>
-                setAssetClass(event.target.value as AssetClass)
-              }
-              className="select-control"
-              data-testid="asset-filter"
-            >
-              {ASSET_CLASS_FILTERS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                  {option.value === "watchlist" && watchlist.length > 0
-                    ? ` (${watchlist.length})`
-                    : ""}
-                </option>
-              ))}
-            </select>
-          </div>
+          <p
+            className="font-mono text-[11px] text-[var(--muted)] lg:text-right"
+            data-testid="outlook-filter-summary"
+          >
+            {pageScopeLabel} · {currentSignals.length} markets ·{" "}
+            <EconomicTerm term="horizon">{horizonInfo.longLabel}</EconomicTerm>
+          </p>
         </div>
 
         <section className="mt-5 grid gap-6 lg:grid-cols-[minmax(17rem,24rem)_minmax(0,1fr)]">

@@ -54,6 +54,41 @@ test.describe("beginner decision UX", () => {
     await expect(page.getByTestId("outlook-row-INDA")).toHaveCount(0);
   });
 
+  test("all page filters sit above the panels they change", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/");
+    const filters = page.getByTestId("market-scope-control");
+    await expect(filters.getByTestId("market-scope")).toBeVisible({
+      timeout: 20_000,
+    });
+    await expect(filters.getByTestId("asset-filter")).toBeVisible();
+    await expect(filters.getByTestId("horizon-control")).toBeVisible();
+
+    const barBottom = await filters.evaluate(
+      (node) => node.getBoundingClientRect().bottom + window.scrollY,
+    );
+    for (const id of [
+      "decision-summary",
+      "near-term-bias",
+      "outlook-row-SPY",
+    ]) {
+      const top = await page
+        .getByTestId(id)
+        .evaluate((node) => node.getBoundingClientRect().top + window.scrollY);
+      expect(top, id).toBeGreaterThan(barBottom);
+    }
+
+    await page.getByTestId("outlook-row-SPY").scrollIntoViewIfNeeded();
+    await expect(filters).toBeInViewport();
+    await filters.getByRole("button", { name: "~1 week" }).click();
+    await expect(filters.getByRole("heading")).toContainText("~1 week");
+    await expect(page.getByTestId("outlook-filter-summary")).toContainText(
+      "World",
+    );
+  });
+
   test("asset class filter covers commodities, crypto, and credit", async ({
     page,
   }) => {
